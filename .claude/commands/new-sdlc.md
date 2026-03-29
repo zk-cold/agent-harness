@@ -6,7 +6,7 @@ This skill handles requests to build new features or make changes in a target re
 
 A request qualifies for the fast path only when all three criteria are met:
 
-1. **No invariant changes** — the mission does not propose new or modified invariants for `CLAUDE.md`.
+1. **No invariant changes** — the mission does not propose new or modified invariants for `CLAUDE.md`. This includes modifications or deletions of existing test code (see CLAUDE.md). Adding new tests is not an invariant change.
 2. **>80% test coverage around target code** — the code being changed is already covered by automated tests at >80% line coverage, providing a safety net for regressions.
 3. **Clear scope, limited & safe change** — the change is well-defined, small in blast radius, and unlikely to introduce systemic risk.
 
@@ -59,7 +59,7 @@ Execute the approved mission in an isolated git worktree. Produce only the deliv
 **Inputs:** The diff (worktree changes), `mission.md`, and `CLAUDE.md` from the target repo. The critic also has access to the full target repo codebase on demand.
 **Outputs:** APPROVE or REJECT (with reason).
 
-Spawn a fresh critic agent. The critic evaluates whether the implementation satisfies all acceptance criteria in `mission.md` and does not violate any invariants in `CLAUDE.md`. There is no "approval with comments" — if changes are needed, the critic must REJECT.
+Spawn a fresh critic agent. The critic evaluates whether the implementation satisfies all acceptance criteria in `mission.md` and does not violate any invariants in `CLAUDE.md`. There is no "approval with comments" — if changes are needed, the critic must REJECT. If the diff modifies or deletes existing test code, the critic must REJECT — the change is not eligible for fast path.
 
 - If the critic approves: present results to the user. The mission is complete.
 - If the critic rejects: the lead agent fixes the issues in the worktree, re-runs related unit tests, and resubmits the updated diff to a fresh critic. Repeat until approved, or escalate to the user if stuck.
