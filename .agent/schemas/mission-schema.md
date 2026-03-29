@@ -54,7 +54,8 @@ Include these only when the mission has something new to declare. Omit entirely 
 
 **Constraints:**
 - Every consideration must be traceable to at least one invariant. If it cannot be derived from an invariant, it is either a missing invariant (flag it) or a preference (exclude it).
-- Considerations do not require MR-gated approval to modify, but they must remain consistent with the invariants at all times.
+- Considerations must never contradict invariants. When a conflict exists, the invariant takes precedence.
+- Consideration changes follow the same modification process as invariant changes (MR + human approval + critic review).
 
 ### Dependencies & Assumptions
 
@@ -70,7 +71,7 @@ Include these only when the mission has something new to declare. Omit entirely 
 
 ## Section Ordering
 
-When present, optional sections appear before required ones in this order: Invariants, Important Considerations, Scope, Dependencies & Assumptions, Acceptance Criteria. Context before scope, scope before criteria.
+When present, optional sections appear before required ones in this order: Invariants, Important Considerations, Scope, Dependencies & Assumptions, Acceptance Criteria. Scope frames the work, then dependencies state what's needed to deliver it.
 
 ---
 
