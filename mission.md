@@ -43,7 +43,7 @@ These are the founding invariants for this project, established simultaneously w
 
 ## Acceptance Criteria
 
-1. mission.md schema is defined with all required sections: Invariants (New/Modified), Important Considerations, Scope, Dependencies & Assumptions, Acceptance Criteria.
+1. mission.md schema is defined with required sections (Scope, Acceptance Criteria) and optional sections (Invariants, Important Considerations, Dependencies & Assumptions).
 2. Each section has a clear description of its purpose and constraints (e.g., what qualifies as an invariant vs a consideration, what "testable" means for an AC).
-3. Guidance is provided for section applicability — e.g., "Invariants (Founding)" for bootstrap missions, "Invariants (New)" when proposing additions, empty when none apply.
-4. The schema distinguishes between new, modified, and founding invariants so that fast path eligibility can be determined from the section header alone.
+3. Guidance is provided for when optional sections should be included or omitted.
+4. Fast path eligibility can be determined from the presence or absence of the Invariants section.

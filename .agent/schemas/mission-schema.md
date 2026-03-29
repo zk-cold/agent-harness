@@ -8,36 +8,7 @@ A mission.md file defines a single unit of work for the agent harness. It is gen
 
 ## Required Sections
 
-### 1. Invariants
-
-**Purpose:** Declare any invariants that this mission introduces, modifies, or ratifies. This section drives flow selection — its header determines whether the fast path or normal flow applies during critic review.
-
-**Section header variants:**
-
-| Header | Meaning | Fast path eligible? |
-|--------|---------|---------------------|
-| `## Invariants (New)` | Mission proposes one or more invariants that do not yet exist in CLAUDE.md. | No — triggers normal flow (2 critics). |
-| `## Invariants (Modified)` | Mission proposes changes to existing CLAUDE.md invariants. | No — triggers normal flow (2 critics). |
-| `## Invariants (New/Modified)` | Mission proposes both new and modified invariants. | No — triggers normal flow (2 critics). |
-| `## Invariants (Founding)` | Bootstrap only. The invariants listed are being established for the first time alongside CLAUDE.md. Not a proposal — an initialization act. | N/A — bootstrap missions use normal flow by default. |
-| `## Invariants` | No new or modified invariants. Section body states "None" or is empty. | Yes — satisfies fast path criterion (a). |
-
-**Constraints:**
-- Each invariant must describe a hard constraint with a clear violation condition. If violation cannot be objectively determined, it is a consideration, not an invariant.
-- Pseudo-invariants (preferences, habits, or conventions disguised as rules) must not appear here. Critics are required to screen for these.
-- When invariants are proposed (New or Modified), the full text of each must be included — not references or diffs.
-- Modified invariants must show the proposed replacement text, not a description of the change.
-
-### 2. Important Considerations
-
-**Purpose:** State new considerations or refinements to existing ones that this mission introduces. Considerations are explicit derivations from invariants, added to compensate for current model limitations. They may be pruned as model capability improves.
-
-**Constraints:**
-- Every consideration must be traceable to at least one invariant. If it cannot be derived from an invariant, it is either a missing invariant (flag it) or a preference (exclude it).
-- Considerations do not require MR-gated approval to modify, but they must remain consistent with the invariants at all times.
-- When no new considerations are introduced, state "No new considerations" or reproduce the current CLAUDE.md considerations for critic reference.
-
-### 3. Scope
+### 1. Scope
 
 **Purpose:** Define the boundaries of the mission — what will be delivered and what will not. A well-defined scope prevents ambiguity during execution and gives critics a frame for evaluating the acceptance criteria.
 
@@ -50,17 +21,7 @@ A mission.md file defines a single unit of work for the agent harness. It is gen
 - Every in-scope item must have at least one corresponding acceptance criterion. If an in-scope item has no AC, either add one or move the item to out-of-scope.
 - Out-of-scope items should name the reason for exclusion when it is not obvious (e.g., "deferred to next phase", "owned by another team").
 
-### 4. Dependencies & Assumptions
-
-**Purpose:** State what must be true for this mission to succeed — preconditions the mission relies on but does not deliver.
-
-**Constraints:**
-- Dependencies are things that must exist or be available (e.g., "CLAUDE.md exists at project root").
-- Assumptions are things believed to be true but not verified (e.g., "coverage tooling produces machine-readable output").
-- If a dependency is not met, the mission cannot proceed. If an assumption proves false during execution, it becomes a blocker (triggering the abort protocol).
-- Do not list things the mission itself will create as dependencies.
-
-### 5. Acceptance Criteria
+### 2. Acceptance Criteria
 
 **Purpose:** Define the conditions under which this mission is considered complete. ACs are the primary artifact critics evaluate and the standard the lead agent executes against.
 
@@ -73,15 +34,47 @@ A mission.md file defines a single unit of work for the agent harness. It is gen
 
 ---
 
+## Optional Sections
+
+Include these only when the mission has something new to declare. Omit entirely when not applicable — do not include empty or placeholder sections.
+
+### Invariants
+
+**When to include:** The mission proposes new or modified invariants for CLAUDE.md. Presence of this section triggers normal flow (2 critics) during review. Absence satisfies fast path criterion (a).
+
+**Constraints:**
+- Each invariant must describe a hard constraint with a clear violation condition. If violation cannot be objectively determined, it is a consideration, not an invariant.
+- Pseudo-invariants (preferences, habits, or conventions disguised as rules) must not appear here. Critics are required to screen for these.
+- The full text of each proposed invariant must be included — not references or diffs.
+- For modifications, show the proposed replacement text, not a description of the change.
+
+### Important Considerations
+
+**When to include:** The mission introduces new considerations or refines existing ones.
+
+**Constraints:**
+- Every consideration must be traceable to at least one invariant. If it cannot be derived from an invariant, it is either a missing invariant (flag it) or a preference (exclude it).
+- Considerations do not require MR-gated approval to modify, but they must remain consistent with the invariants at all times.
+
+### Dependencies & Assumptions
+
+**When to include:** The mission relies on preconditions it does not itself deliver.
+
+**Constraints:**
+- Dependencies are things that must exist or be available (e.g., "CLAUDE.md exists at project root").
+- Assumptions are things believed to be true but not verified (e.g., "coverage tooling produces machine-readable output").
+- If a dependency is not met, the mission cannot proceed. If an assumption proves false during execution, it becomes a blocker (triggering the abort protocol).
+- Do not list things the mission itself will create as dependencies.
+
+---
+
 ## Section Ordering
 
-Sections must appear in the order listed above. This ordering ensures that a reader encounters context (invariants, considerations) before scope, and scope before acceptance criteria.
+When present, optional sections appear before required ones in this order: Invariants, Important Considerations, Scope, Dependencies & Assumptions, Acceptance Criteria. Context before scope, scope before criteria.
 
 ---
 
 ## Titling
-
-The document title follows the format:
 
 ```
 # Mission: {concise title describing the deliverable}
