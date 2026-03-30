@@ -31,7 +31,6 @@
 
 ## Markdown to Script Conversions
 
-- Add a session-start bootstrap checker for `CLAUDE.md` Invariant 1, `.agent/schemas/handoff-protocol.md`, `.claude/commands/enhance-harness.md`, and `.claude/commands/new-sdlc.md` so the harness can verify worktree count, root runtime-artifact placement, and resumability before an agent continues.
 - Add a `mission.md` linter driven by `.agent/schemas/mission-schema.md`, `.agent/schemas/tdd-protocol.md`, and `.agent/schemas/claude-schema.md` to catch missing acceptance-criterion coverage, invalid TDD-exempt assumptions, and invariant or consideration misuse before critic review.
 - Add a `handoff.md` linter or generator driven by `.agent/schemas/handoff-protocol.md` and `.agent/schemas/abort-protocol.md` to enforce section presence, phase-specific transcript rules, and blocked or aborted next-step text.
 - Add a critic-prompt validator driven by `.agent/schemas/critic-protocol.md` and the skill files under `.claude/commands/` to ensure only allowed artifact paths, worktree paths, and raw tool outputs reach critic agents.
