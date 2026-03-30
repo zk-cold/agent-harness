@@ -2,7 +2,7 @@
 
 ## Overview
 
-CLAUDE.md is the sole source of truth for project-level invariants. All agents must read the repo-root copy at session start. It is MR-gated. Any worktree edit to `CLAUDE.md`, to a markdown file under `.agent/schemas/`, or to a markdown file under `.claude/commands/` is proposed content only; the repo-root copies remain authoritative until critic review, human approval, and merge are complete.
+CLAUDE.md is the sole source of truth for project-level invariants. The lead agent must read the repo-root copy at session start. Spawned non-lead agents read only the repo-root governance artifacts or other inputs explicitly required for their role and do not rerun session-start bootstrap discovery unless their phase explicitly requires it. It is MR-gated. Any worktree edit to `CLAUDE.md`, to a markdown file under `.agent/schemas/`, or to a markdown file under `.claude/commands/` is proposed content only; the repo-root copies remain authoritative until critic review, human approval, and merge are complete.
 
 ---
 
