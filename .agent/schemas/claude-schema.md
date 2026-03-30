@@ -2,7 +2,7 @@
 
 ## Overview
 
-CLAUDE.md is the sole source of truth for project-level invariants. All agents must read it at session start. It lives at the project root and is MR-gated — agents never modify it directly.
+CLAUDE.md is the sole source of truth for project-level invariants. All agents must read it at session start. It lives at the project root and is MR-gated. Any `CLAUDE.md` changes that appear in a diff under critic review are proposed MR content; they are not effective project policy until critic review and human approval are complete.
 
 ---
 
@@ -32,7 +32,9 @@ Both sections are optional. Include only when there is content to declare. When 
 
 ## Modification Rules
 
-- Agents must never modify CLAUDE.md directly. All changes go through an MR with human approval and critic review.
+- Agents must not treat unapproved `CLAUDE.md` edits as effective immediately. All changes go through an MR with human approval and critic review.
+- If a diff under critic review touches `CLAUDE.md`, critics should treat that diff as proposed MR content and apply extra attention. The presence of `CLAUDE.md` in the diff is not, by itself, a process violation.
+- `CLAUDE.md` changes remain proposals until the MR is approved. Agents must not rely on unapproved local edits as if they were already in force.
 - Considerations must never contradict invariants. When a conflict exists, the invariant takes precedence.
 - Considerations may be pruned as model capability improves, but follow the same modification process as invariants.
 - New invariants or considerations may be proposed via mission.md. If accepted through critic review and MR, they are added here.

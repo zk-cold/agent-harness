@@ -6,7 +6,7 @@ This document defines the format, lifecycle, and rules for `handoff.md`.
 
 Every `handoff.md` must contain the following sections:
 
-1. **Next / Ongoing Step** — The immediate next action or the step currently in progress. Must be specific enough for a fresh agent session to resume without re-interviewing the dev.
+1. **Next / Ongoing Step** — The immediate next action or the step currently in progress. Must be specific enough for a fresh agent session to resume without re-interviewing the dev. This field may also record the terminal aborted state defined by `.agent/schemas/abort-protocol.md`; when it does, the prior mission must not be resumed.
 2. **Known Failed Attempts** — A list of approaches that were tried and failed, with brief reasons. This prevents a resuming agent from re-treading dead ends. If no attempts have failed, this section must still be present with "None" as its content.
 3. **Dev Interview Transcript** — The full, verbatim Q&A from the interview phase. Every question asked and every answer given must be reproduced exactly. Do not summarize or paraphrase.
 
@@ -14,6 +14,7 @@ Every `handoff.md` must contain the following sections:
 
 - **Full rewrite on phase conclusion.** At the conclusion of each phase (or at the lead agent's discretion mid-phase), `handoff.md` is fully rewritten — not appended to. The rewritten file must contain all three sections with current information.
 - **Session-start check.** On session start, the lead agent must check for an existing `handoff.md` at the project root. If one exists, the agent loads it and uses its contents to orient before proceeding. If it exists but appears irrelevant to the dev's current prompt, the agent must confirm with the dev before discarding it.
+- **Aborted missions are terminal.** If `handoff.md` says the mission is already aborted and must not be resumed per `.agent/schemas/abort-protocol.md`, the next session must not resume that mission. It may only summarize blockers, confirm whether the user wants to start fresh work, and then discard or replace the old handoff if appropriate.
 
 ## Cleanup
 
