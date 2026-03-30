@@ -11,7 +11,7 @@ Any phase in this skill that requires critic agents is blocking. If the environm
 A request qualifies for the fast path only when all three criteria are met:
 
 1. **No invariant changes** — the mission does not propose new or modified invariants for `CLAUDE.md`. This includes modifications or deletions of existing test code (see CLAUDE.md). Adding new tests is not an invariant change.
-2. **>80% test coverage around target code** — the code being changed is already covered by automated tests at >80% line coverage, providing a safety net for regressions.
+2. **>80% test coverage around target code** — the code being changed is already covered by automated tests at the coverage threshold defined in `.agent/schemas/tdd-protocol.md`, providing a safety net for regressions. If no coverage tool is available and the mission does not include coverage tool setup as in-scope, the request is ineligible for fast path.
 3. **Clear scope, limited & safe change** — the change is well-defined, small in blast radius, and unlikely to introduce systemic risk.
 
 If any criterion is not met, the request routes to the normal flow instead.
@@ -74,9 +74,11 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 
 **Actor:** Lead agent.
 **Inputs:** Approved `mission.md`, target repo codebase.
-**Outputs:** Implementation (code changes in worktree), passing unit tests.
+**Outputs:** Implementation (code changes in worktree), passing unit tests, no coverage regression.
 
-Execute the approved mission in an isolated git worktree. The exact `mission.md` approved in Phase: Single-Critic Review is the execution contract for this phase and must remain unchanged. Produce only the deliverables specified in scope. If implementation reveals that the mission itself must change, follow `.agent/schemas/abort-protocol.md`. Run all unit tests related to the changed code before proceeding. If tests fail, fix the issues before moving to fast-path Phase: Post-Implementation Review.
+Execute the approved mission in an isolated git worktree. The exact `mission.md` approved in Phase: Single-Critic Review is the execution contract for this phase and must remain unchanged. Produce only the deliverables specified in scope. If implementation reveals that the mission itself must change, follow `.agent/schemas/abort-protocol.md`.
+
+If the mission declares a TDD exemption per `.agent/schemas/tdd-protocol.md`, verify the exemption is valid (all deliverables are non-executable artifacts), then execute without the TDD loop. Otherwise, follow the TDD Execution Loop defined in `.agent/schemas/tdd-protocol.md`. This includes: setup/verify coverage tool, measure baseline, fill coverage gaps to threshold, per-AC red-green cycle, and final verification (full suite + coverage regression check).
 
 Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 
@@ -134,13 +136,9 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 
 The lead agent spawns a dev subagent and hands it the approved `mission.md`. The dev agent executes the approved mission in the worktree. The exact `mission.md` approved in the preceding review phase is the execution contract and must remain unchanged. The dev agent must produce only the deliverables specified in scope. If implementation reveals that the mission itself must change, the dev agent must stop and report the blocker to the lead agent, who then follows `.agent/schemas/abort-protocol.md`.
 
-Before the dev agent reports completion, it must:
+If the mission declares a TDD exemption per `.agent/schemas/tdd-protocol.md`, the dev agent verifies the exemption is valid (all deliverables are non-executable artifacts), then executes without the TDD loop. Otherwise, the dev agent must follow the TDD Execution Loop defined in `.agent/schemas/tdd-protocol.md`. This includes: setup/verify coverage tool, measure baseline, fill coverage gaps to threshold, per-AC red-green cycle, and final verification (full suite + coverage regression check + formatter/linter).
 
-1. **Run the full regression suite** — all tests in the target repo, not just tests related to the changed code. All tests must pass. If tests fail, the dev agent must fix the issues and re-run the full suite until all tests pass.
-2. **Check for coverage regressions** — if the target repo provides a coverage tool, the dev agent must run it and verify there are no coverage regressions compared to the baseline (pre-change coverage). If coverage has regressed, the dev agent must fix the regression before proceeding.
-3. **Apply formatter and/or linter** — if the target repo provides a formatter and/or linter, the dev agent must run them and ensure all results are clean. If there are violations, the dev agent must fix them before proceeding.
-
-Only after all three checks pass does the dev agent report completion to the lead agent.
+Only after the TDD loop's final verification passes (or, for TDD-exempt missions, after all deliverables are produced and acceptance criteria verified) does the dev agent report completion to the lead agent.
 
 Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 

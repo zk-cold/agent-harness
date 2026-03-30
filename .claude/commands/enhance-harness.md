@@ -31,7 +31,11 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 
 ## Phase: Execute in Worktree
 
-Execute the approved mission in an isolated git worktree. The exact `mission.md` approved in Phase: 2-Critic Review is the execution contract for this phase and must remain unchanged. Produce only the deliverables specified in scope. If implementation reveals that the mission itself must change, follow `.agent/schemas/abort-protocol.md`. On completion, verify all acceptance criteria are met before proceeding to Phase: Single-Critic Completion Review.
+Execute the approved mission in an isolated git worktree. The exact `mission.md` approved in Phase: 2-Critic Review is the execution contract for this phase and must remain unchanged. Produce only the deliverables specified in scope. If implementation reveals that the mission itself must change, follow `.agent/schemas/abort-protocol.md`.
+
+If the mission declares a TDD exemption per `.agent/schemas/tdd-protocol.md`, verify the exemption is valid (all deliverables are non-executable artifacts), then execute without the TDD loop. Documentation-only missions (where all deliverables are .md files or other non-executable artifacts) are valid candidates for TDD exemption. Otherwise, follow the TDD Execution Loop defined in `.agent/schemas/tdd-protocol.md`. This includes: setup/verify coverage tool, measure baseline, fill coverage gaps to threshold, per-AC red-green cycle, and final verification (full suite + coverage regression check). Any scripts or executable code created within this harness must have tests — the TDD exemption does not apply to them.
+
+On completion, verify all acceptance criteria are met before proceeding to Phase: Single-Critic Completion Review.
 
 Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 
