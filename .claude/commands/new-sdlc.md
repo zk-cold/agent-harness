@@ -6,6 +6,8 @@ This skill handles requests to build new features or make changes in a target re
 
 Any phase in this skill that requires critic agents is blocking. If the environment requires explicit user approval before spawning a required critic, the user declines, or the critic tool is otherwise unavailable, the lead agent must fully rewrite `handoff.md` per `.agent/schemas/handoff-protocol.md` with Next / Ongoing Step set to `Blocked: awaiting user approval or tool availability to spawn the required critic agent(s) for <phase name>. Do not resume past this phase without that review.` Then stop, surface the blocker to the dev, and await direction. The lead agent must not skip the blocked review phase, continue execution, or proceed to Cleanup past it.
 
+For this skill, harness-side references to `CLAUDE.md`, files under `.agent/schemas/`, and harness skill-definition files under `.claude/commands/` mean the harness repo-root copies until the relevant change is merged. For the target repo, `CLAUDE.md` and any skill-definition files it directs the agent to use are resolved from the target repo root until merged. Matching worktree files and unstaged changes are proposals only; when a review phase exposes those changed files through diff output or repository access, the reviewer inspects the proposal while the corresponding repo-root copy remains authoritative.
+
 ## Fast-Path Eligibility
 
 A request qualifies for the fast path only when all three criteria are met:
@@ -45,7 +47,7 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 **Inputs:** Interview findings, `.agent/schemas/mission-schema.md`.
 **Outputs:** `mission.md` at the worktree root.
 
-Draft a `mission.md` at the worktree root following `.agent/schemas/mission-schema.md`. The mission must be self-contained: a critic with access to only `CLAUDE.md`, `.agent/schemas/critic-protocol.md`, and `mission.md` must be able to evaluate it. If the request qualifies for the fast path, the mission must not contain an Invariants section (its presence would violate eligibility criterion 1).
+Draft a `mission.md` at the worktree root following the harness repo-root `.agent/schemas/mission-schema.md`. The mission must be self-contained: a critic with access to only the target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, and `mission.md` must be able to evaluate it. If the request qualifies for the fast path, the mission must not contain an Invariants section (its presence would violate eligibility criterion 1).
 
 Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 
@@ -56,7 +58,7 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 ## Phase: Single-Critic Review
 
 **Actor:** One critic agent.
-**Inputs:** `CLAUDE.md` from the target repo, `.agent/schemas/critic-protocol.md`, `.agent/schemas/mission-schema.md`, `mission.md` from the worktree root, and any raw eligibility tool outputs explicitly relied on during interview, such as coverage report output.
+**Inputs:** The target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, the harness repo-root `.agent/schemas/mission-schema.md`, `mission.md` from the worktree root, and any raw eligibility tool outputs explicitly relied on during interview, such as coverage report output.
 **Outputs:** Response per `.agent/schemas/critic-protocol.md`.
 
 Spawn one critic agent. The critic performs two checks in order. If the critic cannot be spawned, follow Required Critic Availability before taking any other action. The critic prompt must contain only those artifact references plus raw eligibility tool outputs, with no lead-agent context briefing, summary, hidden rationale, "things to keep in mind," or extra "mentions." If anything needs to be included before approval, put it in `mission.md` or another phase-allowed artifact first, then rerun review.
@@ -85,10 +87,10 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 ## Phase: Post-Implementation Review (Fast Path)
 
 **Actor:** One fresh critic agent (not the Phase: Single-Critic Review critic).
-**Inputs:** The diff (worktree changes), the exact `mission.md` approved in Phase: Single-Critic Review, `CLAUDE.md` from the target repo, `.agent/schemas/critic-protocol.md`, and any raw verification tool outputs explicitly relied on during execution, such as related test output or coverage output. The critic also has access to the full target repo codebase on demand.
+**Inputs:** The diff (worktree changes), the exact `mission.md` approved in Phase: Single-Critic Review, the target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, and any raw verification tool outputs explicitly relied on during execution, such as related test output or coverage output. The critic also has access to the full target repo codebase on demand.
 **Outputs:** Response per `.agent/schemas/critic-protocol.md`.
 
-Spawn a fresh critic agent. The critic evaluates whether the implementation stays within scope, satisfies all acceptance criteria in the exact `mission.md` approved in Phase: Single-Critic Review, and does not violate any invariants in `CLAUDE.md`. The critic must follow `.agent/schemas/critic-protocol.md`. The critic prompt must contain only those artifact references plus raw tool outputs such as diff output, related test output, or coverage output, with no lead-agent context briefing, summary, hidden rationale, "things to keep in mind," or extra "mentions." If review would require information outside the approved mission and phase-allowed artifacts or raw tool outputs, do not brief the critic; follow `.agent/schemas/abort-protocol.md` or the applicable escalation flow instead. If the critic cannot be spawned, follow Required Critic Availability before taking any other action. If the diff modifies or deletes existing test code, the critic must REJECT — the change is not eligible for fast path.
+Spawn a fresh critic agent. The critic evaluates whether the implementation stays within scope, satisfies all acceptance criteria in the exact `mission.md` approved in Phase: Single-Critic Review, and does not violate any invariants in the target repo-root `CLAUDE.md`. The critic must follow the harness repo-root `.agent/schemas/critic-protocol.md`. The critic prompt must contain only those artifact references plus raw tool outputs such as diff output, related test output, or coverage output, with no lead-agent context briefing, summary, hidden rationale, "things to keep in mind," or extra "mentions." If changed target-repo governance or skill-definition files are present in the diff or available through repository access, the critic reviews them as proposals while the corresponding repo-root copies remain authoritative until merge. If review would require information outside the approved mission and phase-allowed artifacts or raw tool outputs, do not brief the critic; follow `.agent/schemas/abort-protocol.md` or the applicable escalation flow instead. If the critic cannot be spawned, follow Required Critic Availability before taking any other action. If the diff modifies or deletes existing test code, the critic must REJECT — the change is not eligible for fast path.
 
 - If the critic approves: proceed to Phase: Cleanup.
 - If the critic rejects because the change is no longer eligible for fast path: escalate to normal flow per Escalation: Fast Path to Normal Flow.
@@ -118,10 +120,10 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 ## Phase: 2-Critic Mission Review
 
 **Actor:** Two independent critic agents.
-**Inputs:** `CLAUDE.md` from the target repo, `.agent/schemas/critic-protocol.md`, `.agent/schemas/mission-schema.md`, `mission.md` from the worktree root.
+**Inputs:** The target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, the harness repo-root `.agent/schemas/mission-schema.md`, `mission.md` from the worktree root.
 **Outputs:** Response per `.agent/schemas/critic-protocol.md` from each critic.
 
-Spawn two independent critic agents for `mission.md` review. Each critic reads only `CLAUDE.md`, `.agent/schemas/critic-protocol.md`, `.agent/schemas/mission-schema.md`, and `mission.md`, and must follow `.agent/schemas/critic-protocol.md`. The critic prompt must contain only those artifact references, with no lead-agent context briefing, summary, hidden rationale, "things to keep in mind," or extra "mentions." If anything needs to be included before approval, put it in `mission.md` or another phase-allowed artifact first, then rerun review. If the critics cannot be spawned, follow Required Critic Availability before taking any other action.
+Spawn two independent critic agents for `mission.md` review. Each critic reads only the target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, the harness repo-root `.agent/schemas/mission-schema.md`, and `mission.md`, and must follow the harness repo-root `.agent/schemas/critic-protocol.md`. The critic prompt must contain only those artifact references, with no lead-agent context briefing, summary, hidden rationale, "things to keep in mind," or extra "mentions." If anything needs to be included before approval, put it in `mission.md` or another phase-allowed artifact first, then rerun review. If the critics cannot be spawned, follow Required Critic Availability before taking any other action.
 
 - If both approve: that exact `mission.md` becomes the approved mission for the rest of this mission and must not be modified. Proceed to normal-flow Phase: Dev Agent Execution.
 - If either rejects: the lead agent fixes the issues and resubmits to two fresh critic agents. Repeat until both approve, or escalate to the user if stuck.
@@ -145,10 +147,10 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 ## Phase: 2-Critic Post-Implementation Review
 
 **Actor:** Two fresh critic agents (not any previously used critics in this mission).
-**Inputs:** The diff (worktree changes), the exact approved `mission.md`, `CLAUDE.md` from the target repo, `.agent/schemas/critic-protocol.md`, and any raw verification tool outputs explicitly relied on for acceptance checks (such as full test suite output, coverage output, or linter output). Each critic also has access to the full target repo codebase on demand.
+**Inputs:** The diff (worktree changes), the exact approved `mission.md`, the target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, and any raw verification tool outputs explicitly relied on for acceptance checks (such as full test suite output, coverage output, or linter output). Each critic also has access to the full target repo codebase on demand.
 **Outputs:** Response per `.agent/schemas/critic-protocol.md` from each critic.
 
-Spawn two fresh critic agents. Each critic evaluates whether the implementation stays within scope, satisfies all acceptance criteria in the approved `mission.md`, and does not violate any invariants in `CLAUDE.md`. Each critic must follow `.agent/schemas/critic-protocol.md`. The critic prompt must contain only those artifact references plus raw tool outputs, with no lead-agent context briefing, summary, hidden rationale, "things to keep in mind," or extra "mentions." If review would require information outside the approved mission and phase-allowed artifacts or raw tool outputs, do not brief the critics; follow `.agent/schemas/abort-protocol.md` instead. If the critics cannot be spawned, follow Required Critic Availability before taking any other action.
+Spawn two fresh critic agents. Each critic evaluates whether the implementation stays within scope, satisfies all acceptance criteria in the approved `mission.md`, and does not violate any invariants in the target repo-root `CLAUDE.md`. Each critic must follow the harness repo-root `.agent/schemas/critic-protocol.md`. The critic prompt must contain only those artifact references plus raw tool outputs, with no lead-agent context briefing, summary, hidden rationale, "things to keep in mind," or extra "mentions." If changed target-repo governance or skill-definition files are present in the diff or available through repository access, each critic reviews them as proposals while the corresponding repo-root copies remain authoritative until merge. If review would require information outside the approved mission and phase-allowed artifacts or raw tool outputs, do not brief the critics; follow `.agent/schemas/abort-protocol.md` instead. If the critics cannot be spawned, follow Required Critic Availability before taking any other action.
 
 - If both approve: proceed to Phase: Cleanup.
 - If either rejects but the approved `mission.md` remains correct: the lead agent fixes the issues in the worktree (or instructs the dev subagent to fix them), re-runs the full regression suite, re-verifies all acceptance criteria, and resubmits the updated diff to two fresh critics. Repeat until both approve, or escalate to the user if stuck.
