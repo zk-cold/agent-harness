@@ -6,14 +6,32 @@ This protocol governs critic agents spawned by the harness review phases. Critic
 
 ## Input Discipline
 
-1. A critic prompt must contain only the general governing artifacts named by the invoking phase, the repository access named by the invoking phase, and raw tool outputs explicitly granted by the invoking phase.
+These rules apply to all critic agents. Where a rule's scope depends on whether the critic has tool access, the distinction is noted.
+
+1. A critic prompt must contain only the general governing artifacts named by the invoking phase and, for prompt-only critics, raw tool outputs explicitly granted by the invoking phase. For tool-capable critics (see Completion-Review Tool Access below), the prompt contains the governing artifacts and the worktree path; the critic retrieves raw data itself using its granted tools.
 2. Critics must not inspect `.claude/worktrees/`, the main project root, `handoff.md`, or `mission.md` beyond the artifacts explicitly granted by the invoking phase unless that phase explicitly requires such bootstrap discovery.
 3. When an invoking phase names `CLAUDE.md`, a file under `.agent/schemas/`, or a file under `.claude/commands/`, that reference means the applicable repo-root copy until the relevant change is merged, not a matching worktree copy.
-4. If a review phase provides changed governance or skill-definition files through raw diff output or repository access, the critic must inspect that changed worktree copy as a proposal while still applying the repo-root copy as the current authority until merge.
-5. Allowed tool outputs are limited to direct artifacts such as coverage reports, test output, and diff output. The lead agent must not rewrite those outputs into a narrative briefing for the critic.
-6. A critic prompt must not include a context briefing, interpretation layer, hidden rationale, "things to keep in mind," or any other lead-agent summary beyond the approved artifacts and allowed tool outputs.
+4. If changed governance or skill-definition files are present in the diff or discoverable through repository access, the critic must inspect those changed worktree copies as proposals while still applying the repo-root copies as the current authority until merge.
+5. The lead agent must not rewrite raw tool outputs or raw data into a narrative briefing for the critic. For prompt-only critics, raw tool outputs provided in the prompt must be unmodified direct artifacts (coverage reports, test output, diff output). For tool-capable critics, the lead agent provides no raw tool outputs in the prompt — the critic fetches what it needs.
+6. A critic prompt must not include a context briefing, interpretation layer, hidden rationale, "things to keep in mind," or any other lead-agent summary beyond the approved artifacts and (for prompt-only critics) allowed tool outputs.
 7. Before `mission.md` approval, any review-relevant information not already present in the phase's allowed artifacts must be added to `mission.md` or another artifact explicitly allowed by that phase instead of being passed as extra prompt text.
-8. After `mission.md` approval, if review would require information outside the approved `mission.md` and the phase's other allowed artifacts or raw tool outputs, the lead agent must not add that information to the critic prompt and must instead follow the applicable blocker or abort protocol.
+8. After `mission.md` approval, if review would require information outside the approved `mission.md` and the phase's other allowed artifacts, raw tool outputs (for prompt-only critics), or tool-accessible data (for tool-capable critics), the lead agent must not add that information to the critic prompt and must instead follow the applicable blocker or abort protocol.
+
+## Completion-Review Tool Access
+
+Completion-review phases (post-implementation review in both skills) grant critics read-only tool access so they can inspect the codebase and changes directly rather than relying on lead-agent-provided prompt text.
+
+### Granted read-only tools
+
+Completion-review critics may use: Read, Grep, Glob, `git diff`, `git log`, `git show`, and other read-only repository inspection commands.
+
+### Excluded heavy tools
+
+Completion-review critics must not run test suites, coverage tools, linters, formatters, or any tool that executes project code. These are heavy verification tools.
+
+### Heavy verification outputs as runtime artifacts
+
+Before spawning a completion-review critic, the lead agent (or dev agent) must write heavy verification outputs — such as full test suite results, coverage reports, and linter output — as runtime artifact files at the worktree root. The critic reads those artifact files using its granted read-only tools. The lead agent does not include heavy verification outputs in the critic prompt.
 
 ## Response Contract
 
