@@ -41,10 +41,10 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 ## Phase: Single-Critic Review
 
 **Actor:** One critic agent.
-**Inputs:** `CLAUDE.md`, `.agent/schemas/critic-protocol.md`, `.agent/schemas/mission-schema.md`, and `mission.md` from the worktree root.
+**Inputs:** `CLAUDE.md` from the target repo, `.agent/schemas/critic-protocol.md`, `.agent/schemas/mission-schema.md`, `mission.md` from the worktree root, and any raw eligibility tool outputs explicitly relied on during interview, such as coverage report output.
 **Outputs:** Response per `.agent/schemas/critic-protocol.md`.
 
-Spawn one critic agent. The critic performs two checks in order. If the critic cannot be spawned, follow Required Critic Availability before taking any other action.
+Spawn one critic agent. The critic performs two checks in order. If the critic cannot be spawned, follow Required Critic Availability before taking any other action. The critic prompt must contain only those artifact references plus raw eligibility tool outputs, with no lead-agent context briefing, summary, hidden rationale, "things to keep in mind," or extra "mentions." If anything needs to be included before approval, put it in `mission.md` or another phase-allowed artifact first, then rerun review.
 
 1. **Eligibility validation** — confirm all three fast-path criteria are met. If any criterion fails, the critic must REJECT with the reason "not eligible for fast path."
 2. **Mission review** — evaluate the mission.md against the schema and acceptance criteria, exactly as in a normal review.
@@ -68,10 +68,10 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 ## Phase: Post-Implementation Review
 
 **Actor:** One fresh critic agent (not the Phase: Single-Critic Review critic).
-**Inputs:** The diff (worktree changes), the exact `mission.md` approved in Phase: Single-Critic Review, `CLAUDE.md` from the target repo, and `.agent/schemas/critic-protocol.md`. The critic also has access to the full target repo codebase on demand.
+**Inputs:** The diff (worktree changes), the exact `mission.md` approved in Phase: Single-Critic Review, `CLAUDE.md` from the target repo, `.agent/schemas/critic-protocol.md`, and any raw verification tool outputs explicitly relied on during execution, such as related test output or coverage output. The critic also has access to the full target repo codebase on demand.
 **Outputs:** Response per `.agent/schemas/critic-protocol.md`.
 
-Spawn a fresh critic agent. The critic evaluates whether the implementation stays within scope, satisfies all acceptance criteria in the exact `mission.md` approved in Phase: Single-Critic Review, and does not violate any invariants in `CLAUDE.md`. The critic must follow `.agent/schemas/critic-protocol.md`. If the critic cannot be spawned, follow Required Critic Availability before taking any other action. If the diff modifies or deletes existing test code, the critic must REJECT — the change is not eligible for fast path.
+Spawn a fresh critic agent. The critic evaluates whether the implementation stays within scope, satisfies all acceptance criteria in the exact `mission.md` approved in Phase: Single-Critic Review, and does not violate any invariants in `CLAUDE.md`. The critic must follow `.agent/schemas/critic-protocol.md`. The critic prompt must contain only those artifact references plus raw tool outputs such as diff output, related test output, or coverage output, with no lead-agent context briefing, summary, hidden rationale, "things to keep in mind," or extra "mentions." If review would require information outside the approved mission and phase-allowed artifacts or raw tool outputs, do not brief the critic; follow `.agent/schemas/abort-protocol.md` or the applicable fast-path blocker flow instead. If the critic cannot be spawned, follow Required Critic Availability before taking any other action. If the diff modifies or deletes existing test code, the critic must REJECT — the change is not eligible for fast path.
 
 - If the critic approves: proceed to Phase: Cleanup.
 - If the critic rejects because the change is no longer eligible for fast path: rewrite `handoff.md` per `.agent/schemas/handoff-protocol.md` with Next / Ongoing Step set to `Blocked: request no longer qualifies for the fast path; await user direction.` Then stop this fast-path run, keep the approved `mission.md` unchanged, inform the user that the request no longer qualifies for the fast path, and halt. Do not continue this skill.
