@@ -2,6 +2,10 @@
 
 This skill handles requests to build new features or make changes in a target repo using the fast-path SDLC. For a fresh request, the lead agent must follow these phases in order. If a relevant `handoff.md` exists on session start, the lead agent may resume only from a recorded Next / Ongoing Step that clearly maps to one of the phases below or a substep within the current phase. If that handoff marks the prior mission as already aborted and not resumable per `.agent/schemas/abort-protocol.md`, the lead agent must not resume it. Otherwise, if the recorded step does not clearly map to a phase or substep, the lead agent must ask the dev how to proceed instead of skipping required phases.
 
+## Required Critic Availability
+
+Any phase in this skill that requires critic agents is blocking. If the environment requires explicit user approval before spawning a required critic, the user declines, or the critic tool is otherwise unavailable, the lead agent must fully rewrite `handoff.md` per `.agent/schemas/handoff-protocol.md` with Next / Ongoing Step set to `Blocked: awaiting user approval or tool availability to spawn the required critic agent(s) for <phase name>. Do not resume past this phase without that review.` Then stop, surface the blocker to the dev, and await direction. The lead agent must not skip the blocked review phase, continue execution, or proceed to Cleanup past it.
+
 ## Fast-Path Eligibility
 
 A request qualifies for the fast path only when all three criteria are met:
@@ -30,22 +34,20 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 **Inputs:** Interview findings, `.agent/schemas/mission-schema.md`.
 **Outputs:** `mission.md` at the worktree root.
 
-Draft a `mission.md` at the worktree root following `.agent/schemas/mission-schema.md`. The mission must be self-contained: a critic with access to only `CLAUDE.md` and `mission.md` must be able to evaluate it. The mission must not contain an Invariants section (its presence would violate eligibility criterion 1).
+Draft a `mission.md` at the worktree root following `.agent/schemas/mission-schema.md`. The mission must be self-contained: a critic with access to only `CLAUDE.md`, `.agent/schemas/critic-protocol.md`, and `mission.md` must be able to evaluate it. The mission must not contain an Invariants section (its presence would violate eligibility criterion 1).
 
 Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 
 ## Phase: Single-Critic Review
 
 **Actor:** One critic agent.
-**Inputs:** `CLAUDE.md`, `.agent/schemas/mission-schema.md`, and `mission.md` from the worktree root.
-**Outputs:** `APPROVE` with no additional text, or `REJECT` followed by reasons.
+**Inputs:** `CLAUDE.md`, `.agent/schemas/critic-protocol.md`, `.agent/schemas/mission-schema.md`, and `mission.md` from the worktree root.
+**Outputs:** Response per `.agent/schemas/critic-protocol.md`.
 
-Spawn one critic agent. The critic performs two checks in order:
+Spawn one critic agent. The critic performs two checks in order. If the critic cannot be spawned, follow Required Critic Availability before taking any other action.
 
 1. **Eligibility validation** — confirm all three fast-path criteria are met. If any criterion fails, the critic must REJECT with the reason "not eligible for fast path."
 2. **Mission review** — evaluate the mission.md against the schema and acceptance criteria, exactly as in a normal review.
-
-There is no "approval with comments" — if changes are needed, the critic must REJECT.
 
 - If the critic approves: that exact `mission.md` becomes the approved mission for the rest of this fast-path run and must not be modified. Proceed to Phase: Execute in Worktree.
 - If the critic rejects for fast-path ineligibility: rewrite `handoff.md` per `.agent/schemas/handoff-protocol.md` with Next / Ongoing Step set to `Blocked: request does not qualify for the fast path; await user direction.` Then stop executing this skill, inform the user that the request does not qualify for the fast path, and halt.
@@ -66,10 +68,10 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 ## Phase: Post-Implementation Review
 
 **Actor:** One fresh critic agent (not the Phase: Single-Critic Review critic).
-**Inputs:** The diff (worktree changes), the exact `mission.md` approved in Phase: Single-Critic Review, and `CLAUDE.md` from the target repo. The critic also has access to the full target repo codebase on demand.
-**Outputs:** `APPROVE` with no additional text, or `REJECT` followed by reasons.
+**Inputs:** The diff (worktree changes), the exact `mission.md` approved in Phase: Single-Critic Review, `CLAUDE.md` from the target repo, and `.agent/schemas/critic-protocol.md`. The critic also has access to the full target repo codebase on demand.
+**Outputs:** Response per `.agent/schemas/critic-protocol.md`.
 
-Spawn a fresh critic agent. The critic evaluates whether the implementation stays within scope, satisfies all acceptance criteria in the exact `mission.md` approved in Phase: Single-Critic Review, and does not violate any invariants in `CLAUDE.md`. There is no "approval with comments" — if changes are needed, the critic must REJECT. If the diff modifies or deletes existing test code, the critic must REJECT — the change is not eligible for fast path.
+Spawn a fresh critic agent. The critic evaluates whether the implementation stays within scope, satisfies all acceptance criteria in the exact `mission.md` approved in Phase: Single-Critic Review, and does not violate any invariants in `CLAUDE.md`. The critic must follow `.agent/schemas/critic-protocol.md`. If the critic cannot be spawned, follow Required Critic Availability before taking any other action. If the diff modifies or deletes existing test code, the critic must REJECT — the change is not eligible for fast path.
 
 - If the critic approves: proceed to Phase: Cleanup.
 - If the critic rejects because the change is no longer eligible for fast path: rewrite `handoff.md` per `.agent/schemas/handoff-protocol.md` with Next / Ongoing Step set to `Blocked: request no longer qualifies for the fast path; await user direction.` Then stop this fast-path run, keep the approved `mission.md` unchanged, inform the user that the request no longer qualifies for the fast path, and halt. Do not continue this skill.
