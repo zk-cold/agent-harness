@@ -15,7 +15,7 @@ Follow this protocol when continuing the current mission would require reopening
 1. Keep the approved `mission.md` unchanged. Do not edit it, replace it, or draft a successor `mission.md` autonomously.
 2. Fully rewrite `handoff.md` per `.agent/schemas/handoff-protocol.md` before responding to the user.
 3. Set `handoff.md`'s **Next / Ongoing Step** to: `Aborted: approved mission can no longer continue because <blocker summary>. This mission is already aborted and must not be resumed. Await a fresh user request.`
-4. Preserve the current failed-attempt history and the full verbatim dev interview transcript in that rewritten `handoff.md`.
+4. Preserve only the current phase's failed-attempt history in that rewritten `handoff.md`. If the current phase has no failed attempts beyond the abort trigger, record `None`. Because this protocol applies only after `mission.md` approval, omit the **Dev Interview Transcript** section entirely.
 5. Do not remove the worktree during abort. Preserve it in place.
 6. Present the blocker summary to the user and state that the current mission has been aborted.
 7. Do not continue execution, review, or cleanup for that mission after aborting it.
