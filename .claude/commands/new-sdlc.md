@@ -12,7 +12,7 @@ For this skill, harness-side references to `CLAUDE.md`, files under `.agent/sche
 
 A request qualifies for the fast path only when all three criteria are met:
 
-1. **No invariant changes** — the mission does not propose new or modified invariants for `CLAUDE.md`. This includes modifications or deletions of existing test code (see CLAUDE.md). Adding new tests is not an invariant change.
+1. **No invariant changes** — the mission does not propose new or modified invariants in any governance file, and does not modify or delete existing test code (see CLAUDE.md Invariant 8). Adding new tests is not an invariant change.
 2. **>80% test coverage around target code** — the code being changed is already covered by automated tests at the coverage threshold defined in `.agent/schemas/tdd-protocol.md`, providing a safety net for regressions. If no coverage tool is available and the mission does not include coverage tool setup as in-scope, the request is ineligible for fast path.
 3. **Clear scope, limited & safe change** — the change is well-defined, small in blast radius, and unlikely to introduce systemic risk.
 

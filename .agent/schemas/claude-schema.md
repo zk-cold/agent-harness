@@ -2,7 +2,7 @@
 
 ## Overview
 
-CLAUDE.md is the sole source of truth for project-level invariants. The lead agent must read the repo-root copy at session start. Whenever the lead agent spawns a non-lead agent, that prompt must include the exact sentence stem `You are a non-lead agent.`, must state that the recipient operates only on the role-specific inputs granted by its phase, and must forbid session-start bootstrap discovery unless that phase explicitly requires it. Spawned non-lead agents then read only the repo-root governance artifacts or other inputs explicitly required for their role. It is MR-gated. Any worktree edit to `CLAUDE.md`, to a markdown file under `.agent/schemas/`, or to a markdown file under `.claude/commands/` is proposed content only; the repo-root copies remain authoritative until critic review, human approval, and merge are complete.
+CLAUDE.md is the sole source of truth for project-level invariants. The lead agent must read the repo-root copy at session start. Whenever the lead agent spawns a non-lead agent, that prompt must include the exact sentence stem `You are a non-lead agent.`, must state that the recipient operates only on the role-specific inputs granted by its phase, and must forbid session-start bootstrap discovery unless that phase explicitly requires it. Spawned non-lead agents then read only the repo-root governance artifacts or other inputs explicitly required for their role. Any worktree edit to `CLAUDE.md`, to a markdown file under `.agent/schemas/`, or to a markdown file under `.claude/commands/` is proposed content only; the repo-root copies remain authoritative until the change is reviewed and merged via the `enhance-harness` or `new-sdlc` flow.
 
 ---
 
@@ -12,12 +12,12 @@ Both sections are optional. Include only when there is content to declare. When 
 
 ### Invariants
 
-**Purpose:** Define the hard rules that govern all agent behavior in this project. These are strict, rarely modified, and require MR + human approval to change.
+**Purpose:** Define the hard rules that govern all agent behavior in this project. These are strict, rarely modified, and require critic review via the `enhance-harness` or `new-sdlc` flow to change.
 
 **Constraints:**
 - Each invariant must describe a constraint with a clear violation condition. If violation cannot be objectively determined, it belongs in Important Considerations instead.
 - Invariants are numbered sequentially.
-- Modifications require an MR with critic review and human approval.
+- Modifications require critic review via the `enhance-harness` or `new-sdlc` flow.
 - Pseudo-invariants (preferences, habits, conventions) must not appear here.
 
 ### Important Considerations
@@ -32,7 +32,7 @@ Both sections are optional. Include only when there is content to declare. When 
 
 ## Modification Rules
 
-- Agents must not treat unapproved `CLAUDE.md` edits as effective immediately. All changes go through an MR with human approval and critic review.
+- Agents must not treat unapproved `CLAUDE.md` edits as effective immediately. All changes go through the `enhance-harness` or `new-sdlc` flow, which includes critic review before merge.
 - If a diff under critic review touches `CLAUDE.md`, a markdown file under `.agent/schemas/`, or a markdown file under `.claude/commands/`, critics should treat those changed worktree files as proposed MR content while still applying the repo-root copies as current authority. The presence of those files in the diff is not, by itself, a process violation.
 - Worktree edits to `CLAUDE.md`, `.agent/schemas/*.md`, and `.claude/commands/*.md` remain proposals until the MR is approved and merged. Agents must not rely on those local edits as if they were already in force.
 - Considerations must never contradict invariants. When a conflict exists, the invariant takes precedence.
