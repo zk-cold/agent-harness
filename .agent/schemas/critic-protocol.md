@@ -31,7 +31,7 @@ Completion-review critics must not run test suites, coverage tools, linters, for
 
 ### Heavy verification outputs as runtime artifacts
 
-Before spawning a completion-review critic, the lead agent (or dev agent) must write heavy verification outputs — such as full test suite results, coverage reports, and linter output — as runtime artifact files at the worktree root. The critic reads those artifact files using its granted read-only tools. The lead agent does not include heavy verification outputs in the critic prompt.
+Before spawning a completion-review critic, the lead agent (or dev agent) must write heavy verification outputs — such as full test suite results, coverage reports, and linter output — as runtime artifact files at the worktree root. Each completion-review runtime artifact file must contain only raw tool output; it must not include lead-agent summaries, acceptance-criteria self-evaluation, or any other narrative interpretation. The critic reads those artifact files using its granted read-only tools. The lead agent does not include heavy verification outputs in the critic prompt.
 
 ## Response Contract
 
