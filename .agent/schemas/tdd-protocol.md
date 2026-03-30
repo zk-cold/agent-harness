@@ -21,7 +21,7 @@ Every mission.md must satisfy exactly one of:
 
 - **Coverage tool in scope:** The mission includes setup or configuration of an appropriate coverage tool for the target repo's language as an in-scope deliverable.
 - **Coverage tool available:** The target repo already has a working coverage tool, confirmed during interview or early execution.
-- **TDD exempt:** The mission declares a TDD exemption (see TDD Exemption below).
+- **TDD-exempt assumption:** The mission's `Dependencies & Assumptions` section includes the TDD-exempt assumption defined below.
 
 If none of the three conditions is met, the mission is invalid. Critics must reject during mission review. During execution, if the coverage tool assumption proves false and mission.md does not scope its setup, follow `.agent/schemas/abort-protocol.md`.
 
@@ -31,20 +31,21 @@ For new-sdlc fast path specifically: if no coverage tool is available and missio
 
 ## TDD Exemption
 
-A mission may declare itself TDD exempt by stating "TDD exempt" with a reason in its Dependencies & Assumptions section. Common valid reasons include:
+A mission may proceed without the TDD loop only when its `Dependencies & Assumptions` section includes an assumption stating that the mission can be carried out TDD-exempt because every in-scope deliverable is a non-executable artifact. Common valid reasons include:
 
 - Documentation-only change (all deliverables are .md files or other non-executable artifacts).
 
-Critics must verify the exemption is accurate during mission review:
+Critics must verify that assumption is accurate during mission review:
 
-- If any non-exempt artifacts (scripts, executable code, configuration that affects runtime behavior) are in scope, the exemption is invalid and the critic must reject.
-- The exemption does not reduce critic review requirements. A TDD-exempt mission still receives the full critic review structure defined by its skill (e.g., 2-critic mission review + 1 completion review for enhance-harness).
+- If any non-exempt artifacts (scripts, executable code, configuration that affects runtime behavior) are in scope, the assumption is invalid and the critic must reject.
+- The assumption does not reduce critic review requirements. A mission proceeding under a valid TDD-exempt assumption still receives the full critic review structure defined by its skill (e.g., 2-critic mission review + 1 completion review for enhance-harness).
+- If execution reveals that the assumption is false, follow `.agent/schemas/abort-protocol.md` instead of continuing TDD-exempt.
 
 ---
 
 ## TDD Execution Loop
 
-When a mission is not TDD exempt, the execution phase must follow these sub-steps in order. The agent must not write prod-scope code before completing steps 1–3, and must not write prod-scope code for an AC before writing its failing test (step 4).
+When a mission does not have a valid TDD-exempt assumption, the execution phase must follow these sub-steps in order. The agent must not write prod-scope code before completing steps 1–3, and must not write prod-scope code for an AC before writing its failing test (step 4).
 
 ### 1. Setup / Verify Coverage Tool
 
