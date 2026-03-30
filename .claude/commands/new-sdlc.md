@@ -12,15 +12,19 @@ A request qualifies for the fast path only when all three criteria are met:
 
 If any criterion is not met, the lead agent must not proceed. Inform the user that the request does not qualify for the fast path and halt.
 
-## Phase 1: Interview
+## Phase: Interview
 
 **Actor:** Lead agent.
 **Inputs:** User's request.
 **Outputs:** Enough context to draft a mission.md.
 
+Check for an existing `handoff.md` at the project root. If one exists, load it and use its contents to orient before proceeding, per `.agent/schemas/handoff-protocol.md`.
+
 Probe the user's request to clarify scope, intent, and any underlying considerations. Ask targeted questions — do not assume. Assess fast-path eligibility during the interview. The interview is complete when the lead agent has enough information to draft a mission.md and is confident all three eligibility criteria are met.
 
-## Phase 2: Generate mission.md
+Write/update `handoff.md` at the project root per `.agent/schemas/handoff-protocol.md`.
+
+## Phase: Generate mission.md
 
 **Actor:** Lead agent.
 **Inputs:** Interview findings, `.agent/schemas/mission-schema.md`.
@@ -28,7 +32,9 @@ Probe the user's request to clarify scope, intent, and any underlying considerat
 
 Draft a `mission.md` following `.agent/schemas/mission-schema.md`. The mission must be self-contained: a critic with access to only `CLAUDE.md` and `mission.md` must be able to evaluate it. The mission must not contain an Invariants section (its presence would violate eligibility criterion 1).
 
-## Phase 3: Single-Critic Review
+Write/update `handoff.md` at the project root per `.agent/schemas/handoff-protocol.md`.
+
+## Phase: Single-Critic Review
 
 **Actor:** One critic agent.
 **Inputs:** `CLAUDE.md`, `.agent/schemas/mission-schema.md`, and `mission.md` from the target repo.
@@ -41,21 +47,25 @@ Spawn one critic agent. The critic performs two checks in order:
 
 There is no "approval with comments" — if changes are needed, the critic must REJECT.
 
-- If the critic approves: proceed to Phase 4.
+- If the critic approves: proceed to Phase: Execute in Worktree.
 - If the critic rejects for fast-path ineligibility: the lead agent escalates to the normal flow (stop executing this skill and inform the user).
 - If the critic rejects for other reasons: the lead agent fixes the issues and resubmits to a fresh critic. Repeat until approved, or escalate to the user if stuck.
 
-## Phase 4: Execute in Worktree
+Write/update `handoff.md` at the project root per `.agent/schemas/handoff-protocol.md`.
+
+## Phase: Execute in Worktree
 
 **Actor:** Lead agent.
 **Inputs:** Approved `mission.md`, target repo codebase.
 **Outputs:** Implementation (code changes in worktree), passing unit tests.
 
-Execute the approved mission in an isolated git worktree. Produce only the deliverables specified in scope. Run all unit tests related to the changed code before proceeding. If tests fail, fix the issues before moving to Phase 5.
+Execute the approved mission in an isolated git worktree. Produce only the deliverables specified in scope. Run all unit tests related to the changed code before proceeding. If tests fail, fix the issues before moving to Phase: Post-Implementation Review.
 
-## Phase 5: Post-Implementation Review
+Write/update `handoff.md` at the project root per `.agent/schemas/handoff-protocol.md`.
 
-**Actor:** One fresh critic agent (not the Phase 3 critic).
+## Phase: Post-Implementation Review
+
+**Actor:** One fresh critic agent (not the Phase: Single-Critic Review critic).
 **Inputs:** The diff (worktree changes), `mission.md`, and `CLAUDE.md` from the target repo. The critic also has access to the full target repo codebase on demand.
 **Outputs:** APPROVE or REJECT (with reason).
 
@@ -63,3 +73,9 @@ Spawn a fresh critic agent. The critic evaluates whether the implementation sati
 
 - If the critic approves: present results to the user. The mission is complete.
 - If the critic rejects: the lead agent fixes the issues in the worktree, re-runs related unit tests, and resubmits the updated diff to a fresh critic. Repeat until approved, or escalate to the user if stuck.
+
+Write/update `handoff.md` at the project root per `.agent/schemas/handoff-protocol.md`.
+
+## Phase: Cleanup
+
+Remove both `mission.md` and `handoff.md` from the project root per `.agent/schemas/handoff-protocol.md`.
