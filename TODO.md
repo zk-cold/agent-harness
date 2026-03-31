@@ -30,5 +30,4 @@
 ## Markdown to Script Conversions
 
 - Add a critic-prompt validator driven by `.agent/schemas/critic-protocol.md` and the skill files under `.claude/commands/` to ensure only allowed artifact paths, worktree paths, and raw tool outputs reach critic agents.
-- Add a cleanup or merge gate script driven by `CLAUDE.md` Invariant 4 and the Cleanup sections in `.claude/commands/enhance-harness.md` and `.claude/commands/new-sdlc.md` to detect non-trivial merges, regenerate the correct handoff phase reset, and refuse cleanup while the worktree is dirty.
 - Add an automation or script for this governance review itself that enumerates the authoritative Markdown surface, flags changed worktree proposal copies, and rewrites `TODO.md` with the required sections on each run.
