@@ -32,7 +32,6 @@
 ## Markdown to Script Conversions
 
 - Add a `mission.md` linter driven by `.agent/schemas/mission-schema.md`, `.agent/schemas/tdd-protocol.md`, and `.agent/schemas/claude-schema.md` to catch missing acceptance-criterion coverage, invalid TDD-exempt assumptions, and invariant or consideration misuse before critic review.
-- Add a `handoff.md` linter or generator driven by `.agent/schemas/handoff-protocol.md` and `.agent/schemas/abort-protocol.md` to enforce section presence, phase-specific transcript rules, and blocked or aborted next-step text.
 - Add a critic-prompt validator driven by `.agent/schemas/critic-protocol.md` and the skill files under `.claude/commands/` to ensure only allowed artifact paths, worktree paths, and raw tool outputs reach critic agents.
 - Add a cleanup or merge gate script driven by `CLAUDE.md` Invariant 4 and the Cleanup sections in `.claude/commands/enhance-harness.md` and `.claude/commands/new-sdlc.md` to detect non-trivial merges, regenerate the correct handoff phase reset, and refuse cleanup while the worktree is dirty.
 - Add an automation or script for this governance review itself that enumerates the authoritative Markdown surface, flags changed worktree proposal copies, and rewrites `TODO.md` with the required sections on each run.
