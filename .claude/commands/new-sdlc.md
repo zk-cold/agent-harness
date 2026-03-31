@@ -8,46 +8,47 @@ Any phase in this skill that requires critic agents is blocking. If the environm
 
 For this skill, harness-side references to `CLAUDE.md`, files under `.agent/schemas/`, and harness skill-definition files under `.claude/commands/` mean the harness repo-root copies until the relevant change is merged. For the target repo, `CLAUDE.md` and any skill-definition files it directs the agent to use are resolved from the target repo root until merged. Matching worktree files and unstaged changes are proposals only; when a review phase exposes those changed files through diff output or repository access, the reviewer inspects the proposal while the corresponding repo-root copy remains authoritative.
 
-## Fast-Path Eligibility
+---
 
-A request qualifies for the fast path only when all three criteria are met:
+# Shared Phases
+
+## Phase: Mission Creation
+
+**Actor:** Lead agent (interview and mission drafting); one or two critic agents (mission review — see flow-specific logic below).
+**Inputs (critic agents):** The target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, the harness repo-root `.agent/schemas/mission-schema.md`, `mission.md` from the worktree root, and for fast-path review only, any raw eligibility tool outputs explicitly relied on during the interview, such as coverage report output.
+**Outputs:** Approved `mission.md` at the worktree root, with flow determination (fast path or normal) determining which execution phase follows.
+
+On session start, the lead agent must inspect `.claude/worktrees/` and the main project root of the target repo before any interview questions. If `handoff.md` or `mission.md` exists at the main project root, the lead agent must stop and ask the dev how to proceed before continuing. Otherwise, if exactly one worktree exists and it contains `handoff.md` at its root, the lead agent must load that `handoff.md` and use it to orient before proceeding. If multiple worktrees exist, or if exactly one worktree exists but it does not contain `handoff.md`, the lead agent must stop and ask the dev how to proceed before continuing. If no worktree exists and no legacy root runtime artifacts exist, the lead agent must create a worktree before any interview or execution work begins. If the loaded `handoff.md` marks the prior mission as already aborted and not resumable per `.agent/schemas/abort-protocol.md`, the lead agent must not resume that mission. Summarize the blockers from the old handoff to the user, then either follow the Recovery Protocol in `.agent/schemas/handoff-protocol.md` or confirm that the current prompt should be treated as fresh work before discarding or replacing that handoff. Any mission recovered from abort is ineligible for fast path: it restarts from Phase: Mission Creation under the Recovery Protocol and then routes to normal flow. Otherwise, if it reflects a mission whose `mission.md` has already been approved and the current prompt changes that mission's scope or intent, the lead agent must not resume that mission. Keep the approved `mission.md` unchanged and follow `.agent/schemas/abort-protocol.md` using the scope or intent change as the blocker summary. After surfacing that abort to the user, confirm that the new prompt should be treated as fresh work before discarding or replacing the old handoff. If the lead agent will treat the current prompt as fresh work instead of resuming the loaded `handoff.md`, confirm with the dev before discarding or replacing that handoff. If the handoff is relevant, the lead agent may resume from its recorded Next / Ongoing Step per `.agent/schemas/handoff-protocol.md` only when that step clearly continues the same mission without reopening approved work. Whenever the lead agent later spawns a non-lead agent for this skill, that prompt must include the exact sentence stem `You are a non-lead agent.`, must state that the recipient operates only on the role-specific inputs granted by its phase, and must forbid bootstrap discovery unless that phase explicitly requires it.
+
+If no relevant `handoff.md` exists at the worktree root, begin the interview. If a relevant `handoff.md` resumes Phase: Mission Creation, continue from the recorded next question or step rather than restarting from scratch. Probe the user's request to clarify scope, intent, and any underlying considerations only as needed to complete the interview. First determine which repo is the target repo, and if that is not automatically clear, ask the user to clarify before proceeding. Once the target repo is identified, read and follow that repo's `CLAUDE.md` before any repo-specific analysis or execution begins, then search the target repo for `SKILL.md` files and install or activate each discovered repo-local skill before continuing mission work there unless no `SKILL.md` files are found. Assess fast-path eligibility during the interview using the criteria below. The interview is complete when the lead agent has enough information to draft a `mission.md` and has determined which flow applies.
+
+Draft a `mission.md` at the worktree root following the harness repo-root `.agent/schemas/mission-schema.md`. The mission must be self-contained: a critic with access to only the target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, and `mission.md` must be able to evaluate it. If the request qualifies for the fast path, the mission must not contain an Invariants section (its presence would violate eligibility criterion 1).
+
+**Fast-path eligibility:** A request qualifies for the fast path only when all three criteria are met:
 
 1. **No invariant changes** — the mission does not propose new or modified invariants in any governance file, and does not modify or delete existing test code (see CLAUDE.md Invariant 8). Adding new tests is not an invariant change.
 2. **>80% test coverage around target code** — the code being changed is already covered by automated tests at the coverage threshold defined in `.agent/schemas/tdd-protocol.md`, providing a safety net for regressions. If no coverage tool is available and the mission does not include coverage tool setup as in-scope, the request is ineligible for fast path.
 3. **Clear scope, limited & safe change** — the change is well-defined, small in blast radius, and unlikely to introduce systemic risk.
 
-If any criterion is not met, the request routes to the normal flow instead.
+If any criterion is not met, the request routes to the normal flow.
 
-## Flow Routing
+After drafting `mission.md`, the lead agent spawns critic(s) based on the applicable flow:
 
-After the interview, the lead agent determines which flow applies:
+**Fast path** (all three eligibility criteria met): Spawn one critic agent. That critic reads only the target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, the harness repo-root `.agent/schemas/mission-schema.md`, `mission.md`, and any raw eligibility tool outputs explicitly relied on during the interview, and must follow the listed critic protocol. The critic prompt must include the exact sentence stem `You are a non-lead agent.`, must state that the recipient operates only on the role-specific inputs granted by this phase, and must forbid bootstrap discovery unless this phase explicitly requires it. Beyond that required role declaration, the critic prompt must contain only those artifact references plus raw eligibility tool outputs, with no lead-agent context briefing, summary, hidden rationale, "things to keep in mind," or extra "mentions." If anything needs to be included before approval, put it in `mission.md` or another phase-allowed artifact first, then rerun review. If the critic cannot be spawned, follow Required Critic Availability before taking any other action.
 
-- **Fast path:** All three eligibility criteria are met. Proceed to fast-path Phase: Single-Critic Review.
-- **Normal flow:** Any eligibility criterion is not met. Proceed to normal-flow Phase: 2-Critic Mission Review.
+The fast-path critic performs two checks in order:
 
----
+1. **Eligibility validation** — confirm all three fast-path criteria are met. If any criterion fails, the critic must REJECT with the reason "not eligible for fast path."
+2. **Mission review** — evaluate the mission.md against the schema and acceptance criteria, exactly as in a normal review.
 
-# Shared Phases
+- If the critic approves: that exact `mission.md` becomes the approved mission for the rest of this fast-path run and must not be modified. Proceed to fast-path Phase: Execute in Worktree.
+- If the critic rejects for fast-path ineligibility: route to normal flow. Spawn two independent critic agents under the normal-flow critic constraints below.
+- If the critic rejects for other reasons: the lead agent fixes the issues and resubmits to a fresh critic under fast-path constraints. Repeat until approved, or escalate to the user if stuck.
 
-## Phase: Interview
+**Normal flow** (any eligibility criterion is not met, or routed from fast-path ineligibility): Spawn two independent critic agents for `mission.md` review. Each critic reads only the target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, the harness repo-root `.agent/schemas/mission-schema.md`, and `mission.md`, and must follow the listed critic protocol. Each critic prompt must include the exact sentence stem `You are a non-lead agent.`, must state that the recipient operates only on the role-specific inputs granted by this phase, and must forbid bootstrap discovery unless this phase explicitly requires it. Beyond that required role declaration, each critic prompt must contain only those artifact references, with no lead-agent context briefing, summary, hidden rationale, "things to keep in mind," or extra "mentions." If anything needs to be included before approval, put it in `mission.md` or another phase-allowed artifact first, then rerun review. If the critics cannot be spawned, follow Required Critic Availability before taking any other action.
 
-**Actor:** Lead agent.
-**Inputs:** User's request.
-**Outputs:** Enough context to draft a mission.md; flow determination (fast path or normal).
-
-On session start, the lead agent must inspect `.claude/worktrees/` and the main project root of the target repo before any interview questions. If `handoff.md` or `mission.md` exists at the main project root, the lead agent must stop and ask the dev how to proceed before continuing. Otherwise, if exactly one worktree exists and it contains `handoff.md` at its root, the lead agent must load that `handoff.md` and use it to orient before proceeding. If multiple worktrees exist, or if exactly one worktree exists but it does not contain `handoff.md`, the lead agent must stop and ask the dev how to proceed before continuing. If no worktree exists and no legacy root runtime artifacts exist, the lead agent must create a worktree before any interview or execution work begins. If the loaded `handoff.md` marks the prior mission as already aborted and not resumable per `.agent/schemas/abort-protocol.md`, the lead agent must not resume that mission. Summarize the blockers from the old handoff to the user, then either follow the Recovery Protocol in `.agent/schemas/handoff-protocol.md` or confirm that the current prompt should be treated as fresh work before discarding or replacing that handoff. Any mission recovered from abort is ineligible for fast path: it restarts from Phase: Interview under the Recovery Protocol and then routes to normal flow. Otherwise, if it reflects a mission whose `mission.md` has already been approved and the current prompt changes that mission's scope or intent, the lead agent must not resume that mission. Keep the approved `mission.md` unchanged and follow `.agent/schemas/abort-protocol.md` using the scope or intent change as the blocker summary. After surfacing that abort to the user, confirm that the new prompt should be treated as fresh work before discarding or replacing the old handoff. If the lead agent will treat the current prompt as fresh work instead of resuming the loaded `handoff.md`, confirm with the dev before discarding or replacing that handoff. If the handoff is relevant, the lead agent may resume from its recorded Next / Ongoing Step per `.agent/schemas/handoff-protocol.md` only when that step clearly continues the same mission without reopening approved work. Whenever the lead agent later spawns a non-lead agent for this skill, that prompt must include the exact sentence stem `You are a non-lead agent.`, must state that the recipient operates only on the role-specific inputs granted by its phase, and must forbid bootstrap discovery unless that phase explicitly requires it.
-
-If no relevant `handoff.md` exists at the worktree root, begin the interview. If a relevant `handoff.md` resumes Phase: Interview, continue from the recorded next question or step rather than restarting from scratch. Probe the user's request to clarify scope, intent, and any underlying considerations only as needed to complete the interview. First determine which repo is the target repo, and if that is not automatically clear, ask the user to clarify before proceeding. Once the target repo is identified, read and follow that repo's `CLAUDE.md` before any repo-specific analysis or execution begins, then search the target repo for `SKILL.md` files and install or activate each discovered repo-local skill before continuing mission work there unless no `SKILL.md` files are found. Assess fast-path eligibility during the interview. The interview is complete when the lead agent has enough information to draft a mission.md and has determined which flow applies.
-
-Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
-
-## Phase: Generate mission.md
-
-**Actor:** Lead agent.
-**Inputs:** Interview findings, `.agent/schemas/mission-schema.md`.
-**Outputs:** `mission.md` at the worktree root.
-
-Draft a `mission.md` at the worktree root following the harness repo-root `.agent/schemas/mission-schema.md`. The mission must be self-contained: a critic with access to only the target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, and `mission.md` must be able to evaluate it. If the request qualifies for the fast path, the mission must not contain an Invariants section (its presence would violate eligibility criterion 1).
+- If both approve: that exact `mission.md` becomes the approved mission for the rest of this mission and must not be modified. Proceed to normal-flow Phase: Dev Agent Execution.
+- If either rejects: the lead agent fixes the issues and resubmits to two fresh critic agents. Repeat until both approve, or escalate to the user if stuck.
 
 Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 
@@ -55,30 +56,13 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 
 # Fast-Path Flow
 
-## Phase: Single-Critic Review
-
-**Actor:** One critic agent.
-**Inputs:** The target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, the harness repo-root `.agent/schemas/mission-schema.md`, `mission.md` from the worktree root, and any raw eligibility tool outputs explicitly relied on during interview, such as coverage report output.
-**Outputs:** Response per `.agent/schemas/critic-protocol.md`.
-
-Spawn one critic agent. The critic performs two checks in order. The critic reads only the artifacts named in Inputs plus the allowed raw eligibility tool outputs and must follow the listed critic protocol. If the critic cannot be spawned, follow Required Critic Availability before taking any other action. The critic prompt must include the exact sentence stem `You are a non-lead agent.`, must state that the recipient operates only on the role-specific inputs granted by this phase, and must forbid bootstrap discovery unless this phase explicitly requires it. Beyond that required role declaration, the critic prompt must contain only the artifact references listed in Inputs plus raw eligibility tool outputs, with no lead-agent context briefing, summary, hidden rationale, "things to keep in mind," or extra "mentions." If anything needs to be included before approval, put it in `mission.md` or another phase-allowed artifact first, then rerun review.
-
-1. **Eligibility validation** — confirm all three fast-path criteria are met. If any criterion fails, the critic must REJECT with the reason "not eligible for fast path."
-2. **Mission review** — evaluate the mission.md against the schema and acceptance criteria, exactly as in a normal review.
-
-- If the critic approves: that exact `mission.md` becomes the approved mission for the rest of this fast-path run and must not be modified. Proceed to fast-path Phase: Execute in Worktree.
-- If the critic rejects for fast-path ineligibility: route to normal flow. Proceed to normal-flow Phase: 2-Critic Mission Review with the current `mission.md`.
-- If the critic rejects for other reasons: the lead agent fixes the issues and resubmits to a fresh critic. Repeat until approved, or escalate to the user if stuck.
-
-Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
-
 ## Phase: Execute in Worktree (Fast Path)
 
 **Actor:** Lead agent.
 **Inputs:** Approved `mission.md`, target repo codebase.
 **Outputs:** Implementation (code changes in worktree), passing unit tests, no coverage regression.
 
-Execute the approved mission in an isolated git worktree. The exact `mission.md` approved in Phase: Single-Critic Review is the execution contract for this phase and must remain unchanged. Produce only the deliverables specified in scope. Leave implementation changes uncommitted in the worktree for Post-Implementation Review (Fast Path); do not create commits during this phase. If implementation reveals that the mission itself must change, follow `.agent/schemas/abort-protocol.md`.
+Execute the approved mission in an isolated git worktree. The exact `mission.md` approved in Phase: Mission Creation is the execution contract for this phase and must remain unchanged. Produce only the deliverables specified in scope. Leave implementation changes uncommitted in the worktree for Post-Implementation Review (Fast Path); do not create commits during this phase. If implementation reveals that the mission itself must change, follow `.agent/schemas/abort-protocol.md`.
 
 If the approved mission includes the TDD-exempt assumption defined by `.agent/schemas/tdd-protocol.md`, verify that the assumption is valid (all deliverables are non-executable artifacts), then execute without the TDD loop. If execution reveals that the assumption is false, follow `.agent/schemas/abort-protocol.md`. Otherwise, follow the TDD Execution Loop defined in `.agent/schemas/tdd-protocol.md`. This includes: setup/verify coverage tool, measure baseline, fill coverage gaps to threshold, per-AC red-green cycle, and final verification (full suite + coverage regression check).
 
@@ -86,8 +70,8 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 
 ## Phase: Post-Implementation Review (Fast Path)
 
-**Actor:** One fresh critic agent (not the Phase: Single-Critic Review critic).
-**Inputs:** The exact `mission.md` approved in Phase: Single-Critic Review, the target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, and read-only tool access to the worktree and repository. The critic is a tool-capable critic per `.agent/schemas/critic-protocol.md`.
+**Actor:** One fresh critic agent (not the Phase: Mission Creation fast-path critic).
+**Inputs:** The exact `mission.md` approved in Phase: Mission Creation, the target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, and read-only tool access to the worktree and repository. The critic is a tool-capable critic per `.agent/schemas/critic-protocol.md`.
 **Outputs:** Response per `.agent/schemas/critic-protocol.md`.
 
 Before writing heavy verification outputs or spawning the critic, the lead agent must merge the latest applicable target-repo root branch state into the current worktree and reconcile the implementation against that merged state. The applicable branch is the integration branch named by the target repo's governing artifacts; if those artifacts name none, it is the branch from which the worktree was created. If Git reports `Already up to date.` or performs a clean fast-forward, continue this phase on the merged state. Otherwise the merge is non-trivial per the harness repo-root `CLAUDE.md` Invariant 4: re-run the related unit tests and re-verify all acceptance criteria against the merged state, rewrite `handoff.md` with Next / Ongoing Step set to `Phase: Post-Implementation Review (Fast Path) - rerun verification on the merged state, rewrite completion-review runtime artifacts, and submit that state to a fresh critic.`, and restart this phase from its beginning with a fresh critic.
@@ -109,9 +93,9 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 
 When fast-path eligibility is lost during or after implementation (e.g., the post-implementation critic rejects for eligibility), the lead agent must evaluate whether the approved `mission.md` can be submitted intact to normal-flow review:
 
-- **If `mission.md` can be submitted intact** (no fast-path-specific language that would need removal): The lead agent submits it to one additional critic for mission review, following the same critic-prompt constraints as normal-flow Phase: 2-Critic Mission Review. This brings the total mission-review approvals to two (one from the fast-path Single-Critic Review, one from this escalation review). If this critic approves, the mission remains the approved mission and the lead agent proceeds to normal-flow Phase: Dev Agent Execution, handing the dev subagent the approved `mission.md` and the unstaged work from the fast-path attempt. If this critic rejects, the lead agent fixes the issues and resubmits to a fresh critic. Repeat until approved, or escalate to the user if stuck.
+- **If `mission.md` can be submitted intact** (no fast-path-specific language that would need removal): The lead agent submits it to one additional critic for mission review, following the same critic-prompt constraints as the normal-flow critics in Phase: Mission Creation. This brings the total mission-review approvals to two (one from the fast-path critic in Phase: Mission Creation, one from this escalation review). If this critic approves, the mission remains the approved mission and the lead agent proceeds to normal-flow Phase: Dev Agent Execution, handing the dev subagent the approved `mission.md` and the unstaged work from the fast-path attempt. If this critic rejects, the lead agent fixes the issues and resubmits to a fresh critic. Repeat until approved, or escalate to the user if stuck.
 
-- **If `mission.md` requires modification** (e.g., contains fast-path-specific language): The lead agent aborts per `.agent/schemas/abort-protocol.md`, keeping the approved `mission.md` unchanged. Then follow the Recovery Protocol in `.agent/schemas/handoff-protocol.md`: restart from Phase: Interview, draft a new `mission.md` only after the recovery interview is complete, submit it to full 2-Critic Mission Review, and proceed through normal-flow execution. Unstaged work from the fast-path attempt is preserved in the worktree for the dev agent.
+- **If `mission.md` requires modification** (e.g., contains fast-path-specific language): The lead agent aborts per `.agent/schemas/abort-protocol.md`, keeping the approved `mission.md` unchanged. Then follow the Recovery Protocol in `.agent/schemas/handoff-protocol.md`: restart from Phase: Mission Creation, draft a new `mission.md` only after the recovery interview is complete, submit it to the normal-flow critics in Phase: Mission Creation, and proceed through normal-flow execution. Unstaged work from the fast-path attempt is preserved in the worktree for the dev agent.
 
 If the escalation critic cannot be spawned, follow Required Critic Availability before taking any other action.
 
@@ -120,19 +104,6 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 ---
 
 # Normal Flow
-
-## Phase: 2-Critic Mission Review
-
-**Actor:** Two independent critic agents.
-**Inputs:** The target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, the harness repo-root `.agent/schemas/mission-schema.md`, `mission.md` from the worktree root.
-**Outputs:** Response per `.agent/schemas/critic-protocol.md` from each critic.
-
-Spawn two independent critic agents for `mission.md` review. Each critic reads only the artifacts named in Inputs and must follow the listed critic protocol. Each critic prompt must include the exact sentence stem `You are a non-lead agent.`, must state that the recipient operates only on the role-specific inputs granted by this phase, and must forbid bootstrap discovery unless this phase explicitly requires it. Beyond that required role declaration, each critic prompt must contain only the artifact references listed in Inputs, with no lead-agent context briefing, summary, hidden rationale, "things to keep in mind," or extra "mentions." If anything needs to be included before approval, put it in `mission.md` or another phase-allowed artifact first, then rerun review. If the critics cannot be spawned, follow Required Critic Availability before taking any other action.
-
-- If both approve: that exact `mission.md` becomes the approved mission for the rest of this mission and must not be modified. Proceed to normal-flow Phase: Dev Agent Execution.
-- If either rejects: the lead agent fixes the issues and resubmits to two fresh critic agents. Repeat until both approve, or escalate to the user if stuck.
-
-Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 
 ## Phase: Dev Agent Execution
 
