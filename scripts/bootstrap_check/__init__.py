@@ -45,9 +45,40 @@ def check(repo_root: Path) -> str:
     return "ONE_WORKTREE_RESUMABLE"
 
 
+def list_worktrees(repo_root: Path) -> list[tuple[Path, str]]:
+    """Return one entry per worktree directory under <repo_root>/.claude/worktrees/.
+
+    Each entry is (worktree_path, status) where status is one of:
+      RESUMABLE  — handoff.md present and does not contain the abort sentinel
+      ABORTED    — handoff.md present and contains the abort sentinel
+      NO_HANDOFF — no handoff.md found
+    """
+    worktrees_dir = repo_root / ".claude" / "worktrees"
+    if not worktrees_dir.exists():
+        return []
+    result = []
+    for d in sorted(worktrees_dir.iterdir()):
+        if not d.is_dir():
+            continue
+        handoff = d / "handoff.md"
+        if not handoff.exists():
+            status = "NO_HANDOFF"
+        elif ABORT_SENTINEL in handoff.read_text():
+            status = "ABORTED"
+        else:
+            status = "RESUMABLE"
+        result.append((d, status))
+    return result
+
+
 def main() -> None:
-    repo_root = Path(sys.argv[1]) if len(sys.argv) > 1 else Path.cwd()
-    print(check(repo_root))
+    if len(sys.argv) > 1 and sys.argv[1] == "list":
+        repo_root = Path(sys.argv[2]) if len(sys.argv) > 2 else Path.cwd()
+        for path, status in list_worktrees(repo_root):
+            print(f"{path} {status}")
+    else:
+        repo_root = Path(sys.argv[1]) if len(sys.argv) > 1 else Path.cwd()
+        print(check(repo_root))
 
 
 if __name__ == "__main__":

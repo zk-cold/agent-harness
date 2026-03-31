@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from scripts.bootstrap_check import ABORT_SENTINEL, check
+from scripts.bootstrap_check import ABORT_SENTINEL, check, list_worktrees
 
 
 # --- ROOT_ARTIFACTS (AC3, AC9) ---
@@ -90,3 +90,64 @@ def test_one_worktree_resumable_only_handoff_no_sentinel(tmp_path):
     worktree.mkdir(parents=True)
     (worktree / "handoff.md").write_text("Phase: 2-Critic Review")
     assert check(tmp_path) == "ONE_WORKTREE_RESUMABLE"
+
+
+# --- list_worktrees ---
+
+def test_list_worktrees_no_directory(tmp_path):
+    assert list_worktrees(tmp_path) == []
+
+
+def test_list_worktrees_empty_directory(tmp_path):
+    (tmp_path / ".claude" / "worktrees").mkdir(parents=True)
+    assert list_worktrees(tmp_path) == []
+
+
+def test_list_worktrees_single_resumable(tmp_path):
+    wt = tmp_path / ".claude" / "worktrees" / "wt"
+    wt.mkdir(parents=True)
+    (wt / "handoff.md").write_text("Phase: Execute in Worktree")
+    result = list_worktrees(tmp_path)
+    assert result == [(wt, "RESUMABLE")]
+
+
+def test_list_worktrees_single_aborted(tmp_path):
+    wt = tmp_path / ".claude" / "worktrees" / "wt"
+    wt.mkdir(parents=True)
+    (wt / "handoff.md").write_text(
+        f"Aborted: something. {ABORT_SENTINEL}. Await a fresh user request."
+    )
+    result = list_worktrees(tmp_path)
+    assert result == [(wt, "ABORTED")]
+
+
+def test_list_worktrees_single_no_handoff(tmp_path):
+    wt = tmp_path / ".claude" / "worktrees" / "wt"
+    wt.mkdir(parents=True)
+    result = list_worktrees(tmp_path)
+    assert result == [(wt, "NO_HANDOFF")]
+
+
+def test_list_worktrees_two_different_statuses(tmp_path):
+    worktrees = tmp_path / ".claude" / "worktrees"
+    wt_a = worktrees / "a"
+    wt_b = worktrees / "b"
+    wt_a.mkdir(parents=True)
+    wt_b.mkdir()
+    (wt_a / "handoff.md").write_text("Phase: Execute in Worktree")
+    (wt_b / "handoff.md").write_text(
+        f"Aborted: blocker. {ABORT_SENTINEL}. Await fresh request."
+    )
+    result = list_worktrees(tmp_path)
+    assert result == [(wt_a, "RESUMABLE"), (wt_b, "ABORTED")]
+
+
+def test_list_worktrees_skips_non_directory_entries(tmp_path):
+    worktrees = tmp_path / ".claude" / "worktrees"
+    wt = worktrees / "wt"
+    wt.mkdir(parents=True)
+    (wt / "handoff.md").write_text("Phase: Execute in Worktree")
+    # A file in the worktrees dir should be skipped
+    (worktrees / "not-a-dir.txt").write_text("ignored")
+    result = list_worktrees(tmp_path)
+    assert result == [(wt, "RESUMABLE")]
