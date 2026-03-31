@@ -37,3 +37,7 @@ Use this protocol only after `.agent/schemas/abort-protocol.md` has already been
 ## Cleanup
 
 At the end of the final phase (Cleanup), the lead agent removes both `mission.md` and `handoff.md` from the worktree root. These are runtime artifacts and must not persist after a mission is complete.
+
+## Considerations
+
+- **Handoff generator** — Use to produce a well-formed `handoff.md`. `python3 -m scripts.handoff_generator --pre-mission|--post-mission --next-step "<text>" [--failed-attempts "<text>"] [--transcript "<text>"]`. `--transcript` is required in `--pre-mission` mode and disallowed in `--post-mission` mode.

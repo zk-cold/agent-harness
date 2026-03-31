@@ -82,3 +82,9 @@ When present, optional sections appear before required ones in this order: Invar
 ```
 
 The title should describe what the mission produces, not the process of producing it. Prefer "Define the X schema" over "Work on X" or "X improvements."
+
+---
+
+## Considerations
+
+- **Mission linter** — Run after drafting `mission.md` to validate its structure before spawning critics. `python3 -m scripts.mission_linter [path/to/mission.md]`. Prints violation codes and exits 1 on any violation; exits 0 when clean.
