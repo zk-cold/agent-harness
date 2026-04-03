@@ -4,18 +4,8 @@ import subprocess
 from pathlib import Path
 
 # Exact phase-reset texts drawn verbatim from:
-#   .claude/commands/enhance-harness.md (Phase: Single-Critic Completion Review, Phase: Cleanup)
 #   .claude/commands/new-sdlc.md (Phase: Post-Implementation Review, Phase: 2-Critic Post-Implementation Review)
 VARIANTS: dict[str, str] = {
-    "enhance-harness-pre-review": (
-        "Phase: Single-Critic Completion Review - rerun verification on the merged state, "
-        "rewrite completion-review runtime artifacts, and submit that state to a fresh critic."
-    ),
-    "enhance-harness-cleanup": (
-        "Phase: Single-Critic Completion Review - re-verify the cleanup-merged state, "
-        "rewrite completion-review runtime artifacts, and submit that state to a fresh critic "
-        "before any further cleanup."
-    ),
     "new-sdlc-fast-path": (
         "Phase: Post-Implementation Review (Fast Path) - rerun verification on the merged state, "
         "rewrite completion-review runtime artifacts, and submit that state to a fresh critic."

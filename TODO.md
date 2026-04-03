@@ -11,11 +11,10 @@
 - `.agent/schemas/handoff-protocol.md`
 - `.agent/schemas/mission-schema.md`
 - `.agent/schemas/tdd-protocol.md`
-- `.claude/commands/enhance-harness.md`
 - `.claude/commands/new-sdlc.md`
 
 ### Changed worktree proposal copies inspected
-- None. Each discovered governance path was compared against the worktree copy at the same repo-relative path, and every comparison matched: `CLAUDE.md`, `AGENTS.md`, `.agent/schemas/abort-protocol.md`, `.agent/schemas/claude-schema.md`, `.agent/schemas/critic-protocol.md`, `.agent/schemas/handoff-protocol.md`, `.agent/schemas/mission-schema.md`, `.agent/schemas/tdd-protocol.md`, `.claude/commands/enhance-harness.md`, and `.claude/commands/new-sdlc.md` all matched their worktree copies, so no changed proposal copy required separate inspection.
+- None. Each discovered governance path was compared against the worktree copy at the same repo-relative path, and every comparison matched: `CLAUDE.md`, `AGENTS.md`, `.agent/schemas/abort-protocol.md`, `.agent/schemas/claude-schema.md`, `.agent/schemas/critic-protocol.md`, `.agent/schemas/handoff-protocol.md`, `.agent/schemas/mission-schema.md`, `.agent/schemas/tdd-protocol.md`, and `.claude/commands/new-sdlc.md` all matched their worktree copies, so no changed proposal copy required separate inspection.
 
 ## Contradictions
 

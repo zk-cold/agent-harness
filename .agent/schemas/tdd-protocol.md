@@ -1,6 +1,6 @@
 # Invariants
 
-This protocol governs the test-driven development loop within execution phases. Both `/enhance-harness` and `/new-sdlc` reference this protocol from their execution phases.
+This protocol governs the test-driven development loop within `/new-sdlc` execution phases.
 
 ## Coverage Threshold
 
@@ -8,7 +8,7 @@ The coverage threshold is **>80% line coverage on the code being touched by the 
 
 This threshold applies in two contexts:
 
-1. **Fast-path eligibility** (new-sdlc only): the target code must already meet the threshold before execution begins.
+1. **Fast-path eligibility:** the target code must already meet the threshold before execution begins.
 2. **TDD baseline**: before the red-green loop begins, coverage on the target code must meet the threshold. If it does not, the agent fills coverage gaps first (see TDD Execution Loop step 3).
 
 ## Coverage Tool Requirement
@@ -21,7 +21,7 @@ Every mission.md must satisfy exactly one of:
 
 If none of the three conditions is met, the mission is invalid. Critics must reject during mission review. During execution, if the coverage tool assumption proves false and mission.md does not scope its setup, follow `.agent/schemas/abort-protocol.md`.
 
-For new-sdlc fast path specifically: if no coverage tool is available and mission.md does not include coverage tool setup as in-scope, the request is ineligible for fast path.
+For `/new-sdlc` fast path specifically: if no coverage tool is available and mission.md does not include coverage tool setup as in-scope, the request is ineligible for fast path.
 
 ## TDD Exemption
 
@@ -32,7 +32,7 @@ A mission may proceed without the TDD loop only when its `Dependencies & Assumpt
 Critics must verify that assumption is accurate during mission review:
 
 - If any non-exempt artifacts (scripts, executable code, configuration that affects runtime behavior) are in scope, the assumption is invalid and the critic must reject.
-- The assumption does not reduce critic review requirements. A mission proceeding under a valid TDD-exempt assumption still receives the full critic review structure defined by its skill (e.g., 2-critic mission review + 1 completion review for enhance-harness).
+- The assumption does not reduce critic review requirements. A mission proceeding under a valid TDD-exempt assumption still receives the full critic review structure defined by `/new-sdlc` for its active flow.
 - If execution reveals that the assumption is false, follow `.agent/schemas/abort-protocol.md` instead of continuing TDD-exempt.
 
 ## TDD Execution Loop

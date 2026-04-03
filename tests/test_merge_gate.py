@@ -56,23 +56,8 @@ def _current_branch(path: Path) -> str:
 
 
 # ---------------------------------------------------------------------------
-# AC7 — phase-reset texts match skill files verbatim
+# AC7 — phase-reset texts match skill file verbatim
 # ---------------------------------------------------------------------------
-
-def test_variant_enhance_harness_pre_review():
-    assert VARIANTS["enhance-harness-pre-review"] == (
-        "Phase: Single-Critic Completion Review - rerun verification on the merged state, "
-        "rewrite completion-review runtime artifacts, and submit that state to a fresh critic."
-    )
-
-
-def test_variant_enhance_harness_cleanup():
-    assert VARIANTS["enhance-harness-cleanup"] == (
-        "Phase: Single-Critic Completion Review - re-verify the cleanup-merged state, "
-        "rewrite completion-review runtime artifacts, and submit that state to a fresh critic "
-        "before any further cleanup."
-    )
-
 
 def test_variant_new_sdlc_fast_path():
     assert VARIANTS["new-sdlc-fast-path"] == (
@@ -189,7 +174,7 @@ def test_do_merge_already_up_to_date(tmp_path):
 
     branch = _current_branch(repo)
     # Merge the same branch into itself → already up to date
-    message, code = do_merge(repo, handoff_dir, "enhance-harness-pre-review", branch)
+    message, code = do_merge(repo, handoff_dir, "new-sdlc-normal", branch)
     assert message == "TRIVIAL"
     assert code == 0
     assert handoff_file.read_text() == "original"
@@ -227,7 +212,7 @@ def test_do_merge_fast_forward(tmp_path):
     # Reset: checkout the pre-feature state
     subprocess.run(["git", "checkout", "-"], cwd=repo, check=True, capture_output=True)
     # We're back to main/initial; merge feature → fast-forward
-    message, code = do_merge(repo, handoff_dir, "enhance-harness-pre-review", "feature")
+    message, code = do_merge(repo, handoff_dir, "new-sdlc-normal", "feature")
     assert message == "TRIVIAL"
     assert code == 0
     assert handoff_file.read_text() == "original"
@@ -255,7 +240,7 @@ def test_do_merge_non_trivial_merge_commit(tmp_path):
     _commit(repo, "main_extra.txt", "main work\n", "main commit")
 
     # Merge feature into main → non-trivial merge commit (no conflict)
-    message, code = do_merge(repo, handoff_dir, "enhance-harness-pre-review", "feature")
+    message, code = do_merge(repo, handoff_dir, "new-sdlc-normal", "feature")
     assert message == "NON_TRIVIAL"
     assert code == 2
 
@@ -282,7 +267,7 @@ def test_do_merge_conflict(tmp_path):
     _commit(repo, "a.txt", "main version\n", "main modifies a")
 
     # Merge feature → CONFLICT
-    message, code = do_merge(repo, handoff_dir, "enhance-harness-pre-review", "feature")
+    message, code = do_merge(repo, handoff_dir, "new-sdlc-normal", "feature")
     assert message == "NON_TRIVIAL"
     assert code == 2
 
@@ -345,7 +330,7 @@ def test_do_merge_handoff_missing_on_non_trivial(tmp_path):
     subprocess.run(["git", "checkout", main_branch], cwd=repo, check=True, capture_output=True)
     _commit(repo, "main_extra.txt", "main\n", "main diverge")
 
-    message, code = do_merge(repo, handoff_dir, "enhance-harness-pre-review", "feature")
+    message, code = do_merge(repo, handoff_dir, "new-sdlc-normal", "feature")
     assert message == "HANDOFF_MISSING"
     assert code == 4
     assert not (handoff_dir / "handoff.md").exists()
@@ -362,7 +347,7 @@ def test_do_merge_error_nonexistent_branch(tmp_path):
     handoff_file = handoff_dir / "handoff.md"
     handoff_file.write_text("original")
 
-    message, code = do_merge(repo, handoff_dir, "enhance-harness-pre-review", "nonexistent-branch-xyz")
+    message, code = do_merge(repo, handoff_dir, "new-sdlc-normal", "nonexistent-branch-xyz")
     assert message.startswith("MERGE_ERROR")
     assert code == 3
     assert handoff_file.read_text() == "original"
@@ -436,7 +421,7 @@ def test_main_do_merge_trivial(tmp_path, monkeypatch, capsys):
 
     monkeypatch.setattr(
         "sys.argv",
-        ["merge_gate", "do-merge", str(repo), str(handoff_dir), "enhance-harness-pre-review", branch],
+        ["merge_gate", "do-merge", str(repo), str(handoff_dir), "new-sdlc-normal", branch],
     )
     with pytest.raises(SystemExit) as exc:
         main()
@@ -465,7 +450,7 @@ def test_main_do_merge_non_trivial(tmp_path, monkeypatch, capsys):
 
     monkeypatch.setattr(
         "sys.argv",
-        ["merge_gate", "do-merge", str(repo), str(handoff_dir), "enhance-harness-cleanup", "feat2"],
+        ["merge_gate", "do-merge", str(repo), str(handoff_dir), "new-sdlc-normal", "feat2"],
     )
     with pytest.raises(SystemExit) as exc:
         main()
