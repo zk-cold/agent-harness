@@ -77,4 +77,4 @@ The title should describe what the mission produces, not the process of producin
 
 ## Considerations
 
-- **Mission linter** — Run after drafting `mission.md` to validate its structure before spawning critics. `python3 -m scripts.mission_linter [path/to/mission.md]`. Prints violation codes and exits 1 on any violation; exits 0 when clean.
+- **Mission linter** — Run after drafting `mission.md` to validate its structure before spawning critics. `python3 -m scripts.mission_linter [path/to/mission.md]`. Prints violation codes and exits 1 on any violation; exits 0 when clean. It serves as an advisory feedback & does not block submission where the agent deem appropriate.
