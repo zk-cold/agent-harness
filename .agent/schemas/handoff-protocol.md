@@ -32,7 +32,7 @@ Use this protocol only after `.agent/schemas/abort-protocol.md` has already been
 5. The previously approved `mission.md` from the aborted mission remains unchanged throughout that aborted mission. After the abort state is already recorded and recovery has re-entered the Mission Creation phase, the agent drafts a new `mission.md` for the restarted lifecycle by consulting the previous mission and carrying forward only the prior content that still remains accurate after the blocker resolution and any newly captured invariants or considerations are applied.
 6. Recovery resets `handoff.md` to restart the lifecycle from the Mission Creation phase for the new mission.
 7. Recovery reuses the existing worktree. Before recovery continues, any file with unstaged changes that either modify `CLAUDE.md` or modify lines inside a `mission.md` file's `Invariants` or `Beliefs` sections must have all of its unstaged changes discarded.
-8. The restarted mission goes through review and execution from scratch under `/new-sdlc`. Any mission recovered from abort is ineligible for fast path and must route to normal flow.
+8. The restarted mission goes through review and execution from scratch under `/new-sdlc`. Any mission recovered from abort is ineligible for the lite fast-path Mission Creation review variant and must use the full review variant.
 
 ## Cleanup
 

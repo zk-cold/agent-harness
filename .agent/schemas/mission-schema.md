@@ -32,7 +32,7 @@ Include these only when the mission has something new to declare. Omit entirely 
 
 ### Invariants
 
-**When to include:** The mission proposes new or modified invariants for CLAUDE.md. Presence of this section triggers normal flow (2 critics) during `/new-sdlc` review. Absence satisfies fast path criterion (a).
+**When to include:** The mission proposes new or modified invariants for CLAUDE.md. Presence of this section requires the full Mission Creation review variant (2 critics) during `/new-sdlc`. Absence keeps the mission eligible for the lite fast-path review variant on criterion (a).
 
 **Constraints:**
 - Each invariant must describe a hard constraint with a clear violation condition. If violation cannot be objectively determined, it is a consideration, not an invariant.
