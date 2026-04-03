@@ -17,7 +17,7 @@ Every mission.md must satisfy exactly one of:
 
 - **Coverage tool in scope:** The mission includes setup or configuration of an appropriate coverage tool for the target repo's language as an in-scope deliverable.
 - **Coverage tool available:** The target repo already has a working coverage tool, confirmed during interview or early execution.
-- **TDD-exempt assumption:** The mission's `Dependencies & Assumptions` section includes the TDD-exempt assumption defined below.
+- **TDD-exempt assumption:** The mission's `Assumptions` section includes the TDD-exempt assumption defined below.
 
 If none of the three conditions is met, the mission is invalid. Critics must reject during mission review. During execution, if the coverage tool assumption proves false and mission.md does not scope its setup, follow `.agent/schemas/abort-protocol.md`.
 
@@ -25,7 +25,7 @@ For `/new-sdlc` fast path specifically: if no coverage tool is available and mis
 
 ## TDD Exemption
 
-A mission may proceed without the TDD loop only when its `Dependencies & Assumptions` section includes an assumption stating that the mission can be carried out TDD-exempt because every in-scope deliverable is a non-executable artifact. Common valid reasons include:
+A mission may proceed without the TDD loop only when its `Assumptions` section includes an assumption stating that the mission can be carried out TDD-exempt because every in-scope deliverable is a non-executable artifact. Common valid reasons include:
 
 - Documentation-only change (all deliverables are .md files or other non-executable artifacts).
 

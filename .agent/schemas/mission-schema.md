@@ -32,7 +32,7 @@ Include these only when the mission has something new to declare. Omit entirely 
 
 ### Invariants
 
-**When to include:** The mission proposes new or modified invariants for CLAUDE.md. Presence of this section requires the full Mission Creation review variant (2 critics) during `/new-sdlc`. Absence keeps the mission eligible for the lite fast-path review variant on criterion (a).
+**When to include:** The mission proposes new or modified invariants for CLAUDE.md. Presence of this section triggers normal flow (2 critics) during review. Absence satisfies fast path criterion (a).
 
 **Constraints:**
 - Each invariant must describe a hard constraint with a clear violation condition. If violation cannot be objectively determined, it is a consideration, not an invariant.
@@ -49,15 +49,14 @@ Include these only when the mission has something new to declare. Omit entirely 
 - Beliefs must never contradict invariants. When a conflict exists, the invariant takes precedence.
 - Belief changes follow the same modification process as invariant changes (MR + human approval + critic review).
 
-### Dependencies & Assumptions
+### Assumptions
 
 **When to include:** The mission relies on preconditions it does not itself deliver.
 
 **Constraints:**
-- Dependencies are things that must exist or be available (e.g., "the repo-root `CLAUDE.md` exists").
 - Assumptions are things believed to be true but not verified (e.g., "coverage tooling produces machine-readable output").
-- If a dependency is not met, the mission cannot proceed. If an assumption proves false during execution, it becomes a blocker (triggering the abort protocol).
-- Do not list things the mission itself will create as dependencies.
+- If an assumption proves false during execution, it becomes a blocker (triggering the abort protocol).
+- Do not list things the mission itself will create as assumptions.
 
 # Considerations
 
@@ -67,7 +66,7 @@ A mission.md file defines a single unit of work for the agent harness. It is gen
 
 ## Section Ordering
 
-When present, optional sections appear before required ones in this order: Invariants, Beliefs, Scope, Dependencies & Assumptions, Acceptance Criteria. Scope frames the work, then dependencies state what's needed to deliver it.
+When present, sections appear in this order: Invariants, Beliefs, Scope, Assumptions, Acceptance Criteria.
 
 ## Titling
 
@@ -77,4 +76,4 @@ The title should describe what the mission produces, not the process of producin
 
 ## Considerations
 
-- **Mission linter** — Run after drafting `mission.md` to validate its structure before spawning critics. `python3 -m scripts.mission_linter [path/to/mission.md]`. Prints violation codes and exits 1 on any violation; exits 0 when clean. It serves as an advisory feedback & does not block submission where the agent deem appropriate.
+- **Mission linter** — Run after drafting `mission.md` to validate its structure before spawning critics. `python3 -m scripts.mission_linter [path/to/mission.md]`. Prints violation codes and exits 1 on any violation; exits 0 when clean.

@@ -1,43 +1,30 @@
 # Invariants
 
-## Schema Bounded Content
+## Allowed Top-Level Sections
 Governed documents may use only these top-level sections (`#`): **Invariants**, **Beliefs**, and **Considerations**.
 
-## Authoritative Definitions
-The definitions for top-level sections is authoritative and final in this document. They must be applied without reinterpretation.
+## Invariant Content
+Invariants must define always-binding constraints with an objective violation condition. They must not restate content that is directly derivable from other harness governance files, target-repo contents, or automated tests.
 
-## Invariants Definition
-Define always-binding constraints that govern agent behavior.
-**Constraints**:
-- Must describe an objectively-enforceable constraint
-- Not otherwise derivable from harness governance files or target repo contents
-- Not otherwise expressible as automated tests
+## Belief Content
+Beliefs must define default-binding rules with an explicit scope or condition. They must not contradict invariants and must be traceable to at least one consideration or implementation artifact.
 
-## Beliefs Definition
-Define default-binding rules that guide agent decision-making.
-**Constraints**:
-- Must never contradict any invariants
-- Must define its applicable scope / condition
-- Must be traceable to at least one consideration or implementation artifact (e.g. source code)
-**Override Protocol**:
-A belief may be overridden only if:
-- The belief is explicitly referenced
-- A justification is provided - and prepared to withstand adversarial review
+## Consideration Content
+Considerations must provide non-obvious supporting detail traceable to at least one invariant, belief, or implementation artifact. They must not contradict invariants.
 
 # Considerations
-
-## Considerations Definition
-Provide details that isn't automatically obvious.
-**Constraints**:
-- Must never contradict any invariants
-- Must be traceable to at least one invariant or belief
-- Must not state the obvious
 
 ## Governed Documents
 `AGENTS.md`, `CLAUDE.md`, `.agent/schemas/*.md`, and `.claude/commands/*.md` in this harness and the target repo.
 
+## Authoritative Definitions
+The section definitions in this document are authoritative for governed documents.
+
+## Belief Overrides
+A belief may be overridden only when the belief is explicitly referenced and the justification is stated clearly enough to withstand adversarial review.
+
 ## Traceability Annotations
-Traceability are ideally obvious. A traceability that needs explicit declaration implies missing Invariant / Belief / Consideration to surface.
+Traceability should usually be obvious from the content. If it must be declared explicitly to make sense, that usually signals a missing invariant, belief, or consideration.
 
 ## Cross References
-References across files contains an intrinsic belief in repo / file system structure. They hence should never appear in Invariants.
+Cross-file references are allowed when they are necessary to identify the governing artifact or protocol being applied. Do not use them to smuggle in unstated assumptions about repo or filesystem structure.
