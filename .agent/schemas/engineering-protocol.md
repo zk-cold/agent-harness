@@ -1,6 +1,6 @@
 # Invariants
 
-## Existing Test Changes Carry Invariant-Level Review Weight
+## Tests Are Invariants
 When review or fast-path eligibility depends on whether a proposal changes governed behavior, modifications or deletions of existing test code must be treated with the same review weight as invariant changes. Violation: a mission or review treats a modification or deletion of existing test code as still eligible for lite fast-path review, or applies a lower review bar than an invariant change would require.
 
 # Beliefs
