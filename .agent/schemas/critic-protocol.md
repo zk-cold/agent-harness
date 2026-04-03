@@ -1,4 +1,4 @@
-# Critic Protocol
+# Invariants
 
 ## Overview
 
