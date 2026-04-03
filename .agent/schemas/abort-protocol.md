@@ -1,4 +1,4 @@
-# Abort Protocol
+# Invariants
 
 This document defines the required behavior when a mission or fast-path run must stop without continuing to Cleanup.
 

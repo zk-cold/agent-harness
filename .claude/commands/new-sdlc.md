@@ -1,6 +1,6 @@
-# New SDLC
+# Invariants
 
-This skill handles requests to build new features or make changes in a target repo. It supports two flows: the **fast path** for small, safe, well-covered changes, and the **normal flow** for everything else. For a fresh request, the lead agent must follow the shared phases and then the flow-specific phases in order. When operating inside a target repo, that repo's `CLAUDE.md` invariants and important considerations govern ahead of this harness's generic defaults, and any target-repo-specific dependencies or assumptions recorded in the mission govern execution decisions unless doing so would violate the target repo's own invariants. If a relevant `handoff.md` exists on session start, the lead agent may resume only from a recorded Next / Ongoing Step that clearly maps to one of the phases below or a substep within the current phase. If that handoff marks the prior mission as already aborted and not resumable per `.agent/schemas/abort-protocol.md`, the lead agent must not resume it. Otherwise, if the recorded step does not clearly map to a phase or substep, the lead agent must ask the dev how to proceed instead of skipping required phases.
+This skill handles requests to build new features or make changes in a target repo. It supports two flows: the **fast path** for small, safe, well-covered changes, and the **normal flow** for everything else. For a fresh request, the lead agent must follow the shared phases and then the flow-specific phases in order. When operating inside a target repo, that repo's `CLAUDE.md` invariants, beliefs, and considerations govern ahead of this harness's generic defaults, and any target-repo-specific dependencies or assumptions recorded in the mission govern execution decisions unless doing so would violate the target repo's own invariants. If a relevant `handoff.md` exists on session start, the lead agent may resume only from a recorded Next / Ongoing Step that clearly maps to one of the phases below or a substep within the current phase. If that handoff marks the prior mission as already aborted and not resumable per `.agent/schemas/abort-protocol.md`, the lead agent must not resume it. Otherwise, if the recorded step does not clearly map to a phase or substep, the lead agent must ask the dev how to proceed instead of skipping required phases.
 
 ## Required Critic Availability
 
@@ -8,11 +8,9 @@ Any phase in this skill that requires critic agents is blocking. If the environm
 
 For this skill, harness-side references to `CLAUDE.md`, files under `.agent/schemas/`, and harness skill-definition files under `.claude/commands/` mean the harness repo-root copies until the relevant change is merged. For the target repo, `CLAUDE.md` and any skill-definition files it directs the agent to use are resolved from the target repo root until merged. Matching worktree files and unstaged changes are proposals only; when a review phase exposes those changed files through diff output or repository access, the reviewer inspects the proposal while the corresponding repo-root copy remains authoritative.
 
----
+## Shared Phases
 
-# Shared Phases
-
-## Phase: Mission Creation
+### Phase: Mission Creation
 
 **Actor:** Lead agent (interview and mission drafting); one or two critic agents (mission review — see flow-specific logic below).
 **Inputs (critic agents):** The target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, the harness repo-root `.agent/schemas/mission-schema.md`, `mission.md` from the worktree root, and for fast-path review only, any raw eligibility tool outputs explicitly relied on during the interview, such as coverage report output.
@@ -54,11 +52,9 @@ The fast-path critic performs two checks in order:
 
 Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 
----
+## Fast-Path Flow
 
-# Fast-Path Flow
-
-## Phase: Execute in Worktree (Fast Path)
+### Phase: Execute in Worktree (Fast Path)
 
 **Actor:** Lead agent.
 **Inputs:** Approved `mission.md`, target repo codebase.
@@ -70,7 +66,7 @@ If the approved mission includes the TDD-exempt assumption defined by `.agent/sc
 
 Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 
-## Phase: Post-Implementation Review (Fast Path)
+### Phase: Post-Implementation Review (Fast Path)
 
 **Actor:** One fresh critic agent (not the Phase: Mission Creation fast-path critic).
 **Inputs:** The exact `mission.md` approved in Phase: Mission Creation, the target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, and read-only tool access to the worktree and repository. The critic is a tool-capable critic per `.agent/schemas/critic-protocol.md`.
@@ -89,9 +85,7 @@ Spawn a fresh critic agent with read-only tool access and the worktree path. The
 
 Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 
----
-
-# Escalation: Fast Path to Normal Flow
+## Escalation: Fast Path to Normal Flow
 
 When fast-path eligibility is lost during or after implementation (e.g., the post-implementation critic rejects for eligibility), the lead agent must evaluate whether the approved `mission.md` can be submitted intact to normal-flow review:
 
@@ -103,11 +97,9 @@ If the escalation critic cannot be spawned, follow Required Critic Availability 
 
 Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 
----
+## Normal Flow
 
-# Normal Flow
-
-## Phase: Dev Agent Execution
+### Phase: Dev Agent Execution
 
 **Actor:** Dev subagent (spawned by the lead agent via the Agent tool).
 **Inputs:** Approved `mission.md`, target repo codebase (in worktree). If escalated from fast path, any unstaged work from the fast-path attempt is present in the worktree.
@@ -121,7 +113,7 @@ Only after the TDD loop's final verification passes (or, for missions proceeding
 
 Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 
-## Phase: 2-Critic Post-Implementation Review
+### Phase: 2-Critic Post-Implementation Review
 
 **Actor:** Two fresh critic agents (not any previously used critics in this mission).
 **Inputs:** The exact approved `mission.md`, the target repo-root `CLAUDE.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, and read-only tool access to the worktree and repository. Each critic is a tool-capable critic per `.agent/schemas/critic-protocol.md`.
@@ -139,15 +131,15 @@ Spawn two fresh critic agents, each with read-only tool access and the worktree 
 
 Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 
----
-
-# Phase: Cleanup
+### Phase: Cleanup
 
 Before deleting any files, rewrite `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md` with Next / Ongoing Step set to `Phase: Cleanup - apply the target repo's commit/merge rules if any, then ensure mission.md is absent, then delete handoff.md last, then immediately present results to the user in the same turn.` Cleanup may begin only after the approved implementation changes have been committed following the applicable post-implementation review approval.
 
 For `new-sdlc`, Cleanup follows the target repo's commit/merge rules. If the target repo's governing artifacts require or permit merging the approved worktree branch before worktree removal, apply those rules. If the target repo defines no merge rule, default to commit-only and do not auto-merge. Any cleanup-phase merge attempted before worktree removal that is non-trivial per the harness repo-root `CLAUDE.md` Invariant 4 must reset the mission to the applicable completion-review phase: do not continue Cleanup, rewrite `handoff.md` so Next / Ongoing Step names the applicable completion-review phase for the merged state, and resume from that review phase with fresh critic approval before any further cleanup. If a required or permitted cleanup merge fails for any other reason, leave the worktree in place and report the failure to the user.
 
 Then remove `mission.md` if it still exists and `handoff.md` last from the worktree root. If cleanup is interrupted or any deletion fails before `handoff.md` is removed, leave that latest `handoff.md` state in place so the next session can resume cleanup deterministically. After both runtime artifacts are removed, verify that the worktree has no uncommitted changes before removing it. Run `git status` in the worktree and check for unstaged modifications, staged-but-uncommitted changes, and untracked files. If any uncommitted changes are detected, do not remove the worktree — stop, report the uncommitted state to the user (listing the affected files), and leave the worktree in place. Only when the worktree is clean (all changes committed to the branch) proceed to remove the worktree via `git worktree remove --force`. If worktree removal fails, leave the worktree in place and report the failure to the user. Cleanup completion is the end of the mission lifecycle. Immediately after cleanup succeeds, present results to the user.
+
+# Considerations
 
 ## Considerations
 

@@ -1,4 +1,4 @@
-# Enhance Harness
+# Invariants
 
 This skill handles requests to modify or improve the agent harness itself. For a fresh request, the lead agent must follow these phases in order. If a relevant `handoff.md` exists on session start, the lead agent may resume only from a recorded Next / Ongoing Step that clearly maps to one of the phases below or a substep within the current phase. If that handoff marks the prior mission as already aborted and not resumable per `.agent/schemas/abort-protocol.md`, the lead agent must not resume it. Otherwise, if the recorded step does not clearly map to a phase or substep, the lead agent must ask the dev how to proceed instead of skipping required phases.
 
@@ -58,6 +58,8 @@ Before deleting any files, rewrite `handoff.md` at the worktree root per `.agent
 For `enhance-harness`, Cleanup merges the approved worktree branch directly into the harness repo-root `main` branch. If that repo-root merge reports `Already up to date.` or performs a clean fast-forward, continue Cleanup. Otherwise the merge is non-trivial per `CLAUDE.md` Invariant 4: do not continue Cleanup, rewrite `handoff.md` with Next / Ongoing Step set to `Phase: Single-Critic Completion Review - re-verify the cleanup-merged state, rewrite completion-review runtime artifacts, and submit that state to a fresh critic before any further cleanup.`, and resume from Phase: Single-Critic Completion Review with the merged state. If the merge back to `main` fails for any other reason, leave the worktree in place and report the failure to the user.
 
 Then remove `mission.md` if it still exists and `handoff.md` last from the worktree root. If cleanup is interrupted or any deletion fails before `handoff.md` is removed, leave that latest `handoff.md` state in place so the next session can resume cleanup deterministically. After both runtime artifacts are removed, verify that the worktree has no uncommitted changes before removing it. Run `git status` in the worktree and check for unstaged modifications, staged-but-uncommitted changes, and untracked files. If any uncommitted changes are detected, do not remove the worktree — stop, report the uncommitted state to the user (listing the affected files), and leave the worktree in place. Only when the worktree is clean (all changes committed to the branch) proceed to remove the worktree via `git worktree remove --force`. If worktree removal fails, leave the worktree in place and report the failure to the user. Cleanup completion is the end of the mission lifecycle. Immediately after cleanup succeeds, present results to the user.
+
+# Considerations
 
 ## Considerations
 
