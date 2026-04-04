@@ -15,7 +15,8 @@ from scripts.mission_generator import (
 )
 
 
-WORKTREE = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[1]
+MISSION_GENERATOR_MAIN = REPO_ROOT / "scripts" / "mission_generator" / "__main__.py"
 HARD_CONSTRAINT_PERSISTENCE_MODE = "automated tests"
 NATURAL_HOME_PERSISTENCE_MODE = (
     "same text in the governed file and matching top-level governance section "
@@ -38,7 +39,7 @@ def test_package_exports():
 
 
 def test_main_module_uses_package_entrypoint():
-    src = (WORKTREE / "scripts" / "mission_generator" / "__main__.py").read_text()
+    src = MISSION_GENERATOR_MAIN.read_text()
     assert "from scripts.mission_generator import main" in src
     assert "main()" in src
 
@@ -107,7 +108,7 @@ def test_cli_preserves_multiline_text_and_special_characters(tmp_path):
         [sys.executable, "-m", "scripts.mission_generator", str(mission_path)],
         input=input_text,
         text=True,
-        cwd=WORKTREE,
+        cwd=REPO_ROOT,
         capture_output=True,
         check=False,
     )
