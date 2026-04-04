@@ -34,6 +34,8 @@ For changes other than removals, **full new text** must be proposed, not a descr
 
 ### Invariants
 
+### External Constraints
+
 ### Beliefs
 
 ### Considerations
@@ -57,7 +59,7 @@ When a mission proposes changes to a harness `*.template` file, self-containment
 
 ## Section Ordering
 
-When present, sections appear in this order: Invariants, Beliefs, Considerations, Scope, Assumptions, Acceptance Criteria.
+When present, sections appear in this order: Invariants, External Constraints, Beliefs, Considerations, Scope, Assumptions, Acceptance Criteria.
 
 ## Titling
 

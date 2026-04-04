@@ -1,7 +1,10 @@
 # Invariants
 
+## Governance Artifacts
+**Invariants**, **External Constraints**, **Beliefs**, and **Considerations**
+
 ## Allowed Top-Level Sections
-Governed documents may use only these top-level sections (`#`): **Invariants**, **Beliefs**, and **Considerations**.
+Governed documents may only define governance artifacts, with their category being top-level sections (`#`).
 
 ## Authoritative Definitions
 The definitions in this document are authoritative and final. Agents must not edit this file.
@@ -9,11 +12,14 @@ The definitions in this document are authoritative and final. Agents must not ed
 ## Invariant Content
 Invariants must define always-binding constraints。
 
+## External Constraint Content
+External Constraints must define constraints imposed by external authorities that are currently binding.
+
 ## Belief Content
 Beliefs must define default-binding rules with an explicit scope or condition.
 
 ## Consideration Content
-Considerations must provide non-obvious supporting detail traceable to at least one invariant, belief, or implementation artifact. They must not contradict invariants.
+Considerations must provide non-obvious supporting detail traceable to at least one invariant, belief, or implementation artifact. They must not contradict invariants or external constraints.
 
 # Considerations
 
@@ -26,11 +32,14 @@ A statement is disqualified as an invariant when any of the following is true:
 - It is a preference, habit, convention, style choice, or explanation rather than a binding constraint.
 - It is already derivable from other governance artifacts or target-repo contents.
 
-Invariants do not need an explicit `Violation:` clause. The rule itself should already be concrete enough that a reviewer can determine whether it was followed.
+## External Constraint Qualification
+A statement is disqualified as an external constraint when any of the following is true:
+- It is not objectively enforceable from its own wording.
+- It lacks an anchor to a named source and version.
 
 ## Belief Qualification
 A statement is disqualified as a belief when any of the following is true:
-- It contradicts an invariant.
+- It contradicts an invariant or external constraint.
 - It does not define the condition, scope, or context in which it applies.
 - It cannot be traced to at least one consideration or implementation artifact.
 - It is actually an always-binding constraint and therefore belongs in invariants instead.
@@ -40,10 +49,13 @@ A belief may be overridden only when the belief is explicitly referenced and the
 
 ## Consideration Qualification
 A consideration should provide non-obvious supporting detail. It is disqualified as a consideration when any of the following is true:
-- It contradicts an invariant.
+- It contradicts an invariant or external constraint.
 - It is obvious enough that it adds no interpretive or implementation value.
 - It cannot be traced back to an invariant, belief, or implementation artifact.
 - It is actually a binding rule and therefore belongs in invariants or beliefs instead.
+
+## Violation Clauses
+Invariants and External Constraints should not contain an explicit violation clause. They should be concrete enought that a reviewer can determine whether it was followed, from its own wording.
 
 ## Traceability
 Traceability should usually be obvious from the content. If it must be declared explicitly to make sense, that usually signals a missing invariant, belief, or consideration.
