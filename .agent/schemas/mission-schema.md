@@ -65,10 +65,5 @@ When a mission proposes changes to a harness `*.template` file, self-containment
 ## Section Ordering
 When present, sections appear in this order: Invariants, External Constraints, Beliefs, Considerations, Scope, Assumptions, Acceptance Criteria.
 
-## Titling
-Use the title format `Mission: {concise title describing the deliverable}` as the document's single H1.
-
-The title should describe what the mission produces, not the process of producing it. Prefer "Define the X schema" over "Work on X" or "X improvements."
-
 ## Mission Generator
 Use `python3 -m scripts.mission_generator [path/to/mission.md]` to interactively draft or rewrite `mission.md`. This is an agent-operated convenience tool, not an approval gate. It should safely capture multiline text and special characters and emit a schema-ordered draft for review.
