@@ -1,9 +1,5 @@
 # Considerations
-## Canonical Source
-Treat the repo-root `CLAUDE.md` as the canonical source of repository instructions.
-
-## Shared Rules
-Keep shared harness rules in the shared governance files instead of duplicating them here.
-
-## Claude Commands
-Interpret `/name` as the repo-root `./.claude/commands/name.md` and follow that file.
+- This file exists to guide runtimes that read `AGENTS.md`.
+- For project-level invariants, follow `CLAUDE.md`.
+- For shared harness rules, follow the shared governance files instead of duplicating them here.
+- Interpret `/name` as repo-root `./.claude/commands/name.md` and follow that file.
