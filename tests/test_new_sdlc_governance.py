@@ -28,3 +28,22 @@ def test_tdd_protocol_requires_execution_to_validate_coverage_assumption():
 
     assert "Mission Creation may carry forward a plausible assumption" in text
     assert "execution step 1 must confirm it" in text
+
+
+def test_tdd_protocol_uses_baseline_only_for_threshold_gating():
+    text = _read(".agent/schemas/tdd-protocol.md")
+
+    assert "The coverage threshold is **>80% line coverage on the code being touched by the mission**." in text
+    assert "This baseline is used in step 3" in text
+    assert "Verify the touched code still meets the coverage threshold (>80% line coverage)." in text
+    assert "Verify no coverage regression compared to the baseline recorded in step 2." not in text
+
+
+def test_new_sdlc_execution_mentions_threshold_check_not_regression_gate():
+    text = _read(".claude/commands/new-sdlc.md")
+
+    assert "touched code remains above the >80% coverage threshold" in text
+    assert "final verification (full suite + coverage threshold check)" in text
+    assert "final verification (full suite + coverage threshold check + formatter/linter)" in text
+    assert "coverage regression check" not in text
+    assert "no coverage regression" not in text

@@ -38,7 +38,7 @@ Confirm the coverage tool is available and working. If the mission scopes covera
 
 ### 2. Measure Baseline Coverage
 
-Run the coverage tool against the code being touched by the mission. Record the baseline coverage percentage. This baseline is used in step 5 to verify no coverage regression.
+Run the coverage tool against the code being touched by the mission. Record the baseline coverage percentage. This baseline is used in step 3 to determine whether coverage gaps must be filled before prod changes begin.
 
 ### 3. Fill Coverage Gaps
 
@@ -70,7 +70,7 @@ For each acceptance criterion in mission.md, in order:
 After all ACs have been addressed:
 
 - Run the full test suite. All tests must pass.
-- Run the coverage tool. Verify no coverage regression compared to the baseline recorded in step 2.
+- Run the coverage tool. Verify the touched code still meets the coverage threshold (>80% line coverage).
 - If the target repo provides a formatter and/or linter, run them and ensure results are clean.
 
 # Considerations
