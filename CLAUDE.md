@@ -41,6 +41,15 @@ Only after such approval, the changes can be merged back to repo-root branch sta
 ## Template Files
 Flag any proposed template (`*.template`) changes to the developer and include full approved text of updated sections in `mission.md` as a **consideration**.
 
+## Harness-Local Scope Invariant
+The opening scope invariant in this file is specific to this harness `CLAUDE.md`. It should not be generalized into an assumption that target repo `CLAUDE.md` files use the same audience or scope model.
+
+## Codex Sub-Agent Boundary
+In this harness, the opening scope invariant means Codex sub-agents must ignore `CLAUDE.md` while still being free to continue reading `AGENTS.md`. That split is deliberate: `CLAUDE.md` carries lead-only governance here, while `AGENTS.md` remains a useful Codex routing artifact.
+
+## Bootstrap Breadth
+`Bootstrap` intentionally treats any prompt as a request to create new SDLC. That breadth is deliberate for the current harness because governance-document edits are implementation work. Narrowing should happen only through future explicit exclusions, not by silently weakening the invariant.
+
 ## Bootstrap Check
 Run within Mission Creation after routing, against the applicable repo root. Two subcommands:
 - `python3 -m scripts.bootstrap_check [repo_root]` — Outputs one of: `ROOT_ARTIFACTS`, `MULTIPLE_WORKTREES`, `ONE_WORKTREE_NO_HANDOFF`, `ONE_WORKTREE_ABORTED`, `ONE_WORKTREE_RESUMABLE`, `NO_WORKTREE`. Exits 0 in all cases. Use to detect root artifacts and get an overall worktree-state summary.
