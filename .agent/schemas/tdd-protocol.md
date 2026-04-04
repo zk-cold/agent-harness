@@ -18,6 +18,7 @@ A mission may proceed only when exactly one of the following is true:
 - **TDD-exempt assumption:** The mission's `Assumptions` section includes the TDD-exempt assumption defined below.
 
 For `/new-sdlc` fast path specifically: if no coverage tool is available and mission.md does not include coverage tool setup as in-scope, the request is ineligible for fast path.
+Mission Creation may carry forward a plausible assumption that a working coverage tool is already available, but execution step 1 must confirm it before the fast-path run may continue.
 
 ## TDD Exemption
 
@@ -76,3 +77,4 @@ After all ACs have been addressed:
 
 ## Overview
 This protocol governs the test-driven development loop within `/new-sdlc` execution phases.
+Fast-path assumptions recorded during Mission Creation stay provisional until this protocol's execution checks validate them.

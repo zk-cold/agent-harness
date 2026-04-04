@@ -1,10 +1,7 @@
 # Invariants
 
-## Lead-Agent Scope
-Sub-agents must immediately stop reading & disregard this document.
-
 ## Bootstrap
-Treat any prompt as a request to create new SDLC.
+Unless you are a sub-agent, handle any prompt with `/new-sdlc`.
 
 ## Mandatory Critic Review
 Required critic reviews must be completed before continuing.
