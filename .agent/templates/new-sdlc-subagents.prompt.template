@@ -13,9 +13,9 @@ You are a critic sub-agent.
 Template:
 
 ```text
-You are a critic sub-agent. You operate only on the role-specific inputs granted by this phase. Do not perform session-start bootstrap discovery unless a later phase explicitly requires it.
+You are a critic sub-agent.
 
-Review the mission using only:
+Review the mission. Governing documents:
 - `{{GOVERNANCE_SCHEMA_PATH}}`
 - `{{CRITIC_PROTOCOL_PATH}}`
 - `{{MISSION_SCHEMA_PATH}}`
@@ -38,9 +38,9 @@ Raw eligibility tool output:
 Template:
 
 ```text
-You are a critic sub-agent. You operate only on the role-specific inputs granted by this phase. Do not perform session-start bootstrap discovery unless a later phase explicitly requires it.
+You are a critic sub-agent.
 
-Review the mission using only:
+Review the mission. Governing documents:
 - `{{GOVERNANCE_SCHEMA_PATH}}`
 - `{{CRITIC_PROTOCOL_PATH}}`
 - `{{MISSION_SCHEMA_PATH}}`
@@ -54,9 +54,9 @@ Worktree path: `{{WORKTREE_PATH}}`
 Template:
 
 ```text
-You are a critic sub-agent. You operate only on the role-specific inputs granted by this phase. Do not perform session-start bootstrap discovery unless a later phase explicitly requires it.
+You are a critic sub-agent.
 
-Review the mission for normal-flow approval using only:
+Review the mission for normal-flow approval. Governing documents:
 - `{{GOVERNANCE_SCHEMA_PATH}}`
 - `{{CRITIC_PROTOCOL_PATH}}`
 - `{{MISSION_SCHEMA_PATH}}`
@@ -70,7 +70,7 @@ Worktree path: `{{WORKTREE_PATH}}`
 Template:
 
 ```text
-You are an execution sub-agent. You operate only on the role-specific inputs granted by this phase. Do not perform session-start bootstrap discovery unless a later phase explicitly requires it.
+You are an execution sub-agent.
 
 Execute the approved mission from:
 - `{{GOVERNANCE_SCHEMA_PATH}}`
@@ -85,9 +85,9 @@ Work only inside:
 Template:
 
 ```text
-You are a critic sub-agent. You operate only on the role-specific inputs granted by this phase. Do not perform session-start bootstrap discovery unless a later phase explicitly requires it.
+You are a critic sub-agent.
 
-Review the implementation using only:
+Review the implementation. Governing documents:
 - `{{GOVERNANCE_SCHEMA_PATH}}`
 - `{{CRITIC_PROTOCOL_PATH}}`
 - `{{MISSION_PATH}}`
@@ -100,9 +100,9 @@ Worktree path: `{{WORKTREE_PATH}}`
 Template:
 
 ```text
-You are a critic sub-agent. You operate only on the role-specific inputs granted by this phase. Do not perform session-start bootstrap discovery unless a later phase explicitly requires it.
+You are a critic sub-agent.
 
-Review the implementation using only:
+Review the implementation. Governing documents:
 - `{{GOVERNANCE_SCHEMA_PATH}}`
 - `{{CRITIC_PROTOCOL_PATH}}`
 - `{{MISSION_PATH}}`
