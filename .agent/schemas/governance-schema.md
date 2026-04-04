@@ -21,6 +21,9 @@ Beliefs must define default-binding rules with an explicit scope or condition.
 ## Consideration Content
 Considerations must provide non-obvious supporting detail traceable to at least one invariant, belief, or implementation artifact. They must not contradict invariants or external constraints.
 
+## Overrides
+A belief or consideration may be overridden only when it is explicitly referenced and the justification is stated clearly enough to withstand adversarial review.
+
 # Considerations
 
 ## Governed Documents
@@ -43,9 +46,6 @@ A statement is disqualified as a belief when any of the following is true:
 - It does not define the condition, scope, or context in which it applies.
 - It cannot be traced to at least one consideration or implementation artifact.
 - It is actually an always-binding constraint and therefore belongs in invariants instead.
-
-## Belief Overrides
-A belief may be overridden only when the belief is explicitly referenced and the justification is stated clearly enough to withstand adversarial review.
 
 ## Consideration Qualification
 A consideration should provide non-obvious supporting detail. It is disqualified as a consideration when any of the following is true:

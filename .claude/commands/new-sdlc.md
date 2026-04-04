@@ -30,8 +30,9 @@ The mission must be self-contained: a critic with access to only the harness rep
 **Fast-path eligibility:** A request qualifies for the fast path only when all three criteria are met:
 
 1. **No invariant modifications or deletions** — the mission does not modify or delete invariants in governance files, and does not semantically modify or delete test code. Adding a new invariant (including tests) is allowed on fast path. Changing a `*.template` file referenced by a governed document disqualifies the mission from fast path.
-2. **>80% test coverage around target code** — the code being changed already has more than 80% line coverage, providing a safety net for regressions. If no coverage tool is available and the mission does not include coverage tool setup as in-scope, the request is ineligible for fast path.
-3. **Clear scope, limited & safe change** — the change is well-defined, small in blast radius, and unlikely to introduce systemic risk.
+2. **No belief or consideration overrides** - Fast path permits modifying or deleting not more than one belief or consideration. However, overriding any of them in planned aritifacts disqualifies the mission from fast path.
+3. **>80% test coverage around target code** — the code being changed already has more than 80% line coverage, providing a safety net for regressions. If no coverage tool is available and the mission does not include coverage tool setup as in-scope, the request is ineligible for fast path.
+4. **Clear scope, limited & safe change** — the change is well-defined, small in blast radius, and unlikely to introduce systemic risk.
 
 After each draft, the lead agent selects one review variant for that loop iteration:
 
