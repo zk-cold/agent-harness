@@ -1,12 +1,15 @@
 # Invariants
 
+## Governing Scope
+This document governs engineering behavior for the target repo, including this harness only when it is the target repo. Its rules must not be written or interpreted as harness-specific unless that scope is stated explicitly.
+
 ## Tests Are Invariants
 Semantic modifications or deletions of existing test code must be treated with the same review weight as invariant changes.
 
 # Beliefs
 
 ## Prefer Scripts for Deterministic Logic
-Deterministic tasks that demand no LLM capability (e.g. linting, formatting, git ops) should be converted into scripts.
+When the target repo requires a deterministic task that demands no LLM capability and is expected to recur, require reviewable output, or otherwise benefit from repeatability (e.g. linting, formatting, git ops), prefer converting it into a script unless keeping it as an ad hoc command is clearly lower-maintenance.
 
 # Considerations
 

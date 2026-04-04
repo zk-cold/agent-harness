@@ -28,7 +28,7 @@
 
 ## Optional Sections
 
-Include these only when the mission has something new to declare. The follow the same definition as set out in `governance-schema.md`. 
+Include these only when the mission has something new to declare. They follow the same definition as set out in `governance-schema.md`.
 Omit entirely when not applicable — do not include empty or placeholder sections.
 For changes other than removals, **full new text** must be proposed, not a description of changes.
 
@@ -67,6 +67,5 @@ Use the title format `Mission: {concise title describing the deliverable}` as th
 
 The title should describe what the mission produces, not the process of producing it. Prefer "Define the X schema" over "Work on X" or "X improvements."
 
-## Considerations
-
-- **Mission linter** — Run after drafting `mission.md` to validate its structure before spawning critics. `python3 -m scripts.mission_linter [path/to/mission.md]`. Prints violation codes and exits 1 on any violation; exits 0 when clean.
+## Mission Linter
+Run after drafting `mission.md` to validate its structure before spawning critics. `python3 -m scripts.mission_linter [path/to/mission.md]`. Prints violation codes and exits 1 on any violation; exits 0 when clean.
