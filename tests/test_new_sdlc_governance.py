@@ -23,6 +23,23 @@ def test_mission_schema_allows_later_validation_of_fast_path_assumptions():
     assert "Assumptions must not hide already-known fast-path disqualifiers." in text
 
 
+def test_mission_schema_requires_persisted_governed_artifacts():
+    text = _read(".agent/schemas/mission-schema.md")
+
+    assert "Each non-persistence AC maps to one or more in-scope items." in text
+    assert "Each persistence AC maps to the governed artifact it persists." in text
+    assert (
+        "Every governed artifact captured in `Invariants`, `External Constraints`, `Beliefs`, or `Considerations` "
+        "must have at least one acceptance criterion that requires the artifact to be persisted."
+    ) in text
+    assert (
+        "When a governed artifact is not persisted as automated tests, its persistence acceptance criterion must "
+        "require the same text in the governed file and matching top-level governance section where the artifact will "
+        "live after the mission completes."
+    ) in text
+    assert "For hard constraints, prefer automated tests when the constraint can naturally be enforced there." in text
+
+
 def test_tdd_protocol_requires_execution_to_validate_coverage_assumption():
     text = _read(".agent/schemas/tdd-protocol.md")
 

@@ -19,8 +19,16 @@
 - Each AC must be **testable**: an independent reviewer can determine whether it has been met by examining the deliverables, without needing to ask the author.
 - Each AC must be **unambiguous**: there is one reasonable interpretation of what "met" means.
 - Each AC must be **specific**: it references concrete artifacts, sections, or behaviors — not vague qualities like "well-designed" or "comprehensive."
-- ACs are numbered sequentially. Each maps to one or more in-scope items.
+- ACs are numbered sequentially.
+- Each non-persistence AC maps to one or more in-scope items.
+- Each persistence AC maps to the governed artifact it persists.
 - Do not include ACs for out-of-scope items.
+
+### 3. Persistence Requirements
+
+**Constraints:**
+- Every governed artifact captured in `Invariants`, `External Constraints`, `Beliefs`, or `Considerations` must have at least one acceptance criterion that requires the artifact to be persisted.
+- When a governed artifact is not persisted as automated tests, its persistence acceptance criterion must require the same text in the governed file and matching top-level governance section where the artifact will live after the mission completes.
 
 ## Mission Validity
 
@@ -43,13 +51,17 @@ Optional mission sections may be used only under these exact headings: `Invarian
 - Assumptions may provisionally carry plausible fast-path claims forward from Mission Creation only when they can be validated during later review or execution.
 - Assumptions must not hide already-known fast-path disqualifiers.
 
+# Beliefs
+
+- For hard constraints, prefer automated tests when the constraint can naturally be enforced there.
+
 # Considerations
 
 ## Scope Purpose
 Define the boundaries of the mission — what will be delivered and what will not. A well-defined scope prevents ambiguity during execution and gives critics a frame for evaluating the acceptance criteria.
 
 ## Acceptance Criteria Purpose
-Define the conditions under which this mission is considered complete. ACs are the primary artifact critics evaluate and the standard the primary agent executes against.
+Define the conditions under which this mission is considered complete. ACs are the primary artifact critics evaluate and the standard the primary agent executes against. Scope-delivery ACs map to in-scope items; persistence ACs map to the governed artifacts they persist.
 
 ## Optional Sections
 Include these only when the mission has something new to declare. They follow the same definition as set out in `governance-schema.md`.

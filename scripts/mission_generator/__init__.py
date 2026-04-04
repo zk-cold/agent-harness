@@ -9,7 +9,17 @@ from pathlib import Path
 import sys
 from typing import Callable
 
-PERSISTENCE_MODES = ("executable test coverage", "governing-document text")
+HARD_CONSTRAINT_PERSISTENCE_MODE = "automated tests"
+NATURAL_HOME_PERSISTENCE_MODE = (
+    "same text in the governed file and matching top-level governance section "
+    "where the artifact will live after the mission completes"
+)
+PERSISTENCE_MODES_BY_SECTION = {
+    "Invariants": (HARD_CONSTRAINT_PERSISTENCE_MODE,),
+    "External Constraints": (HARD_CONSTRAINT_PERSISTENCE_MODE,),
+    "Beliefs": (NATURAL_HOME_PERSISTENCE_MODE,),
+    "Considerations": (NATURAL_HOME_PERSISTENCE_MODE,),
+}
 GOVERNANCE_SECTIONS = (
     "Invariants",
     "External Constraints",
@@ -108,6 +118,14 @@ def _read_choice(
         output_fn(f"Enter exactly one of: {', '.join(choices)}")
 
 
+def _persistence_modes_for_section(section: str) -> tuple[str, ...]:
+    return PERSISTENCE_MODES_BY_SECTION[section]
+
+
+def _persistence_prompt_for_section(section: str) -> str:
+    return f"Persistence mode [{'/'.join(_persistence_modes_for_section(section))}]: "
+
+
 def _read_required_block(
     input_fn: Callable[[str], str],
     output_fn: Callable[[str], None],
@@ -151,8 +169,8 @@ def _collect_governing_artifacts(
         mode = _read_choice(
             input_fn,
             output_fn,
-            "Persistence mode [executable test coverage/governing-document text]: ",
-            PERSISTENCE_MODES,
+            _persistence_prompt_for_section(section),
+            _persistence_modes_for_section(section),
         )
         artifacts.append(GoverningArtifact(section, text, mode, next_ga_id))
         next_ga_id += 1
