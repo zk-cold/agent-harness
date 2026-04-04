@@ -39,7 +39,7 @@ If clean-up phase merge is non-trivial, mission must be reset to completion-revi
 Only after such approval, the changes can be merged back to repo-root branch state & cleaned up.
 
 ## Template Files
-Flag any proposed template (`*.template`) changes to the developer and include full approved text in `mission.md` as a **consideration**.
+Flag any proposed template (`*.template`) changes to the developer and include full approved text of updated sections in `mission.md` as a **consideration**.
 
 ## Bootstrap Check
 Run within Mission Creation after routing, against the applicable repo root. Two subcommands:

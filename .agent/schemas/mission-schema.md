@@ -47,7 +47,6 @@ For changes other than removals, **full new text** must be proposed, not a descr
 **Constraints:**
 - Assumptions are things believed to be true but not yet verified.
 - If an assumption proves false during execution, it becomes a blocker (triggering the abort protocol).
-- Do not list things the mission itself will create as assumptions.
 
 # Considerations
 
