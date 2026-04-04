@@ -45,8 +45,10 @@ Include these only when the mission has something new to declare. Omit entirely 
 **When to include:** The mission introduces new default-binding rules or refines existing ones.
 
 **Constraints:**
-- Every belief must be traceable to at least one invariant. If it cannot be derived from an invariant, it is either a missing invariant (flag it) or a preference (exclude it).
-- Beliefs must never contradict invariants. When a conflict exists, the invariant takes precedence.
+- Every belief must be a default-binding rule with an explicit scope or condition.
+- Every belief must be traceable to at least one consideration or implementation artifact.
+- For this document, an implementation artifact is a concrete repository artifact whose implementation or behavior motivates the rule, such as a script, test, or generated runtime file.
+- Beliefs must not contradict invariants.
 - Belief changes follow the same modification process as invariant changes (MR + human approval + critic review).
 
 ### Assumptions
