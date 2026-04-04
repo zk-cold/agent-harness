@@ -25,13 +25,11 @@ For `/new-sdlc` fast path specifically: if no coverage tool is available and mis
 
 ## TDD Exemption
 
-A mission may proceed without the TDD loop only when its `Assumptions` section includes an assumption stating that the mission can be carried out TDD-exempt because every in-scope deliverable is a non-executable artifact. Common valid reasons include:
-
-- Documentation-only change (all deliverables are .md files or other non-executable artifacts).
+A mission may proceed without the TDD loop only when its `Assumptions` section includes an assumption stating that the mission can be carried out TDD-exempt because every in-scope deliverable is a non-testable artifact.
 
 Critics must verify that assumption is accurate during mission review:
 
-- If any non-exempt artifacts (scripts, executable code, configuration that affects runtime behavior) are in scope, the assumption is invalid and the critic must reject.
+- If any non-exempt artifacts (executable code, configuration that affects runtime behavior) are in scope, the assumption is invalid and the critic must reject.
 - The assumption does not reduce critic review requirements. A mission proceeding under a valid TDD-exempt assumption still receives the full critic review structure defined by `/new-sdlc` for its active flow.
 - If execution reveals that the assumption is false, follow `.agent/schemas/abort-protocol.md` instead of continuing TDD-exempt.
 

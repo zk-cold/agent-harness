@@ -40,10 +40,10 @@ For changes other than removals, **full new text** must be proposed, not a descr
 
 ### Assumptions
 
-**When to include:** The mission relies on preconditions it does not itself deliver.
+**When to include:** The mission relies on preconditions it does not itself deliver, or can only be verified in a later phase.
 
 **Constraints:**
-- Assumptions are things believed to be true but not verified (e.g., "coverage tooling produces machine-readable output").
+- Assumptions are things believed to be true but not yet verified.
 - If an assumption proves false during execution, it becomes a blocker (triggering the abort protocol).
 - Do not list things the mission itself will create as assumptions.
 
