@@ -9,6 +9,10 @@ from scripts.mission_linter import lint
 VALID = """\
 # Mission: Test mission
 
+## Considerations
+
+- Supporting detail for reviewers.
+
 ## Scope
 
 - **In scope:**
@@ -17,7 +21,7 @@ VALID = """\
 - **Out of scope:**
   - Something excluded
 
-## Dependencies & Assumptions
+## Assumptions
 
 - coverage tool is available via pytest-cov
 
@@ -153,11 +157,11 @@ def test_ac_not_empty(tmp_path):
 # --- AC9: SECTION_ORDER ---
 
 def test_section_order_violation(tmp_path):
-    # Dependencies & Assumptions before Scope = wrong order
+    # Assumptions before Scope = wrong order
     content = """\
 # Mission: Test mission
 
-## Dependencies & Assumptions
+## Assumptions
 
 - coverage available
 
@@ -178,13 +182,21 @@ def test_section_order_violation(tmp_path):
 
 
 def test_section_order_optional_before_scope(tmp_path):
-    # Invariants before Scope is correct
+    # Optional sections before Scope are correct if they follow schema order
     content = """\
 # Mission: Test mission
 
 ## Invariants
 
 - Some invariant. Violation: if X then Y.
+
+## Beliefs
+
+- Default rule when condition X holds.
+
+## Considerations
+
+- Supporting detail for reviewers.
 
 ## Scope
 
@@ -194,7 +206,7 @@ def test_section_order_optional_before_scope(tmp_path):
 - **Out of scope:**
   - Excluded
 
-## Dependencies & Assumptions
+## Assumptions
 
 - coverage available
 
@@ -247,7 +259,7 @@ def test_empty_optional_invariants(tmp_path):
 - **Out of scope:**
   - Excluded
 
-## Dependencies & Assumptions
+## Assumptions
 
 - coverage available
 
@@ -263,7 +275,7 @@ def test_empty_optional_considerations(tmp_path):
     content = """\
 # Mission: Test mission
 
-## Important Considerations
+## Considerations
 
 ## Scope
 
@@ -273,7 +285,7 @@ def test_empty_optional_considerations(tmp_path):
 - **Out of scope:**
   - Excluded
 
-## Dependencies & Assumptions
+## Assumptions
 
 - coverage available
 
@@ -285,7 +297,33 @@ def test_empty_optional_considerations(tmp_path):
     assert "EMPTY_OPTIONAL_SECTION" in lint(p)
 
 
-def test_empty_optional_deps(tmp_path):
+def test_empty_optional_beliefs(tmp_path):
+    content = """\
+# Mission: Test mission
+
+## Beliefs
+
+## Scope
+
+- **In scope:**
+  - Deliverable
+
+- **Out of scope:**
+  - Excluded
+
+## Assumptions
+
+- coverage available
+
+## Acceptance Criteria
+
+1. Works.
+"""
+    p = write(tmp_path, content)
+    assert "EMPTY_OPTIONAL_SECTION" in lint(p)
+
+
+def test_empty_optional_assumptions(tmp_path):
     content = """\
 # Mission: Test mission
 
@@ -297,7 +335,7 @@ def test_empty_optional_deps(tmp_path):
 - **Out of scope:**
   - Excluded
 
-## Dependencies & Assumptions
+## Assumptions
 
 ## Acceptance Criteria
 
@@ -326,7 +364,7 @@ def test_coverage_tool_missing(tmp_path):
 - **Out of scope:**
   - Excluded
 
-## Dependencies & Assumptions
+## Assumptions
 
 - Something unrelated
 
@@ -364,7 +402,7 @@ def test_coverage_tool_tdd_exempt_in_deps(tmp_path):
 - **Out of scope:**
   - Excluded
 
-## Dependencies & Assumptions
+## Assumptions
 
 - TDD-exempt because all deliverables are non-executable.
 
@@ -393,7 +431,7 @@ def test_tdd_exempt_in_ac(tmp_path):
     assert "TDD_EXEMPT_WRONG_SECTION" in lint(p)
 
 
-def test_tdd_exempt_in_deps_no_violation(tmp_path):
+def test_tdd_exempt_in_assumptions_no_violation(tmp_path):
     content = """\
 # Mission: Test mission
 
@@ -405,7 +443,7 @@ def test_tdd_exempt_in_deps_no_violation(tmp_path):
 - **Out of scope:**
   - Excluded
 
-## Dependencies & Assumptions
+## Assumptions
 
 - TDD-exempt because all deliverables are non-executable.
 
@@ -431,7 +469,7 @@ def test_tdd_exempt_with_py_in_scope(tmp_path):
 - **Out of scope:**
   - Excluded
 
-## Dependencies & Assumptions
+## Assumptions
 
 - TDD-exempt because all deliverables are non-executable.
 
@@ -455,7 +493,7 @@ def test_tdd_exempt_with_script_word_in_scope(tmp_path):
 - **Out of scope:**
   - Excluded
 
-## Dependencies & Assumptions
+## Assumptions
 
 - TDD-exempt because all deliverables are non-executable.
 
@@ -479,7 +517,7 @@ def test_tdd_exempt_with_md_only_in_scope(tmp_path):
 - **Out of scope:**
   - Excluded
 
-## Dependencies & Assumptions
+## Assumptions
 
 - TDD-exempt because all deliverables are non-executable.
 

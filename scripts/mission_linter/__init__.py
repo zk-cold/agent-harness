@@ -9,13 +9,14 @@ from pathlib import Path
 # Prescribed section order from mission-schema.md
 _SECTION_ORDER = [
     "Invariants",
-    "Important Considerations",
+    "Beliefs",
+    "Considerations",
     "Scope",
-    "Dependencies & Assumptions",
+    "Assumptions",
     "Acceptance Criteria",
 ]
 
-_OPTIONAL_SECTIONS = {"Invariants", "Important Considerations", "Dependencies & Assumptions"}
+_OPTIONAL_SECTIONS = {"Invariants", "Beliefs", "Considerations", "Assumptions"}
 
 _EXECUTABLE_EXTENSIONS = {".py", ".sh", ".js", ".ts", ".go", ".rb", ".rs"}
 
@@ -101,7 +102,7 @@ def lint(path: Path) -> list[str]:
             violations.append("EMPTY_OPTIONAL_SECTION")
 
     # AC11: COVERAGE_TOOL_MISSING
-    deps_body = _section_body(sections, "Dependencies & Assumptions") or ""
+    deps_body = _section_body(sections, "Assumptions") or ""
     in_scope_text_for_coverage = _in_scope_bullets(scope_body) if scope_body is not None else ""
     has_coverage_in_scope = bool(re.search(r"\bcoverage\b", in_scope_text_for_coverage, re.IGNORECASE))
     has_coverage_in_deps = bool(re.search(r"\bcoverage\b", deps_body, re.IGNORECASE))
@@ -110,7 +111,7 @@ def lint(path: Path) -> list[str]:
         violations.append("COVERAGE_TOOL_MISSING")
 
     # AC12: TDD_EXEMPT_WRONG_SECTION
-    # "TDD-exempt" is only allowed in the Dependencies & Assumptions section
+    # "TDD-exempt" is only allowed in the Assumptions section
     text_without_deps = text
     if deps_body:
         # Remove the deps section content from the text we check

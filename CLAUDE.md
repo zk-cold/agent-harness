@@ -9,7 +9,11 @@
 5. **Once a `mission.md` has been approved for `/new-sdlc`, that approved mission is immutable for the rest of that mission.** If implementation or review reveals the mission must change, the lead agent must stop the current mission, keep the approved `mission.md` unchanged, and follow `.agent/schemas/abort-protocol.md`, including rewriting `handoff.md` to state that the mission is already aborted and not resumable. The lead agent must not autonomously create a replacement mission. Violation: the agent edits an approved `mission.md`, continues execution or review under a modified mission, fails to record the abort state in `handoff.md`, resumes a mission already marked aborted, or drafts a new mission without first stopping and surfacing blockers to the user.
 6. **Belief-definition rules in `mission-schema.md` and `handoff-protocol.md` must stay consistent.** When `.agent/schemas/mission-schema.md` defines beliefs or `.agent/schemas/handoff-protocol.md` qualifies when a recovered mission may capture a belief, the file must require that beliefs define default-binding rules with an explicit scope or condition, are traceable to at least one consideration or implementation artifact, and do not contradict invariants. For this invariant, an implementation artifact is a concrete repository artifact whose implementation or behavior motivates the rule, such as a script, test, or generated runtime file. Violation: either file omits the default-binding-rule requirement, omits the explicit scope-or-condition requirement, omits the traceability-to-consideration-or-implementation-artifact requirement, omits the implementation-artifact meaning stated here, or permits beliefs that contradict invariants.
 
+
 # Considerations
+
+## Template Files
+Template files (`*.template`) inside this harness are not governance files as set out by `governance-schema.md`. They, however, materially shapes how the Invariants and Beliefs are enforced. Flag any proposed changes to the developer & include full approved text in `mission.md` as a **consideration**.
 
 ## Considerations
 

@@ -1,0 +1,148 @@
+`new-sdlc` Sub-Agent Prompt Templates
+
+Use these templates verbatim except for placeholder substitution and omission of explicitly optional blocks. Do not add lead-agent briefings, summaries, hidden rationale, "things to keep in mind," or extra mentions outside the placeholders named here.
+
+## Shared Role Declaration
+
+```
+You are a non-lead agent.
+```
+
+## Mission Creation Lite-Review Critic
+
+Required artifacts:
+- `{{GOVERNANCE_SCHEMA_PATH}}`
+- `{{TARGET_REPO_CLAUDE_PATH}}`
+- `{{CRITIC_PROTOCOL_PATH}}`
+- `{{MISSION_SCHEMA_PATH}}`
+- `{{MISSION_PATH}}`
+- raw eligibility tool outputs explicitly relied on during the interview
+
+Template:
+
+```text
+You are a non-lead agent.
+
+Review the mission using only:
+- `{{GOVERNANCE_SCHEMA_PATH}}`
+- `{{TARGET_REPO_CLAUDE_PATH}}`
+- `{{CRITIC_PROTOCOL_PATH}}`
+- `{{MISSION_SCHEMA_PATH}}`
+- `{{MISSION_PATH}}`
+{{RAW_ELIGIBILITY_OUTPUTS_BLOCK}}
+```
+
+Optional block shape:
+
+```text
+- raw eligibility tool output:
+  {{RAW_ELIGIBILITY_OUTPUT}}
+```
+
+## Mission Creation Full-Review Critic
+
+Required artifacts:
+- `{{GOVERNANCE_SCHEMA_PATH}}`
+- `{{TARGET_REPO_CLAUDE_PATH}}`
+- `{{CRITIC_PROTOCOL_PATH}}`
+- `{{MISSION_SCHEMA_PATH}}`
+- `{{MISSION_PATH}}`
+
+Template:
+
+```text
+You are a non-lead agent.
+
+Review the mission using only:
+- `{{GOVERNANCE_SCHEMA_PATH}}`
+- `{{TARGET_REPO_CLAUDE_PATH}}`
+- `{{CRITIC_PROTOCOL_PATH}}`
+- `{{MISSION_SCHEMA_PATH}}`
+- `{{MISSION_PATH}}`
+```
+
+## Fast-Path Escalation Critic
+
+Required artifacts:
+- `{{GOVERNANCE_SCHEMA_PATH}}`
+- `{{TARGET_REPO_CLAUDE_PATH}}`
+- `{{CRITIC_PROTOCOL_PATH}}`
+- `{{MISSION_SCHEMA_PATH}}`
+- `{{MISSION_PATH}}`
+
+Template:
+
+```text
+You are a non-lead agent.
+
+Review the mission for normal-flow approval using only:
+- `{{GOVERNANCE_SCHEMA_PATH}}`
+- `{{TARGET_REPO_CLAUDE_PATH}}`
+- `{{CRITIC_PROTOCOL_PATH}}`
+- `{{MISSION_SCHEMA_PATH}}`
+- `{{MISSION_PATH}}`
+```
+
+## Dev Agent Execution
+
+Required artifacts:
+- `{{GOVERNANCE_SCHEMA_PATH}}`
+- `{{MISSION_PATH}}`
+- `{{WORKTREE_PATH}}`
+
+Template:
+
+```text
+You are a non-lead agent. You operate only on the role-specific inputs granted by this phase. Do not perform session-start bootstrap discovery unless a later phase explicitly requires it.
+
+Execute the approved mission from:
+- `{{GOVERNANCE_SCHEMA_PATH}}`
+- `{{MISSION_PATH}}`
+
+Work only inside:
+- `{{WORKTREE_PATH}}`
+```
+
+## Fast-Path Post-Implementation Critic
+
+Required artifacts:
+- `{{GOVERNANCE_SCHEMA_PATH}}`
+- `{{TARGET_REPO_CLAUDE_PATH}}`
+- `{{CRITIC_PROTOCOL_PATH}}`
+- `{{MISSION_PATH}}`
+- `{{WORKTREE_PATH}}`
+
+Template:
+
+```text
+You are a non-lead agent.
+
+Review the implementation using only:
+- `{{GOVERNANCE_SCHEMA_PATH}}`
+- `{{TARGET_REPO_CLAUDE_PATH}}`
+- `{{CRITIC_PROTOCOL_PATH}}`
+- `{{MISSION_PATH}}`
+- worktree path: `{{WORKTREE_PATH}}`
+```
+
+## Normal-Flow Post-Implementation Critic
+
+Required artifacts:
+- `{{GOVERNANCE_SCHEMA_PATH}}`
+- `{{TARGET_REPO_CLAUDE_PATH}}`
+- `{{CRITIC_PROTOCOL_PATH}}`
+- `{{MISSION_PATH}}`
+- `{{WORKTREE_PATH}}`
+
+Template:
+
+```text
+You are a non-lead agent.
+
+Review the implementation using only:
+- `{{GOVERNANCE_SCHEMA_PATH}}`
+- `{{TARGET_REPO_CLAUDE_PATH}}`
+- `{{CRITIC_PROTOCOL_PATH}}`
+- `{{MISSION_PATH}}`
+- worktree path: `{{WORKTREE_PATH}}`
+```
