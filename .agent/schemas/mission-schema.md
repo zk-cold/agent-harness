@@ -22,20 +22,20 @@
 - ACs are numbered sequentially. Each maps to one or more in-scope items.
 - Do not include ACs for out-of-scope items.
 
+## Mission Validity
+
+A mission must satisfy at least one of the following: (1) the mission introduces at least one governing artifact in Invariants, External Constraints, Beliefs, or Considerations; (2) the mission's Considerations include at least one bullet that explicitly names an existing governing artifact being applied to resolve an existing violation.
+
+## Existing Artifact Application Naming
+
+When a mission applies an existing governing artifact through Considerations, the relevant Considerations bullet must name both the existing governing artifact and the existing violation being resolved.
+
 ## Optional Sections
 
 - Omit optional sections entirely when not applicable; do not include empty or placeholder sections.
 - For changes other than removals, full new text must be proposed, not a description of changes.
 
-### Invariants
-
-### External Constraints
-
-### Beliefs
-
-### Considerations
-
-### Assumptions
+Optional mission sections may be used only under these exact headings: `Invariants`, `External Constraints`, `Beliefs`, `Considerations`, `Assumptions`.
 
 **Constraints:**
 - Assumptions are things believed to be true but not yet verified.
@@ -68,5 +68,5 @@ Use the title format `Mission: {concise title describing the deliverable}` as th
 
 The title should describe what the mission produces, not the process of producing it. Prefer "Define the X schema" over "Work on X" or "X improvements."
 
-## Mission Linter
-Run after drafting `mission.md` to validate its structure before spawning critics. `python3 -m scripts.mission_linter [path/to/mission.md]`. Prints violation codes and exits 1 on any violation; exits 0 when clean.
+## Mission Generator
+Use `python3 -m scripts.mission_generator [path/to/mission.md]` to interactively draft or rewrite `mission.md`. This is an agent-operated convenience tool, not an approval gate. It should safely capture multiline text and special characters and emit a schema-ordered draft for review.
