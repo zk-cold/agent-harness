@@ -39,10 +39,7 @@ If clean-up phase merge is non-trivial, mission must be reset to completion-revi
 Only after such approval, the changes can be merged back to repo-root branch state & cleaned up.
 
 ## Template Files
-Template files (`*.template`) inside this harness are not governance files as set out by `governance-schema.md`. They, however, materially shape how the Invariants and Beliefs are enforced. Flag any proposed changes to the developer and include full approved text in `mission.md` as a **consideration**.
-
-## Enforcement Limits
-These invariants are currently text-only. More direct enforcement will require prompt, phase, merge-state, and mission-lifecycle observability from the harness.
+Flag any proposed template (`*.template`) changes to the developer and include full approved text in `mission.md` as a **consideration**.
 
 ## Bootstrap Check
 Run within Mission Creation after routing, against the applicable repo root. Two subcommands:

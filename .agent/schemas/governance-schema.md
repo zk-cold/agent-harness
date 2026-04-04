@@ -62,3 +62,6 @@ Traceability should usually be obvious from the content. If it must be declared 
 
 ## Cross References
 Cross-file references are allowed when they are necessary to identify the governing artifact or protocol being applied. Do not use them to smuggle in unstated assumptions about repo or filesystem structure.
+
+## Template Files
+Template files (`*.template`) are not governance files. They, however, when referenced by a governance file, materially shape how the Invariants and Beliefs are enforced. They are, hence, regarded as **considerations** during planning, coding, and review.
