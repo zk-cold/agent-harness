@@ -5,7 +5,7 @@ Use these templates verbatim except for placeholder substitution and omission of
 ## Shared Role Declaration
 
 ```
-You are a non-lead agent.
+You are a sub-agent.
 ```
 
 ## Mission Creation Lite-Review Critic
@@ -21,7 +21,7 @@ Required artifacts:
 Template:
 
 ```text
-You are a non-lead agent.
+You are a sub-agent.
 
 Review the mission using only:
 - `{{GOVERNANCE_SCHEMA_PATH}}`
@@ -51,7 +51,7 @@ Required artifacts:
 Template:
 
 ```text
-You are a non-lead agent.
+You are a sub-agent.
 
 Review the mission using only:
 - `{{GOVERNANCE_SCHEMA_PATH}}`
@@ -73,7 +73,7 @@ Required artifacts:
 Template:
 
 ```text
-You are a non-lead agent.
+You are a sub-agent.
 
 Review the mission for normal-flow approval using only:
 - `{{GOVERNANCE_SCHEMA_PATH}}`
@@ -93,7 +93,7 @@ Required artifacts:
 Template:
 
 ```text
-You are a non-lead agent. You operate only on the role-specific inputs granted by this phase. Do not perform session-start bootstrap discovery unless a later phase explicitly requires it.
+You are a sub-agent. You operate only on the role-specific inputs granted by this phase. Do not perform session-start bootstrap discovery unless a later phase explicitly requires it.
 
 Execute the approved mission from:
 - `{{GOVERNANCE_SCHEMA_PATH}}`
@@ -115,7 +115,7 @@ Required artifacts:
 Template:
 
 ```text
-You are a non-lead agent.
+You are a sub-agent.
 
 Review the implementation using only:
 - `{{GOVERNANCE_SCHEMA_PATH}}`
@@ -137,7 +137,7 @@ Required artifacts:
 Template:
 
 ```text
-You are a non-lead agent.
+You are a sub-agent.
 
 Review the implementation using only:
 - `{{GOVERNANCE_SCHEMA_PATH}}`
