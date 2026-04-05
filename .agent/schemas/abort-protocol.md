@@ -1,7 +1,5 @@
 # Invariants
 
-This document defines the required behavior when a mission or fast-path run must stop without continuing to Cleanup.
-
 ## When To Abort
 
 Follow this protocol when continuing the current mission would require reopening approved work. This includes:

@@ -12,7 +12,8 @@ VARIANTS: dict[str, str] = {
     ),
     "new-sdlc-normal": (
         "Phase: 2-Critic Post-Implementation Review - rerun verification on the merged state, "
-        "rewrite completion-review runtime artifacts, and submit that state to two fresh critics."
+        "rewrite completion-review runtime artifacts, submit that state to the first fresh critic, "
+        "and if it approves then to a second fresh critic."
     ),
 }
 
@@ -24,7 +25,7 @@ _HANDOFF_TEMPLATE = (
 def classify_merge_output(output: str, returncode: int) -> str:
     """Classify git merge output as TRIVIAL, NON_TRIVIAL, or MERGE_ERROR.
 
-    Trivial (CLAUDE.md Invariant 4): output contains "Already up to date." OR
+    Trivial (CLAUDE.md Trivial Merge Qualification): output contains "Already up to date." OR
     git exits 0 and output contains "Fast-forward" with no "CONFLICT" markers.
     Non-trivial: output contains "CONFLICT", or git exits 0 with no "Fast-forward".
     Merge error: git exits non-zero with no "CONFLICT" markers.

@@ -1,5 +1,8 @@
 # Invariants
 
+## Fast-Path Assumption Validation
+Fast-path assumptions recorded during Mission Creation stay provisional until this protocol's execution checks validate them.
+
 ## Coverage Threshold
 
 The coverage threshold is **>80% line coverage on the code being touched by the mission**. This single definition is the source of truth — no skill file or mission.md may define a conflicting threshold.
@@ -73,8 +76,3 @@ After all ACs have been addressed:
 - Run the coverage tool. Verify the touched code still meets the coverage threshold (>80% line coverage).
 - If the target repo provides a formatter and/or linter, run them and ensure results are clean.
 
-# Considerations
-
-## Overview
-This protocol governs the test-driven development loop within `/new-sdlc` execution phases.
-Fast-path assumptions recorded during Mission Creation stay provisional until this protocol's execution checks validate them.

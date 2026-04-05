@@ -69,7 +69,8 @@ def test_variant_new_sdlc_fast_path():
 def test_variant_new_sdlc_normal():
     assert VARIANTS["new-sdlc-normal"] == (
         "Phase: 2-Critic Post-Implementation Review - rerun verification on the merged state, "
-        "rewrite completion-review runtime artifacts, and submit that state to two fresh critics."
+        "rewrite completion-review runtime artifacts, submit that state to the first fresh critic, "
+        "and if it approves then to a second fresh critic."
     )
 
 
@@ -456,3 +457,46 @@ def test_main_do_merge_non_trivial(tmp_path, monkeypatch, capsys):
         main()
     assert exc.value.code == 2
     assert "NON_TRIVIAL" in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------------------
+# AC9 — merge_gate no longer references CLAUDE.md Invariant 4
+# ---------------------------------------------------------------------------
+
+def test_merge_gate_no_invariant_4_reference():
+    """scripts/merge_gate/__init__.py must not reference CLAUDE.md Invariant 4."""
+    repo_root = Path(__file__).resolve().parents[1]
+    source = (repo_root / "scripts" / "merge_gate" / "__init__.py").read_text()
+    assert "CLAUDE.md Invariant 4" not in source
+    assert "Invariant 4" not in source
+
+
+def test_merge_gate_references_trivial_merge_qualification():
+    """scripts/merge_gate/__init__.py must reference CLAUDE.md Trivial Merge Qualification."""
+    repo_root = Path(__file__).resolve().parents[1]
+    source = (repo_root / "scripts" / "merge_gate" / "__init__.py").read_text()
+    assert "Trivial Merge Qualification" in source
+
+
+# ---------------------------------------------------------------------------
+# AC9 — phase-reset text matches new-sdlc.md replacement paragraphs exactly
+# ---------------------------------------------------------------------------
+
+def test_variant_fast_path_text_matches_new_sdlc():
+    """VARIANTS['new-sdlc-fast-path'] must match the replacement paragraph in new-sdlc.md."""
+    repo_root = Path(__file__).resolve().parents[1]
+    new_sdlc = (repo_root / ".claude" / "commands" / "new-sdlc.md").read_text()
+    reset_text = VARIANTS["new-sdlc-fast-path"]
+    assert reset_text in new_sdlc, (
+        f"Fast-path variant text not found in new-sdlc.md:\n{reset_text}"
+    )
+
+
+def test_variant_normal_text_matches_new_sdlc():
+    """VARIANTS['new-sdlc-normal'] must match the replacement paragraph in new-sdlc.md."""
+    repo_root = Path(__file__).resolve().parents[1]
+    new_sdlc = (repo_root / ".claude" / "commands" / "new-sdlc.md").read_text()
+    reset_text = VARIANTS["new-sdlc-normal"]
+    assert reset_text in new_sdlc, (
+        f"Normal-flow variant text not found in new-sdlc.md:\n{reset_text}"
+    )
