@@ -1,5 +1,8 @@
 # Invariants
 
+## Governed Documents
+`AGENTS.md`, `CLAUDE.md`, `.agent/schemas/*.md`, and `.claude/commands/*.md` in this harness and the target repo.
+
 ## Governance Artifacts
 **Invariants**, **External Constraints**, **Beliefs**, and **Considerations**
 
@@ -24,13 +27,13 @@ Beliefs must define default-binding rules with an explicit scope or condition.
 ## Consideration Content
 Considerations must provide non-obvious supporting detail traceable to at least one hard constraint, belief, or implementation artifact.
 
+## Implementation Artifact
+Git-tracked artifacts that are not classified as Governed Documents
+
 ## Overrides
 A belief or consideration may be overridden only when it is explicitly referenced and the justification is stated clearly enough to withstand adversarial review.
 
 # Considerations
-
-## Governed Documents
-`AGENTS.md`, `CLAUDE.md`, `.agent/schemas/*.md`, and `.claude/commands/*.md` in this harness and the target repo.
 
 ## Invariant Qualification
 A statement is disqualified as an invariant when any of the following is true:
