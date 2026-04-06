@@ -32,10 +32,6 @@ If no relevant `handoff.md` exists, begin the interview from scratch. If a relev
 3. Submit the current draft to the applicable review variant.
 4. If the required approvals are not yet obtained, return to interview and drafting only as needed, then repeat the loop.
 
-The mission must be self-contained: a critic with access to only the harness repo-root `.agent/schemas/governance-schema.md`, the harness repo-root `.agent/schemas/critic-protocol.md`, the harness repo-root `.agent/schemas/mission-schema.md`, and `mission.md` must be able to evaluate it.
-
-Mission Creation should make a good-faith attempt to keep a request on fast path whenever no fast-path disqualifier is already known. If a fast-path eligibility fact is still unknown but is plausibly true and can be checked during lite review, execution, or post-implementation review, the lead agent should capture it as an explicit `Assumptions` entry in `mission.md` instead of forcing normal flow up front. These assumptions are provisional: they do not waive the fast-path rules, and fast path must be abandoned as soon as review or execution disproves any of them.
-
 **Fast-path eligibility:** A request qualifies for the fast path only when all four criteria are met:
 
 1. **No invariant / external constraint modifications or deletions** — the mission does not modify or delete invariants or external constraints in governance files, and does not semantically modify or delete test code. Adding a new invariant / external contraint is allowed on fast path. Changing a `*.template` file referenced by a governed document disqualifies the mission from fast path.
@@ -69,7 +65,7 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 
 Execute the approved mission in an isolated git worktree. The exact `mission.md` approved in Phase: Mission Creation is the execution contract for this phase and must remain unchanged. Produce only the deliverables specified in scope. Leave implementation changes uncommitted in the worktree for Post-Implementation Review (Fast Path); do not create commits during this phase. If implementation reveals that the mission itself must change, follow `.agent/schemas/abort-protocol.md`.
 
-Execution must verify any fast-path assumptions as soon as the relevant checks become available. If the approved mission includes the TDD-exempt assumption defined by `.agent/schemas/tdd-protocol.md`, verify that the assumption is valid (all deliverables are non-executable artifacts), then execute without the TDD loop. If execution reveals that the assumption is false, follow `.agent/schemas/abort-protocol.md`. Otherwise, follow the TDD Execution Loop defined in `.agent/schemas/tdd-protocol.md`. This includes: setup/verify coverage tool, measure baseline, fill coverage gaps to threshold, per-AC red-green cycle, and final verification (coverage threshold check).
+If the approved mission includes the TDD-exempt assumption defined by `.agent/schemas/tdd-protocol.md`, verify that the assumption is valid (all deliverables are non-executable artifacts), then execute without the TDD loop. If execution reveals that the assumption is false, follow `.agent/schemas/abort-protocol.md`. Otherwise, follow the TDD Execution Loop defined in `.agent/schemas/tdd-protocol.md`. This includes: setup/verify coverage tool, measure baseline, fill coverage gaps to threshold, per-AC red-green cycle, and final verification (coverage threshold check).
 
 Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-protocol.md`.
 

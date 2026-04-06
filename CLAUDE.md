@@ -6,55 +6,22 @@ Unless you are a sub-agent, handle any prompt with `/new-sdlc`.
 ## Mandatory Critic Review
 Required critic reviews must be completed before continuing.
 
-## Completion-Review before Commits
-Until required completion-review approves the implementation, the implementation must stay uncomitted in the worktree.
-
-## Approved Mission Immutability
-Once a `mission.md` has been approved, that approved mission is immutable for the rest of that mission.
-
 ## Meta Governance
 This harness must have no external constraints.
 
 ## Root Branch
 The root branch for this harness is `main`.
 
-## Critic Spawning Blockers
-If spawning the required critic is blocked by runtime, the mission must be blocked, and user must be prompted for direction.
-
-## Abort Protocol
-If implementation or review reveals an immutable `mission.md` must change, keep the `mission.md` unchanged, and follow `.agent/schemas/abort-protocol.md`.
-
-## Completion-Review Merge Base
-The applicable repo-root branch state is the integration branch named by the target repo's governing artifacts; if those artifacts name none, it is the branch from which the worktree was created.
-
-## Completion-Review Merge Requirement
-Before completion review, the latest applicable repo-root branch state must be merged into the current worktree.
-
 ## Trivial Merge Qualification
 A completion-review or cleanup merge counts as trivial only when Git reports `Already up to date.` or performs a clean fast-forward with no manual conflict resolution.
-
-## Non-Trivial Merge Phase Reset
-If the completion-review merge is non-trivial, the merged state must re-enter the applicable completion-review phase before further completion review may continue.
-
-## Non-Trivial Merge Submission Gate
-A non-trivially merged state must not be submitted for completion review unless that merged state remains within the approved mission scope and satisfies every mission acceptance criterion.
-
-## Completion-Review Runtime Inputs
-Completion-review critics must review the live uncommitted diff plus the runtime artifact files required by `.agent/schemas/critic-protocol.md` `Heavy verification outputs as runtime artifacts` for the merged state under review.
-
-## Cleanup Merge Reset
-If a clean-up phase merge is non-trivial, mission must be reset to completion-review phase and obtain fresh completion-review approvals before cleanup continues.
-
-## Post-Approval Merge-Back Gate
-Changes may be merged back to repo-root branch state only after fresh completion-review approval on the merged state.
-
-## Template Files
-Flag any proposed template (`*.template`) changes to the developer and include full approved text of updated sections in `mission.md` as a **consideration**.
 
 ## Codex Sub-Agent Boundary
 Codex sub-agents must ignore this `CLAUDE.md` while remaining free to continue reading `AGENTS.md`.
 
 # Considerations
+
+## Derivability Remediation
+governance-schema.md Invariant Qualification bullet 3 ("already derivable from other governance artifacts") is applied to remove invariants, beliefs, and considerations identified as derivable or duplicated in TODO.md section 1 (Possible Removals). Cross-file duplications keep the authoritative copy and remove the restatement; within-file duplications and obvious/low-value items are removed outright.
 
 ## Codex Sub-Agent Boundary Rationale
 The Codex sub-agent boundary in this file exists because `CLAUDE.md` carries lead-only governance here, while `AGENTS.md` remains a useful Codex routing artifact.

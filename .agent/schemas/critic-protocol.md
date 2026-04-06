@@ -36,5 +36,4 @@ Before spawning a completion-review critic sub-agent, the primary agent (or exec
 1. An approval response must be exactly `APPROVE` with no additional text.
 2. A rejection response must begin with `REJECT` and then state the reasons.
 3. There is no approval with comments. If a critic has any feedback, caveat, or requested change, it must reject.
-4. A response that combines approval with commentary, suggestions, or caveats is a violation.
-5. Rejection reasons must be specific enough for the primary agent to act on without guessing what needs to change.
+4. Rejection reasons must be specific enough for the primary agent to act on without guessing what needs to change.

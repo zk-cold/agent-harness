@@ -59,20 +59,7 @@ Optional mission sections may be used only under these exact headings: `Invarian
 - Assumptions may provisionally carry plausible fast-path claims forward from Mission Creation only when they can be validated during later review or execution.
 - Assumptions must not hide already-known fast-path disqualifiers.
 
-# Beliefs
-
-- For hard constraints, prefer automated tests when the constraint can naturally be enforced there.
-
 # Considerations
-
-## Scope Purpose
-Define the boundaries of the mission — what will be delivered and what will not. A well-defined scope prevents ambiguity during execution and gives critics a frame for evaluating the acceptance criteria.
-
-## Acceptance Criteria Purpose
-Define the conditions under which this mission is considered complete. ACs are the primary artifact critics evaluate and the standard the primary agent executes against. Scope-delivery ACs map to in-scope items; persistence ACs map to the governed artifacts they persist.
-
-## Optional Sections
-Include these only when the mission has something new to declare. They follow the same definition as set out in `governance-schema.md`.
 
 ## Assumptions
 Use this section when the mission relies on preconditions it does not itself deliver, or can only be verified in a later phase. This includes fast-path assumptions that are reasonable to defer to lite review, execution, or post-implementation review.
