@@ -2,62 +2,6 @@
 
 Audit of all governed files against `.agent/schemas/governance-schema.md`.
 
-## 1. Possible Removals
-
-### 1.1 Cross-File Duplications (CLAUDE.md into new-sdlc.md / protocols)
-
-| # | CLAUDE.md Invariant | Authoritative Source |
-|---|---|---|
-| 1.1.1 | Completion-Review before Commits | Enforced by new-sdlc.md phase structure: both execution phases say "leave uncommitted"; both review phases create commits only after approval. |
-| 1.1.2 | Approved Mission Immutability | Restated in new-sdlc.md (>=4 places), abort-protocol.md Required Actions S1, handoff-protocol.md Recovery S5. |
-| 1.1.3 | Critic Spawning Blockers | Fully subsumed by new-sdlc.md "Required Critic Availability" which provides the complete protocol. |
-| 1.1.4 | Abort Protocol | Repackages abort-protocol.md "When To Abort" + Required Actions S1. That protocol is self-contained. |
-| 1.1.5 | Completion-Review Merge Base | Restated verbatim in both post-implementation review phases in new-sdlc.md. |
-| 1.1.6 | Completion-Review Merge Requirement | Restated in both post-implementation review phases in new-sdlc.md. |
-| 1.1.7 | Non-Trivial Merge Phase Reset | Restated with full detail in both post-implementation review phases in new-sdlc.md. |
-| 1.1.8 | Non-Trivial Merge Submission Gate | Enforced by phase structure (re-verify all ACs before resubmitting) and critic evaluation criteria in new-sdlc.md. |
-| 1.1.9 | Completion-Review Runtime Inputs | Restated in both post-implementation review phases in new-sdlc.md, referencing critic-protocol.md. |
-| 1.1.10 | Cleanup Merge Reset | Restated in new-sdlc.md Phase: Cleanup. |
-| 1.1.11 | Post-Approval Merge-Back Gate | Enforced by phase ordering in new-sdlc.md (cleanup follows review approval). |
-| 1.1.12 | Template Files | Also stated in new-sdlc.md Phase: Mission Creation. |
-
-Non-duplicated CLAUDE.md invariants (keep): Bootstrap, Meta Governance, Root Branch, Mandatory Critic Review, Trivial Merge Qualification, Codex Sub-Agent Boundary.
-
-### 1.2 AGENTS.md
-
-| # | Statement | Duplicate Of |
-|---|---|---|
-| 1.2.1 | Bootstrap ("follow `.claude/commands/new-sdlc.md` in response to any prompt") | CLAUDE.md Bootstrap ("handle any prompt with `/new-sdlc`"). Same constraint, different wording. |
-
-### 1.3 Other Cross-File Duplications
-
-| # | Statement | Authoritative Source |
-|---|---|---|
-| 1.3.1 | mission-schema.md Self-Containment | Restated verbatim in new-sdlc.md Phase: Mission Creation. |
-| 1.3.2 | tdd-protocol.md Fast-Path Assumption Validation | Restated in new-sdlc.md Phase: Execute in Worktree. |
-| 1.3.3 | handoff-protocol.md Session-start check (lifecycle bullet) | ~80% overlap with new-sdlc.md Phase: Mission Creation (worktree inspection, relatedness test, bootstrap). |
-| 1.3.4 | handoff-protocol.md Cleanup section | Restated in new-sdlc.md Phase: Cleanup. |
-| 1.3.5 | handoff-protocol.md Cleanup reset to completion review (lifecycle bullet) | Restated in new-sdlc.md Phase: Cleanup. |
-
-### 1.4 Within-File Duplications
-
-| # | Statement | Duplicate Of |
-|---|---|---|
-| 1.4.1 | critic-protocol.md Response Contract item 4 ("A response that combines approval with commentary, suggestions, or caveats is a violation") | Item 3 ("There is no approval with comments. If a critic has any feedback, caveat, or requested change, it must reject."). Same rule, different words. |
-| 1.4.2 | new-sdlc.md Fast-Path Preference belief | Verbatim restatement of the paragraph already in Phase: Mission Creation. |
-
-### 1.5 Obvious / Low Enforceable Value
-
-| # | Statement | Reason |
-|---|---|---|
-| 1.5.1 | handoff-protocol.md consideration Abort Protocol Reference | States "This document relies on the existing abort protocol behavior..." -- obvious from the explicit abort-protocol.md references throughout the file. |
-| 1.5.2 | mission-schema.md consideration Scope Purpose | "Define the boundaries of the mission -- what will be delivered and what will not." Obvious from the section name and the required subsections. |
-| 1.5.3 | mission-schema.md consideration Acceptance Criteria Purpose | "Define the conditions under which this mission is considered complete." Obvious from the name and constraints. |
-| 1.5.4 | mission-schema.md consideration Optional Sections | First sentence restates the invariant ("Omit optional sections entirely when not applicable"). Second sentence adds marginal value. |
-| 1.5.5 | mission-schema.md belief "For hard constraints, prefer automated tests" | Overlaps with engineering-protocol.md consideration "Prefer Automated Tests over Prose Rules." Same idea in two files. |
-
----
-
 ## 2. Governance Schema Violations
 
 ### 2.1 Misclassifications
