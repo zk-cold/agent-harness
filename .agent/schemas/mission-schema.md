@@ -52,7 +52,7 @@ When a mission applies an existing governing artifact through Considerations, th
 Optional mission sections may be used only under these exact headings: `Invariants`, `External Constraints`, `Beliefs`, `Considerations`, `Assumptions`.
 - Omit optional sections entirely when not applicable; do not include empty or placeholder sections.
 - For changes other than removals, full new text must be proposed, not a description of changes.
-- Critics must review rigoriously against the governance-schema, for any proposed new/updated governance artifacts
+- Critics must review rigoriously any proposed new/updated governance artifacts, against their qualifications clauses
 
 ## Assumptions Content
 Things believed to be true, that materially enables / shapes / constraints the mission.

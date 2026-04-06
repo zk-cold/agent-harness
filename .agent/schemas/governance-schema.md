@@ -51,7 +51,7 @@ A statement is disqualified as a belief when any of the following is true:
 - It is actually an always-binding constraint and therefore belongs in hard constraints instead.
 
 ## Consideration Qualification
-A consideration should provide non-obvious supporting detail. It is disqualified as a consideration when any of the following is true:
+A statement is disqualified as a consideration when any of the following is true:
 - It contradicts a hard constraint.
 - It is obvious enough that it adds no interpretive or implementation value.
 - It cannot be traced back to a hard constraint, belief, or implementation artifact.
