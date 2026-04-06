@@ -20,9 +20,6 @@ Codex sub-agents must ignore this `CLAUDE.md` while remaining free to continue r
 
 # Considerations
 
-## Derivability Remediation
-governance-schema.md Invariant Qualification bullet 3 ("already derivable from other governance artifacts") is applied to remove invariants, beliefs, and considerations identified as derivable or duplicated in TODO.md section 1 (Possible Removals). Cross-file duplications keep the authoritative copy and remove the restatement; within-file duplications and obvious/low-value items are removed outright.
-
 ## Codex Sub-Agent Boundary Rationale
 The Codex sub-agent boundary in this file exists because `CLAUDE.md` carries lead-only governance here, while `AGENTS.md` remains a useful Codex routing artifact.
 
