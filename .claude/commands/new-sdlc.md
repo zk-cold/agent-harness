@@ -34,8 +34,8 @@ If no relevant `handoff.md` exists, begin the interview from scratch. If a relev
 
 **Fast-path eligibility:** A request qualifies for the fast path only when all four criteria are met:
 
-1. **No invariant / external constraint modifications or deletions** — the mission does not modify or delete invariants or external constraints in governance files, and does not semantically modify or delete test code. Adding a new invariant / external contraint is allowed on fast path. Changing a `*.template` file referenced by a governed document disqualifies the mission from fast path.
-2. **No belief or consideration overrides** - Fast path permits modifying or deleting not more than one belief or consideration. However, overriding any of them in planned aritifacts disqualifies the mission from fast path.
+1. **No hard constraint modifications or deletions** — the mission does not modify or delete invariants or external constraints in governance files, and does not semantically modify or delete test code. Adding a new hard constraint is allowed on fast path. Changing a `*.template` file referenced by a governed document disqualifies the mission from fast path.
+2. **No belief or consideration overrides** - Fast path permits modifying or deleting not more than one belief or consideration. However, overriding any of them in planned artifacts disqualifies the mission from fast path.
 3. **>80% test coverage around target code** — the code being changed already has more than 80% line coverage, providing a safety net for regressions. If no coverage tool is available and the mission does not include coverage tool setup as in-scope, the request is ineligible for fast path.
 4. **Clear scope, limited & safe change** — the change is well-defined, small in blast radius, and unlikely to introduce systemic risk.
 

@@ -4,7 +4,7 @@
 **Invariants**, **External Constraints**, **Beliefs**, and **Considerations**
 
 ## Hard Constraints
-**Invariants** and **External Contraints**
+**Invariants** and **External Constraints**
 
 ## Allowed Top-Level Sections
 Governed documents may only define governance artifacts, with their category being top-level sections (`#`).
@@ -13,7 +13,7 @@ Governed documents may only define governance artifacts, with their category bei
 The definitions in this document are authoritative and final. Agents must not edit this file.
 
 ## Invariant Content
-Invariants must define always-binding constraints。
+Invariants must define always-binding constraints.
 
 ## External Constraint Content
 External Constraints must define constraints imposed by external authorities that are currently binding.
@@ -58,7 +58,7 @@ A statement is disqualified as a consideration when any of the following is true
 - It is actually a binding rule and therefore belongs in hard constraints or beliefs instead.
 
 ## Violation Clauses
-Hard Constraints should not contain an explicit violation clause. They should be concrete enought that a reviewer can determine whether it was followed, from its own wording.
+Hard Constraints should not contain an explicit violation clause. They should be concrete enough that a reviewer can determine whether it was followed, from its own wording.
 
 ## Traceability
 Traceability should usually be obvious from the content. If it must be declared explicitly to make sense, that usually signals a missing hard constraint, belief, or consideration.
