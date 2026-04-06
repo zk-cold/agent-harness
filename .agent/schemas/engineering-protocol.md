@@ -19,6 +19,9 @@ Refactoring is allowed only when justified by at least one existing or newly int
 ## New Test Purpose
 Each new test must express an identified invariant or external constraint. Tests must not be written solely for coverage.
 
+## Governance Persistence
+Persist new invariants, beliefs, and considerations only when a reviewed mission explicitly promotes them into the relevant governance artifact.
+
 # Beliefs
 
 ## Prefer Scripts for Deterministic Logic
@@ -29,6 +32,3 @@ This belief does not require deterministic linting for mission or governance pro
 
 ## Prefer Automated Tests over Prose Rules
 Where possible, use automated tests to express invariants.
-
-## Governance Persistence
-Persist new invariants, beliefs, and considerations only when a reviewed mission explicitly promotes them into the relevant governance artifact.

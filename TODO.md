@@ -2,39 +2,6 @@
 
 Audit of all governed files against `.agent/schemas/governance-schema.md`.
 
-## 2. Governance Schema Violations
-
-### 2.1 Misclassifications
-
-| # | File | Statement | Current | Should Be | Reason |
-|---|---|---|---|---|---|
-| 2.1.1 | engineering-protocol.md | Governance Persistence | Consideration | Invariant | "Persist...only when a reviewed mission explicitly promotes them" is an always-binding constraint, not supporting detail. Disqualified as consideration per "actually a binding rule." |
-
-### 2.2 Invariant Qualification Failures (Derivability)
-
-The 12 CLAUDE.md duplicates (1.1.1--1.1.12) and AGENTS.md Bootstrap (1.2.1) are also schema violations: each is "already derivable from other governance artifacts" per governance-schema.md Invariant Qualification bullet 3.
-
-### 2.3 Defects in governance-schema.md
-
-The schema declares itself authoritative and agent-uneditable but contains:
-
-| # | Line | Defect |
-|---|---|---|
-| 2.3.1 | 8 | "External **Contraints**" -- typo, should be "Constraints" |
-| 2.3.2 | 16 | Trailing CJK period (U+3002) instead of ASCII period |
-| 2.3.3 | 61 | "concrete **enought**" -- typo, should be "enough" |
-
-These require developer action since agents must not edit this file.
-
-### 2.4 Defects in new-sdlc.md
-
-| # | Line | Defect |
-|---|---|---|
-| 2.4.1 | 41 | "invariant / external **contraint**" -- typo |
-| 2.4.2 | 42 | "planned **aritifacts**" -- typo |
-
----
-
 ## 3. Contradictions
 
 ### 3.1 engineering-protocol.md "New Test Purpose" vs tdd-protocol.md Step 3 "Fill Coverage Gaps"
