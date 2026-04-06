@@ -37,6 +37,8 @@ When present, sections appear in this order: Invariants, External Constraints, B
 **Constraints:**
 - Every governed artifact captured in `Invariants`, `External Constraints`, `Beliefs`, or `Considerations` must have at least one acceptance criterion that requires the artifact to be persisted.
 - When a governed artifact is not persisted as automated tests, its persistence acceptance criterion must require the same text in the governed file and matching top-level governance section where the artifact will live after the mission completes.
+- When a mission's `Considerations` section references an existing governing artifact solely to apply it retrospectively to an existing violation — without modifying, extending, or reinterpreting that artifact — the mission may explicitly exempt that consideration from persistence by listing it in `Out of scope`. When so exempted, that consideration does not require a persistence acceptance criterion.
+- Every consideration that a mission persists must be prepared to withstand adversarial critic review against its lasting governance value beyond the mission.
 
 ## Mission Validity
 
