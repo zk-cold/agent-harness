@@ -72,7 +72,7 @@ For each acceptance criterion in mission.md, in order:
 
 **e. Verify the test is green.** If it fails, fix the prod code (not the test) and re-verify.
 
-**f. Refactor** if needed, verifying tests remain green after any refactoring.
+**f. Refactor** if needed, verifying tests remain green after any refactoring. Any refactoring must satisfy `.agent/schemas/engineering-protocol.md` Refactoring Justification.
 
 ### 5. Final Verification
 

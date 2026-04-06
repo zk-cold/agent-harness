@@ -2,28 +2,6 @@
 
 Audit of all governed files against `.agent/schemas/governance-schema.md`.
 
-## 3. Contradictions
-
-### 3.1 engineering-protocol.md "New Test Purpose" vs tdd-protocol.md Step 3 "Fill Coverage Gaps"
-
-- Engineering protocol: "Each new test must express an identified invariant or external constraint. Tests must not be written solely for coverage."
-- TDD protocol Step 3: "If the baseline coverage...is below the coverage threshold, write tests to bring it up to the threshold."
-
-Step 3 directs writing tests to meet a coverage number without requiring they express an identified invariant. An agent following Step 3 literally could write tests that violate "New Test Purpose."
-
-### 3.2 engineering-protocol.md "Refactoring Justification" vs tdd-protocol.md Step 4f "Refactor"
-
-- Engineering protocol: "Refactoring is allowed only when justified by at least one existing or newly introduced governing artifact."
-- TDD Step 4f: "Refactor if needed, verifying tests remain green after any refactoring."
-
-Step 4f permits refactoring with no mention of governing-artifact justification. An agent following TDD literally could refactor without satisfying the engineering protocol.
-
-### 3.3 handoff-protocol.md Recovery Protocol S4 extends governance-schema.md
-
-Recovery S4 adds a definition of "implementation artifact" ("a concrete repository artifact whose implementation or behavior motivates the rule, such as a script, test, or generated runtime file") that does not appear in governance-schema.md. Since the schema is "authoritative and final," introducing a new scoped definition of a term the schema uses could create divergent interpretations inside vs. outside recovery context.
-
----
-
 ## 4. Ambiguities
 
 | # | Location | Statement (abbreviated) | Ambiguity |
