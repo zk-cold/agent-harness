@@ -49,22 +49,21 @@ A mission must satisfy at least one of the following: (1) the mission introduces
 When a mission applies an existing governing artifact through Considerations, the relevant Considerations bullet must name both the existing governing artifact and the existing violation being resolved.
 
 ## Optional Sections
-
+Optional mission sections may be used only under these exact headings: `Invariants`, `External Constraints`, `Beliefs`, `Considerations`, `Assumptions`.
 - Omit optional sections entirely when not applicable; do not include empty or placeholder sections.
 - For changes other than removals, full new text must be proposed, not a description of changes.
+- Critics must review rigoriously against the governance-schema, for any proposed new/updated governance artifacts
 
-Optional mission sections may be used only under these exact headings: `Invariants`, `External Constraints`, `Beliefs`, `Considerations`, `Assumptions`.
-
-**Constraints:**
-- Assumptions are things believed to be true but not yet verified.
-- Assumptions must be limited to preconditions that may remain unverified during Mission Creation.
-- Assumptions may provisionally carry plausible fast-path claims forward from Mission Creation only when they can be validated during later review or execution.
-- Assumptions must not hide already-known fast-path disqualifiers.
+## Assumptions Content
+Things believed to be true, that materially enables / shapes / constraints the mission.
 
 # Considerations
 
-## Assumptions
-Use this section when the mission relies on preconditions it does not itself deliver, or can only be verified in a later phase. This includes fast-path assumptions that are reasonable to defer to lite review, execution, or post-implementation review.
+## Assumption Qualifications
+A statement is disqualified as an assumption when any of the following is true:
+- It is verifiable during Mission Creation
+- It does not serve as a precondition to the drafted mission
+- It serves governance value beyond the scope of this mission
 
 ## Mission Generator
 Use `python3 -m scripts.mission_generator [path/to/mission.md]` to interactively draft or rewrite `mission.md`. This is an agent-operated convenience tool, not an approval gate. It should safely capture multiline text and special characters and emit a schema-ordered draft for review.
