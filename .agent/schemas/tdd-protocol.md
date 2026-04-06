@@ -1,5 +1,9 @@
 # Invariants
 
+## TDD Final Verification Scope
+
+The TDD Execution Loop's Final Verification step (`.agent/schemas/tdd-protocol.md`) must not include a full test suite run. Final Verification covers only coverage-threshold and formatter/linter checks. The full test suite run is deferred to the completion-review phase, which runs it after merging the applicable repo-root branch state to produce runtime artifacts for critic review.
+
 ## Fast-Path Assumption Validation
 Fast-path assumptions recorded during Mission Creation stay provisional until this protocol's execution checks validate them.
 
@@ -72,7 +76,6 @@ For each acceptance criterion in mission.md, in order:
 
 After all ACs have been addressed:
 
-- Run the full test suite. All tests must pass.
 - Run the coverage tool. Verify the touched code still meets the coverage threshold (>80% line coverage).
 - If the target repo provides a formatter and/or linter, run them and ensure results are clean.
 
