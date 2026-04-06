@@ -14,7 +14,7 @@ The coverage threshold is **>80% line coverage on the code being touched by the 
 This threshold applies in two contexts:
 
 1. **Fast-path eligibility:** the target code must already meet the threshold before execution begins.
-2. **TDD baseline**: before the red-green loop begins, coverage on the target code must meet the threshold. If it does not, the agent fills coverage gaps first (see TDD Execution Loop step 3).
+2. **TDD baseline**: before the red-green loop begins, coverage on the target code must meet the threshold. If it does not, the executing agent must follow `.agent/schemas/abort-protocol.md`.
 
 ## Coverage Tool Requirement
 
@@ -35,6 +35,9 @@ The TDD-exempt assumption is valid only when all in-scope deliverables are non-t
 
 - If any non-exempt artifacts (executable code, configuration that affects runtime behavior) are in scope, the assumption is invalid.
 
+## Low-Coverage Abort Rule
+When the TDD Execution Loop's step 2 (Measure Baseline Coverage) reveals that the target code's line coverage is at or below the coverage threshold (>80%), the executing agent must follow `.agent/schemas/abort-protocol.md` with the blocker summary identifying the insufficient baseline coverage. The agent must not write tests to fill coverage gaps or proceed with the red-green cycle.
+
 ## TDD Execution Loop
 
 When a mission does not have a valid TDD-exempt assumption, the execution phase must follow these sub-steps in order. The agent must not write prod-scope code before completing steps 1–3, and must not write prod-scope code for an AC before writing its failing test (step 4).
@@ -45,14 +48,13 @@ Confirm the coverage tool is available and working. If the mission scopes covera
 
 ### 2. Measure Baseline Coverage
 
-Run the coverage tool against the code being touched by the mission. Record the baseline coverage percentage. This baseline is used in step 3 to determine whether coverage gaps must be filled before prod changes begin.
+Run the coverage tool against the code being touched by the mission. Record the baseline coverage percentage. This baseline is used in step 3 to determine whether the threshold is met before prod changes begin.
 
-### 3. Fill Coverage Gaps
+### 3. Verify Baseline Meets Threshold
 
-If the baseline coverage on the target code is below the coverage threshold (>80% line coverage), write tests to bring it up to the threshold. Then:
+If the baseline coverage measured in step 2 is at or below the coverage threshold (>80% line coverage), follow `.agent/schemas/abort-protocol.md` with the blocker summary identifying the insufficient baseline coverage percentage and the affected code. Do not write tests to fill coverage gaps or proceed with the red-green cycle.
 
-- Verify all tests (existing and new) are green.
-- Do not touch prod-scope code during this step. The goal is to establish a safety net around the code about to change, not to modify the code itself.
+If the baseline coverage exceeds the threshold, proceed to step 4.
 
 ### 4. Per-AC Red-Green Cycle
 
