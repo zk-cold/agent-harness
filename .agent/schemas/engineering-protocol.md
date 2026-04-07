@@ -11,7 +11,6 @@ Semantic modifications or deletions of existing test code must be reviewed with 
 ## Existing Violations
 A failing test is an existing violation of the invariant or external constraint that the test expresses.
 An implementation that does not satisfy an existing belief is an existing violation unless an explicit override is documented as a consideration in mission.md and subsequently persisted.
-An existing consideration may be cited to identify, explain, or trace an existing violation, but it does not become a hard constraint solely by being cited.
 
 ## Refactoring Justification
 Refactoring is allowed only when necessary to satisfy or when it directly supports at least one existing or newly introduced governing artifact. Refactoring without such justification is not allowed.
