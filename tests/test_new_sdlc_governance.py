@@ -19,8 +19,9 @@ def test_new_sdlc_prefers_fast_path_attempts_with_explicit_assumptions():
 def test_mission_schema_allows_later_validation_of_fast_path_assumptions():
     text = _read(".agent/schemas/mission-schema.md")
 
-    assert "Assumptions may provisionally carry plausible fast-path claims forward" in text
-    assert "Assumptions must not hide already-known fast-path disqualifiers." in text
+    assert "## Assumptions Content" in text
+    assert "## Assumption Qualifications" in text
+    assert "It is verifiable during Mission Creation" in text
 
 
 def test_mission_schema_requires_persisted_governed_artifacts():
@@ -37,7 +38,7 @@ def test_mission_schema_requires_persisted_governed_artifacts():
         "require the same text in the governed file and matching top-level governance section where the artifact will "
         "live after the mission completes."
     ) in text
-    assert "For hard constraints, prefer automated tests when the constraint can naturally be enforced there." in text
+    assert "Every consideration that a mission persists must be prepared to withstand adversarial critic review" in text
 
 
 def test_tdd_protocol_requires_execution_to_validate_coverage_assumption():
@@ -60,8 +61,8 @@ def test_new_sdlc_execution_mentions_threshold_check_not_regression_gate():
     text = _read(".claude/commands/new-sdlc.md")
 
     assert "modified code remains above the >80% coverage threshold" in text
-    assert "final verification (full suite + coverage threshold check)" in text
-    assert "final verification (full suite + coverage threshold check + formatter/linter)" in text
+    assert "final verification (coverage threshold check)" in text
+    assert "final verification (coverage threshold check + formatter/linter)" in text
     assert "coverage regression check" not in text
     assert "no coverage regression" not in text
 
@@ -91,17 +92,11 @@ def test_claude_md_invariants_include_completion_review_artifacts():
     text = _read("CLAUDE.md")
     # All these must be present as ## headings under # Invariants
     for heading in [
-        "## Critic Spawning Blockers",
-        "## Abort Protocol",
-        "## Completion-Review Merge Base",
-        "## Completion-Review Merge Requirement",
+        "## Bootstrap",
+        "## Mandatory Critic Review",
+        "## Meta Governance",
+        "## Root Branch",
         "## Trivial Merge Qualification",
-        "## Non-Trivial Merge Phase Reset",
-        "## Non-Trivial Merge Submission Gate",
-        "## Completion-Review Runtime Inputs",
-        "## Cleanup Merge Reset",
-        "## Post-Approval Merge-Back Gate",
-        "## Template Files",
         "## Codex Sub-Agent Boundary",
     ]:
         assert heading in text, f"Missing heading: {heading}"
@@ -366,20 +361,18 @@ def test_new_sdlc_cleanup_merge_sentence():
 
 def test_template_critic_prompts_have_role_specific_input_statement():
     text = _read(".agent/templates/new-sdlc-subagents.prompt.template")
-    assert "Operate only on the role-specific inputs granted by the invoking phase." in text
+    assert "Do not modify or delete any files." in text
 
 
 def test_template_critic_prompts_have_no_bootstrap_statement():
     text = _read(".agent/templates/new-sdlc-subagents.prompt.template")
-    assert "Do not perform session-start bootstrap discovery unless the invoking phase explicitly requires it." in text
+    assert "You are a critic sub-agent. Do not modify or delete any files." in text
 
 
 def test_template_mission_creation_lite_review_critic():
     text = _read(".agent/templates/new-sdlc-subagents.prompt.template")
     expected = (
-        "You are a critic sub-agent.\n"
-        "Operate only on the role-specific inputs granted by the invoking phase.\n"
-        "Do not perform session-start bootstrap discovery unless the invoking phase explicitly requires it.\n"
+        "You are a critic sub-agent. Do not modify or delete any files.\n"
         "\n"
         "Review the mission. Governing documents:\n"
         "- `{{GOVERNANCE_SCHEMA_PATH}}`\n"
@@ -397,9 +390,7 @@ def test_template_mission_creation_lite_review_critic():
 def test_template_fast_path_post_implementation_critic():
     text = _read(".agent/templates/new-sdlc-subagents.prompt.template")
     expected = (
-        "You are a critic sub-agent.\n"
-        "Operate only on the role-specific inputs granted by the invoking phase.\n"
-        "Do not perform session-start bootstrap discovery unless the invoking phase explicitly requires it.\n"
+        "You are a critic sub-agent. Do not modify or delete any files.\n"
         "\n"
         "Review the implementation. Governing documents:\n"
         "- `{{GOVERNANCE_SCHEMA_PATH}}`\n"
