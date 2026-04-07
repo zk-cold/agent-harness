@@ -4,7 +4,7 @@
 For a fresh request, the lead agent must follow the shared phases and then the applicable flow-specific phases in order.
 
 ## Target Repo Governance Precedence
-When operating inside a target repo, that repo's `CLAUDE.md` invariants, beliefs, and considerations govern ahead of this harness's generic defaults. Any target-repo-specific dependencies or assumptions recorded in the mission govern execution decisions unless doing so would violate the target repo's own invariants.
+When operating inside a target repo, that repo's `CLAUDE.md` invariants, beliefs, and considerations govern ahead of this harness's beliefs and considerations. Any target-repo-specific dependencies or assumptions recorded in the mission govern execution decisions unless doing so would violate the target repo's own invariants.
 
 ## Handoff Resumption
 If a relevant `handoff.md` exists on session start, the lead agent may resume only from a recorded Next / Ongoing Step that clearly maps to one of the phases below or a substep within the current phase. If that handoff marks the prior mission as already aborted and not resumable per `.agent/schemas/abort-protocol.md`, the lead agent must not resume it. Otherwise, if the recorded step does not clearly map to a phase or substep, the lead agent must ask the dev how to proceed instead of skipping required phases.
@@ -37,7 +37,7 @@ If no relevant `handoff.md` exists, begin the interview from scratch. If a relev
 1. **No modification or removal of more than one governing artifacts** — Changing a `*.template` file referenced by a governed document counts as a consideration change.
 2. **No belief or consideration overrides**
 3. **>80% test coverage around target code**
-4. **Clear scope, limited & safe change** — the change is well-defined, small in blast radius, and unlikely to introduce systemic risk.
+4. **Clear scope, limited & safe change** — the change is well-defined, modifies no more than three files, does not alter control flow shared across modules, and does not change public API contracts except to add new ones or remove deprecated ones.
 
 After each draft, the lead agent selects one review variant for that loop iteration:
 
@@ -61,7 +61,7 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 
 **Actor:** Lead agent.
 **Inputs:** Approved `mission.md`, target repo codebase.
-**Outputs:** Implementation (code changes in worktree), passing unit tests, touched code remains above the >80% coverage threshold.
+**Outputs:** Implementation (code changes in worktree), passing unit tests, modified code remains above the >80% coverage threshold.
 
 Execute the approved mission in an isolated git worktree. The exact `mission.md` approved in Phase: Mission Creation is the execution contract for this phase and must remain unchanged. Produce only the deliverables specified in scope. Leave implementation changes uncommitted in the worktree for Post-Implementation Review (Fast Path); do not create commits during this phase. If implementation reveals that the mission itself must change, follow `.agent/schemas/abort-protocol.md`.
 
@@ -106,7 +106,7 @@ Write/update `handoff.md` at the worktree root per `.agent/schemas/handoff-proto
 
 **Actor:** Dev subagent (spawned by the lead agent via the Agent tool).
 **Inputs:** The harness repo-root `.agent/schemas/governance-schema.md`, approved `mission.md`, target repo codebase (in worktree). If escalated from fast path, any unstaged work from the fast-path attempt is present in the worktree. In the spawned dev prompt, `governance-schema.md` must be the first governance artifact listed.
-**Outputs:** Implementation (code changes in worktree), touched code remains above the >80% coverage threshold, clean formatter/linter results.
+**Outputs:** Implementation (code changes in worktree), modified code remains above the >80% coverage threshold, clean formatter/linter results.
 
 The lead agent spawns a dev subagent and hands it the approved `mission.md`. Instantiate the `Dev Agent Execution` template from `.agent/templates/new-sdlc-subagents.prompt.template` with `governance-schema.md` first. The dev agent executes the approved mission in the worktree from that handed-off context and must not rerun session-start bootstrap discovery of `.claude/worktrees/`, the main project root, `handoff.md`, or `mission.md` unless a later phase explicitly requires it. The exact `mission.md` approved in the preceding review phase is the execution contract and must remain unchanged. The dev agent must produce only the deliverables specified in scope and must leave implementation changes uncommitted in the worktree for post-implementation review. If implementation reveals that the mission itself must change, the dev agent must stop and report the blocker to the lead agent, who then follows `.agent/schemas/abort-protocol.md`.
 

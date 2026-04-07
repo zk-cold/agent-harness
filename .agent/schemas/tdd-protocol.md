@@ -9,7 +9,7 @@ Fast-path assumptions recorded during Mission Creation stay provisional until th
 
 ## Coverage Threshold
 
-The coverage threshold is **>80% line coverage on the code being touched by the mission**. This single definition is the source of truth — no skill file or mission.md may define a conflicting threshold.
+The coverage threshold is **>80% line coverage on the code being modified by the mission**. This single definition is the source of truth — no skill file or mission.md may define a conflicting threshold.
 
 This threshold applies in two contexts:
 
@@ -48,7 +48,7 @@ Confirm the coverage tool is available and working. If the mission scopes covera
 
 ### 2. Measure Baseline Coverage
 
-Run the coverage tool against the code being touched by the mission. Record the baseline coverage percentage. This baseline is used in step 3 to determine whether the threshold is met before prod changes begin.
+Run the coverage tool against the code being modified by the mission. Record the baseline coverage percentage. This baseline is used in step 3 to determine whether the threshold is met before prod changes begin.
 
 ### 3. Verify Baseline Meets Threshold
 
@@ -78,6 +78,6 @@ For each acceptance criterion in mission.md, in order:
 
 After all ACs have been addressed:
 
-- Run the coverage tool. Verify the touched code still meets the coverage threshold (>80% line coverage).
+- Run the coverage tool. Verify the modified code still meets the coverage threshold (>80% line coverage).
 - If the target repo provides a formatter and/or linter, run them and ensure results are clean.
 

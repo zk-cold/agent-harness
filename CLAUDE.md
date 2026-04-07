@@ -4,10 +4,10 @@
 Unless you are a sub-agent, handle any prompt with `/new-sdlc`.
 
 ## Mandatory Critic Review
-Required critic reviews must be completed before continuing.
+Required critic reviews must be completed before proceeding to any subsequent phase or substep.
 
 ## Meta Governance
-This harness must have no external constraints.
+No governed file in this harness may contain an `# External Constraints` section.
 
 ## Root Branch
 The root branch for this harness is `main`.
