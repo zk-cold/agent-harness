@@ -22,7 +22,7 @@ Once approved, `mission.md` most not be modified. Abort otherwise.
 API designs must be explicit as hard constraints, such that tests can be written without knowing the implementations.
 
 ## Coverage Tool Requirement
-Unless TDD-exempted, the target repo must already have a working coverage tool.
+When TDD applies, a working coverage tool must be in place before the Mission Draft step in Phase: Mission Creation.
 
 # Considerations
 
@@ -39,13 +39,17 @@ Each resubmission is to a new agent.
 1. Identify target repo
 2. Check for `.claude/worktrees/*/` for related `handoff.md` and follow `handoff-protocol.md` if so
 3. Otherwise, create fresh worktree. Initialize `handoff.md` following `handoff-protocol.md`
-4. Loop **interview -> mission draft -> coverage verification -> update `handoff.md` -> submission** until approved
+4. Loop **interview -> coverage tooling gate -> mission draft -> coverage verification -> update `handoff.md` -> submission** until approved
 ### Interview
 For any single invariant requested, try ask questions to uncover if there is actually an external constraint / consideration / belief behind it.
+### Coverage Tooling Gate
+When the Coverage Tool Requirement blocks mission drafting, the lead confirms or suggests the tech stack with the user and sets up the applicable coverage tool before proceeding.
 ### Mission Draft
 Follow `mission-schema.md`.
 ### Coverage Verification
 Run per submission, unless TDD-exempted, or there is no change to code in-scope since the previous run.
+#### Greenfield Baseline
+When no code in-scope exists yet (greenfield), record baseline coverage as N/A.
 1. Measure and record baseline coverage againt the code in-scope.
 2. If the baseline coverage is below threshold, follow  identifying the insufficient baseline coverage and the affected code.
 3. If baseline coverage is satisfactory, record a transient consideration in the mission.
