@@ -22,10 +22,7 @@ Invariants must define always-binding constraints.
 External Constraints must define constraints imposed by external authorities that are currently binding.
 
 ## Consideration Content
-Considerations must provide non-obvious supporting detail to hard constraints.
-
-## Belief Content
-Beliefs must define default-binding rules with an explicit scope or condition.
+Considerations must define default-binding rules.
 
 ## Implementation Artifact
 Git-tracked artifacts that are not classified as Governed Documents
@@ -50,16 +47,8 @@ A statement is disqualified as an external constraint when any of the following 
 A statement is disqualified as a consideration when any of the following is true:
 - It contradicts a hard constraint.
 - It is obvious enough that it adds no interpretive or implementation value.
-- It cannot be traced back to a hard constraint AND at least one implementation artifact.
+- It cannot be traced back to at least one governance or implementation artifact.
 - It is actually a binding rule and therefore belongs in hard constraints or beliefs instead.
-
-## Belief Qualification
-A statement is disqualified as a belief when any of the following is true:
-- It contradicts a hard constraint.
-- It does not define the condition, scope, or context in which it applies.
-- It is traceable to a hard constraint - that's a consideration.
-- It is actually an always-binding constraint and therefore belongs in hard constraints instead.
-- It cannot be traced to at least one implementation artifact.
 
 ## Violation Clauses
 Hard Constraints should not contain an explicit violation clause. They should be concrete enough that a reviewer can determine whether it was followed, from its own wording.
