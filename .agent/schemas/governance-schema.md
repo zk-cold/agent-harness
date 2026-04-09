@@ -61,3 +61,8 @@ Cross-file references are allowed when they are necessary to identify the govern
 
 ## Template Files
 Template files (`*.template`) are not governance files. They, however, when referenced by a governance file, materially shape how the governance artifacts are enforced. They are, hence, regarded as **considerations** during planning, coding, and review.
+
+## Code Comments
+Comments are not not governance artifacts. They may, however, shape agent bevhior with similar impact as governance artifacts, or otherwise dilute contexts.
+They are, hence, subject to Consideration Qualification during coding and review.
+
