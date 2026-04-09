@@ -17,5 +17,5 @@ Execute below steps in order unless the mission is TDD exempted:
 
 # Consideration
 ## Fast-Path Validation Timing
-1. Fail fast whenever we have to override a belief or consideration
+1. Fail fast whenever we have to override a consideration
 2. Upon creating/modifying/removing a new file, verify the file count criteria

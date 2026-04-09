@@ -48,7 +48,7 @@ Reject if TDD Exemption is declared but an in-scope item is testable.
 ## Fast-Path Eligibility
 All criteria must be met
 - No more than one governed artifact change
-- No consideration or belief overrides
+- No consideration overrides
 - Scope <5 files
 
 # Considerations

@@ -20,5 +20,5 @@ Each in-scope item must derive at least 1 AC. Each AC must govern at least one i
 ## Prefer Fast Path
 Submit for fast-path approval if
 - We propose/remove/modify at most one governed artifact, AND
-- We do not override considerations or beliefs, AND
+- We do not override considerations, AND
 - Less than 5 files are in scope

@@ -4,7 +4,7 @@
 For a fresh request, follow the phases in order.
 
 ## Target Repo Governance Precedence
-When operating inside a target repo, that repo's hard constraints, beliefs, and considerations govern ahead of this harness's beliefs and considerations.
+When operating inside a target repo, that repo's hard constraints and considerations govern ahead of this harness's considerations.
 
 ## Handoff Resumption
 On session start, follow `handoff-protocol.md`. The recorded **Next / Ongoing Step** must map clearly to a phase in this document.

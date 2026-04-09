@@ -4,7 +4,7 @@
 `AGENTS.md`, `CLAUDE.md`, `.agent/schemas/*.md`, and `.claude/commands/*.md` in this harness and the target repo.
 
 ## Governance Artifacts
-**Invariants**, **External Constraints**, **Beliefs**, and **Considerations**
+**Invariants**, **External Constraints**, and **Considerations**
 
 ## Hard Constraints
 **Invariants** and **External Constraints**
@@ -28,7 +28,7 @@ Considerations must define default-binding rules.
 Git-tracked artifacts that are not classified as Governed Documents
 
 ## Overrides
-A belief or consideration may be overridden only when it is explicitly referenced and the justification is stated clearly enough to withstand adversarial review.
+A consideration may be overridden only when it is explicitly referenced and the justification is stated clearly enough to withstand adversarial review.
 
 # Considerations
 
@@ -48,13 +48,13 @@ A statement is disqualified as a consideration when any of the following is true
 - It contradicts a hard constraint.
 - It is obvious enough that it adds no interpretive or implementation value.
 - It cannot be traced back to at least one governance or implementation artifact.
-- It is actually a binding rule and therefore belongs in hard constraints or beliefs instead.
+- It is actually an always binding rule and therefore belongs in hard constraints instead.
 
 ## Violation Clauses
 Hard Constraints should not contain an explicit violation clause. They should be concrete enough that a reviewer can determine whether it was followed, from its own wording.
 
 ## Traceability
-Traceability should usually be obvious from the content. If it must be declared explicitly to make sense, that usually signals a missing hard constraint, belief, or consideration.
+Traceability should usually be obvious from the content. If it must be declared explicitly to make sense, that usually signals a missing hard constraint or consideration.
 
 ## Cross References
 Cross-file references are allowed when they are necessary to identify the governance artifact or protocol being applied. Do not use them to smuggle in unstated assumptions about repo or filesystem structure.
