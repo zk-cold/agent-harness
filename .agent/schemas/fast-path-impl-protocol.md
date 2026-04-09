@@ -15,7 +15,7 @@ Execute below steps in order unless the mission is TDD exempted:
 2. Verification against `sdet-protocol.md` - once locked, no further additions/modifications/deletions
 3. Follow `sde-protocol.md` as an SDE
 
-# Consideration
+# Considerations
 ## Fast-Path Validation Timing
 1. Fail fast whenever we have to override a consideration
 2. Upon creating/modifying/removing a new file, verify the file count criteria

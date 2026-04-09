@@ -60,7 +60,7 @@ Submit to 2 sequential agents using `Mission Creation Critic` for normal flow. I
 ## Phase: Fast-Path Execution
 1. Close mission-critic agents.
 2. Follow `fast-path-impl-protocol.md`. 
-3. Enter `Phase: Fast-Path Critic`
+3. Enter `Phase: Fast-Path Post-Impl Critic`
 
 ## Escalation to Normal Flow
 1. Discard all worktree changes except `handoff.md` and `mission.md`

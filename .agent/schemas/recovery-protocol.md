@@ -1,6 +1,6 @@
 # Invariants
 
-# Governance Scope
+## Governance Scope
 This document applies only when `handoff.md` records the mission in aborted state.
 
 ## Blocker Removal
