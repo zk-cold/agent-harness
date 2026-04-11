@@ -1,7 +1,7 @@
 # Invariants
 
 ## Test Result Verification
-All tests must pass in the runtime artifacts provided for review.
+The implementation review must use `test-output.txt` from the worktree root. All tests reported in that file must pass.
 
 ## Coverage Threshold Verification
 The modified code must meet the coverage threshold.
@@ -12,4 +12,4 @@ When the mission assumes TDD Excemption, all implementation artifacts must be no
 # Considerations
 
 ## Coverage Report
-Coverage report, if needed, should be inside runtime artifacts.
+If coverage verification is needed, use `coverage-output.txt` from the worktree root.
