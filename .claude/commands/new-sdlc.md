@@ -16,7 +16,7 @@ Sub-agent requiring phases are blocking. If a required sub-agent cannot be spawn
 All prompts must be instantiated from `new-sdlc-prompts.md`.
 
 ## Approved Mission Immutability
-Once approved, `mission.md` most not be modified. Abort otherwise.
+Once approved, `mission.md` must not be modified.
 
 ## API Design
 API designs must be explicit as hard constraints, such that tests can be written without knowing the implementations.
@@ -33,7 +33,10 @@ The term "abort" in this document refer to the actions specified by `abort-proto
 This happens at start of any phase, except `Phase: Mission Creation`.
 
 ## Resubmissions
-Each resubmission is to a new agent.
+Each critic round spawns a fresh critic agent. Executor sub-agents (SDE, SDET) persist across fix-and-resubmit cycles within a phase.
+
+## Default Coverage Threshold
+The default coverage threshold is 80% line coverage on modified code. The target repo's hard constraints or considerations may override this default.
 
 ## Phase: Mission Creation
 1. Identify target repo
@@ -51,7 +54,7 @@ Run per submission, unless TDD-exempted, or there is no change to code in-scope 
 #### Greenfield Baseline
 When no code in-scope exists yet (greenfield), record baseline coverage as N/A.
 1. Measure and record baseline coverage againt the code in-scope.
-2. If the baseline coverage is below threshold, follow  identifying the insufficient baseline coverage and the affected code.
+2. If the baseline coverage is below threshold, abort, surfacing the insufficient baseline coverage and the affected code.
 3. If baseline coverage is satisfactory, record a transient consideration in the mission.
 ### Submission
 Submit to 1 agent using `Fast-Path Mission Creation Critic` template when fast-path is plausible. Enter `Phase: Fast-Path Execution` if approved.
@@ -74,7 +77,7 @@ Spawn agent using `Fast-Path Post-Impl Critic` template.
 - Reject -> fix and resubmit if `mission.md` remains good. Abort otherwise
 
 ## Phase: SDET Execution
-Close mission/escaltion critic agents. 
+Close mission/escalation critic agents.
 If mission is TDD-exempted, enter `Phase: SDE Execution`.
 Otherwise, spawn agent using `SDET Execution` template.
 ### Submission

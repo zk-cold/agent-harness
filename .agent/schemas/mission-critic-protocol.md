@@ -15,7 +15,7 @@ When a consideration claims to resolve an existing violation, it must name both 
 Each proposed governance artifact (and every part thereof) must be challenged against the content & disqualification clauses defined by `governance-schema.md`.
 
 ## Acceptance Criteria Rigor
-Each AC must be independently verifiable - a reviwer cna determine pass/fail by examine deliverables alone, with no additional explanation needed.
+Each AC must be independently verifiable - a reviewer can determine pass/fail by examining deliverables alone, with no additional explanation needed.
 
 ## AC-Scope Traceability
 Each in-scope item must trace to at least one AC. Each AC must trace to at least one in-scope item.
