@@ -17,10 +17,9 @@ Create or overwrite `TODO.md` at the active worktree's repo root. No other files
 
 ## Deliverable Structure
 `TODO.md` must contain:
-1. A `Reviewed Files` section listing the exact repo-relative authoritative files inspected and separately listing any changed worktree proposal copies inspected.
-2. A `Contradictions` section covering every reviewed path, listing concrete contradictions with artifact references or explicitly stating none were found.
-3. An `Ambiguities` section covering every reviewed path, listing concrete unclear or underspecified areas with artifact references or explicitly stating none were found.
-4. A `Markdown to Script Conversions` section naming specific procedures and proposing how each could become an executable script, check, or automation, or explicitly stating no candidates were found.
+1. A `Contradictions` section covering every reviewed path, listing concrete contradictions with artifact references or explicitly stating none were found.
+2. An `Ambiguities` section covering every reviewed path, listing concrete unclear or underspecified areas with artifact references or explicitly stating none were found.
+3. A `Markdown to Script Conversions` section naming specific procedures and proposing how each could become an executable script, check, or automation, or explicitly stating no candidates were found.
 
 ## Read-Only
 This command must not modify any existing repository file except overwriting `TODO.md` if it already exists.
