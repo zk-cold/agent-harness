@@ -18,6 +18,9 @@ All prompts must be instantiated from `new-sdlc-prompts.md`.
 ## Approved Mission Immutability
 Once approved, `mission.md` must not be modified.
 
+## Mission-Draft Governance Artifact Approval
+During Mission Draft, each proposed addition, modification, or removal of a governance artifact must be presented to the user one artifact at a time and must receive user approval before it is included in `mission.md`. If critic feedback requires change, the revised text must get user approval again before resubmission.
+
 ## API Design
 API designs must be explicit as hard constraints, such that tests can be written without knowing the implementations.
 
