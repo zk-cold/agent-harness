@@ -1,7 +1,10 @@
 # Invariants
 
 ## Structural Completeness
-Reject any mission that omits `Scope` (with both `In scope` and `Out of scope` subsections) or `Acceptance Criteria`.
+Reject any mission that omits `Delivery Mode`, `Scope` (with both `In scope` and `Out of scope` subsections), or `Acceptance Criteria`.
+
+## Delivery Mode Validation
+Reject if the mission declares zero, multiple, or unsupported delivery modes.
 
 ## Mission Justification
 Each mission must either
@@ -43,10 +46,15 @@ Reject any assumptions that
 (c) carries governance value beyond the mission
 
 ## TDD Exemption Validation
-Reject if TDD Exemption is declared but an in-scope item is testable.
+Reject if `TDD-exempt` is declared but an in-scope item is testable.
+
+## Test-Only Validation
+Reject if `Test-Only` is declared and any in-scope item:
+(a) requires prod-scope code changes
+(b) is not explicitly qualified as `Already-Satisfied Behavior`
 
 ## Fast-Path Eligibility
-When the review context explicitly identifies the mission as fast-path, all criteria must be met:
+When the review context explicitly identifies the mission as fast-path and the delivery mode is not `Test-Only`, all criteria must be met:
 - No more than one governed artifact change
 - No consideration overrides
 - Scope <5 files

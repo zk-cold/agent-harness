@@ -27,6 +27,9 @@ API designs must be explicit as hard constraints, such that tests can be written
 ## Coverage Tool Requirement
 When TDD applies, a working coverage tool must be in place before the Mission Draft step in Phase: Mission Creation.
 
+## Test-Only Routing
+A mission declared `Test-Only` must stay on fast path and must not enter normal-flow execution phases.
+
 # Considerations
 
 ## Abort
@@ -49,18 +52,18 @@ The default coverage threshold is 80% line coverage on modified code. The target
 ### Interview
 For any single invariant requested, try ask questions to uncover if there is actually an external constraint / consideration / belief behind it.
 ### Coverage Tooling Gate
-When the Coverage Tool Requirement blocks mission drafting, the lead confirms or suggests the tech stack with the user and sets up the applicable coverage tool before proceeding.
+When the Coverage Tool Requirement blocks mission drafting, the lead confirms or suggests the tech stack with the user and sets up the applicable coverage tool before proceeding. `Test-Only` missions skip this gate unless target-repo governance explicitly requires coverage tooling for the in-scope test work.
 ### Mission Draft
 Follow `mission-schema.md`.
 ### Coverage Verification
-Run per submission, unless TDD-exempted, or there is no change to code in-scope since the previous run.
+Run per submission, unless the mission is `TDD-exempt` or `Test-Only`, or there is no change to prod-scope code in-scope since the previous run.
 #### Greenfield Baseline
-When no code in-scope exists yet (greenfield), record baseline coverage as N/A.
-1. Measure and record baseline coverage againt the code in-scope.
+When no prod-scope code in-scope exists yet (greenfield), record baseline coverage as N/A.
+1. Measure and record baseline coverage against the prod-scope code in-scope.
 2. If the baseline coverage is below threshold, abort, surfacing the insufficient baseline coverage and the affected code.
 3. If baseline coverage is satisfactory, record a transient consideration in the mission.
 ### Submission
-Submit to 1 agent using `Fast-Path Mission Creation Critic` template when fast-path is plausible. Enter `Phase: Fast-Path Execution` if approved.
+Submit to 1 agent using `Fast-Path Mission Creation Critic` template when the mission is `Test-Only` or fast-path is plausible. Enter `Phase: Fast-Path Execution` if approved.
 Submit to 2 sequential agents using `Mission Creation Critic` for normal flow. If approved by both critics, enter `Phase: SDET Execution`.
 
 ## Phase: Fast-Path Execution
@@ -81,7 +84,8 @@ Spawn agent using `Fast-Path Post-Impl Critic` template.
 
 ## Phase: SDET Execution
 Close mission/escalation critic agents.
-If mission is TDD-exempted, enter `Phase: SDE Execution`.
+If mission is `TDD-exempt`, enter `Phase: SDE Execution`.
+If mission is `Test-Only`, abort because routing has violated `Test-Only Routing`.
 Otherwise, spawn agent using `SDET Execution` template.
 ### Submission
 When SDET reports ready, enter `Phase: Test Critic`.

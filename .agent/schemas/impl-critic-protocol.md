@@ -3,11 +3,17 @@
 ## Test Result Verification
 The implementation review must use `test-output.txt` from the worktree root. All tests reported in that file must pass.
 
+## Lint Verification
+When formatter or linter verification is required, the implementation review must use `lint-output.txt` from the worktree root. All checks reported in that file must pass.
+
 ## Coverage Threshold Verification
-The modified code must meet the coverage threshold.
+Modified prod-scope code must meet the coverage threshold.
 
 ## TDD Exemption Validation
-When the mission assumes TDD Excemption, all implementation artifacts must be non-testable.
+When the mission assumes `TDD-exempt`, all implementation artifacts must be non-testable.
+
+## Test-Only Validation
+When the mission assumes `Test-Only`, all implementation artifacts must be test-scope only.
 
 # Considerations
 

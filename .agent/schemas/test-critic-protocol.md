@@ -11,3 +11,6 @@ Every testable hard constraint must have a corresponding test.
 
 ## New Test Purpose
 Each new test must express an identified hard constraint.
+
+## Test-Only Qualification
+When the mission delivery mode is `Test-Only`, each new or modified test must map to an in-scope item explicitly qualified as `Already-Satisfied Behavior`.
