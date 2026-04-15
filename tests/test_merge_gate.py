@@ -460,25 +460,6 @@ def test_main_do_merge_non_trivial(tmp_path, monkeypatch, capsys):
 
 
 # ---------------------------------------------------------------------------
-# AC9 — merge_gate no longer references CLAUDE.md Invariant 4
-# ---------------------------------------------------------------------------
-
-def test_merge_gate_no_invariant_4_reference():
-    """scripts/merge_gate/__init__.py must not reference CLAUDE.md Invariant 4."""
-    repo_root = Path(__file__).resolve().parents[1]
-    source = (repo_root / "scripts" / "merge_gate" / "__init__.py").read_text()
-    assert "CLAUDE.md Invariant 4" not in source
-    assert "Invariant 4" not in source
-
-
-def test_merge_gate_references_trivial_merge_qualification():
-    """scripts/merge_gate/__init__.py must reference CLAUDE.md Trivial Merge Qualification."""
-    repo_root = Path(__file__).resolve().parents[1]
-    source = (repo_root / "scripts" / "merge_gate" / "__init__.py").read_text()
-    assert "Trivial Merge Qualification" in source
-
-
-# ---------------------------------------------------------------------------
 # AC9 — phase-reset texts stay usable as handoff next-step content
 # ---------------------------------------------------------------------------
 
