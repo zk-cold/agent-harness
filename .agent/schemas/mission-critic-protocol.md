@@ -46,7 +46,9 @@ Reject any assumptions that
 Reject if TDD Exemption is declared but an in-scope item is testable.
 
 ## Fast-Path Eligibility
-All criteria must be met
+Apply this invariant only when the review context explicitly identifies the mission as a fast-path mission.
+If the review context does not explicitly identify the mission as fast-path, do not reject under this invariant.
+When this invariant applies, all criteria must be met:
 - No more than one governed artifact change
 - No consideration overrides
 - Scope <5 files
