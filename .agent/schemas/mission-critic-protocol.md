@@ -55,9 +55,9 @@ Reject if `Test-Only` is declared and any in-scope item:
 
 ## Fast-Path Eligibility
 When the review context explicitly identifies the mission as fast-path and the delivery mode is not `Test-Only`, all criteria must be met:
-- No more than one governed artifact change
+- No more than three governance artifact modifications or removals
 - No consideration overrides
-- Scope <5 files
+- Scope ≤7 files
 
 # Considerations
 

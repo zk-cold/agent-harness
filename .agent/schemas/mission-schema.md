@@ -26,4 +26,4 @@ Each in-scope item must derive at least 1 AC. Each AC must govern at least one i
 ## Prefer Fast Path
 Submit for fast-path approval if either of the following is true:
 - The delivery mode is `Test-Only`.
-- We propose/remove/modify at most one governed artifact, do not override considerations, and have fewer than 5 files in scope.
+- We modify or remove at most three governance artifacts, do not override considerations, and have no more than 7 files in scope.
