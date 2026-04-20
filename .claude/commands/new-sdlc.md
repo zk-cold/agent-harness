@@ -30,6 +30,9 @@ When TDD applies, a working coverage tool must be in place before the Mission Dr
 ## Test-Only Routing
 A mission declared `Test-Only` must stay on fast path and must not enter normal-flow execution phases.
 
+## Mission Redraft After Rejection
+Before redrafting a mission following a critic rejection, each rejection reason must be recorded in `## Known Failed Attempts` together with a note on whether it contradicts the `## Dev Interview Transcript` section of `handoff.md`.
+
 # Considerations
 
 ## Abort
