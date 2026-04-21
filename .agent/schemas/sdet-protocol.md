@@ -23,3 +23,6 @@ Each test must express at least one (or part of) hard constraint.
 
 ## Document External Constraints
 Each external constraint must be documented of the same anchor info specified by `governance-schema.md`.
+
+## Fail-Fast on Governance Breach
+If completing the mission would breach a governance artifact not amended or overridden by the approved mission, halt and surface the blocker in the response to the lead.

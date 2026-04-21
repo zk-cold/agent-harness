@@ -20,3 +20,6 @@ Refactor only if an Acceptance Criteria cannot be met without such refactoring.
 
 ## Governance Persistence
 Persist governance artifacts as prose rules only if such persistence is in the Acceptance Criteria.
+
+## Fail-Fast on Governance Breach
+If completing the mission would breach a governance artifact not amended or overridden by the approved mission, halt and surface the blocker in the response to the lead.
