@@ -47,6 +47,9 @@ Each critic round spawns a fresh critic agent. Executor sub-agents (SDE, SDET) p
 ## Default Coverage Threshold
 The default coverage threshold is 80% line coverage on modified code. The target repo's hard constraints or considerations may override this default.
 
+## Reframe Procedural Steps as Deliverables
+During the Interview and Mission Draft steps, each procedural step should be reframed as a concrete deliverable before it enters mission scope.
+
 ## Phase: Mission Creation
 1. Identify target repo
 2. Check for `.claude/worktrees/*/` for related `handoff.md` and follow `handoff-protocol.md` if so
