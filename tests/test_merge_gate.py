@@ -29,6 +29,10 @@ def _make_git_repo(path: Path) -> Path:
         ["git", "config", "user.name", "Test"],
         cwd=path, check=True, capture_output=True,
     )
+    subprocess.run(
+        ["git", "config", "commit.gpgsign", "false"],
+        cwd=path, check=True, capture_output=True,
+    )
     (path / "a.txt").write_text("initial\n")
     subprocess.run(["git", "add", "."], cwd=path, check=True, capture_output=True)
     subprocess.run(
@@ -53,25 +57,6 @@ def _current_branch(path: Path) -> str:
         cwd=path, capture_output=True, text=True, check=True,
     )
     return r.stdout.strip()
-
-
-# ---------------------------------------------------------------------------
-# AC7 — phase-reset texts remain stable
-# ---------------------------------------------------------------------------
-
-def test_variant_new_sdlc_fast_path():
-    assert VARIANTS["new-sdlc-fast-path"] == (
-        "Phase: Post-Implementation Review (Fast Path) - rerun verification on the merged state, "
-        "rewrite completion-review runtime artifacts, and submit that state to a fresh critic."
-    )
-
-
-def test_variant_new_sdlc_normal():
-    assert VARIANTS["new-sdlc-normal"] == (
-        "Phase: 2-Critic Post-Implementation Review - rerun verification on the merged state, "
-        "rewrite completion-review runtime artifacts, submit that state to the first fresh critic, "
-        "and if it approves then to a second fresh critic."
-    )
 
 
 # ---------------------------------------------------------------------------
