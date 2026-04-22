@@ -27,3 +27,6 @@ Each in-scope item must derive at least 1 AC. Each AC must govern at least one i
 Submit for fast-path approval if either of the following is true:
 - The delivery mode is `Test-Only`.
 - We propose/remove/modify at most one governed artifact, do not override considerations, and have fewer than 5 files in scope.
+
+## Stubbing and Runtime-Patching Policy
+Each `TDD` or `Test-Only` mission must declare, under mission.md's `## Invariants` section, an invariant titled `Stubbing and Runtime-Patching Policy`. The invariant's body enumerates, as two separate allowlists, the symbols a test may replace with a mock, stub, fake, or spy (the stubbing allowlist) and the modules, classes, functions, attributes, or constants a test may mutate, replace, or rebind at runtime (the runtime-patching allowlist). An empty allowlist permits none.
