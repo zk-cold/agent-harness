@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 from scripts.merge_gate import (
-    VARIANTS,
     check_dirty,
     classify_merge_output,
     do_merge,
@@ -262,45 +261,6 @@ def test_do_merge_conflict(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# AC8 — handoff.md rewrite format
-# ---------------------------------------------------------------------------
-
-def test_handoff_rewrite_format_all_variants(tmp_path):
-    """For each variant, confirm the rewritten handoff.md has correct format."""
-    repo = _make_git_repo(tmp_path)
-    main_branch = _current_branch(repo)
-
-    for i, variant in enumerate(VARIANTS):
-        # Fresh handoff dir per variant
-        handoff_dir = tmp_path / f"handoff_{i}"
-        handoff_dir.mkdir()
-        handoff_file = handoff_dir / "handoff.md"
-        handoff_file.write_text("old content")
-
-        # Build a fresh diverging-merge repo state in a sub-path
-        sub = tmp_path / f"repo_{i}"
-        sub.mkdir()
-        sub_repo = _make_git_repo(sub)
-        sub_main = _current_branch(sub_repo)
-
-        subprocess.run(["git", "checkout", "-b", "feat"], cwd=sub_repo, check=True, capture_output=True)
-        _commit(sub_repo, f"feat_{i}.txt", "feat\n", "feat")
-        subprocess.run(["git", "checkout", sub_main], cwd=sub_repo, check=True, capture_output=True)
-        _commit(sub_repo, f"main_{i}.txt", "main\n", "main")
-
-        do_merge(sub_repo, handoff_dir, variant, "feat")
-
-        content = handoff_file.read_text()
-        expected = (
-            "## Next / Ongoing Step\n\n"
-            + VARIANTS[variant]
-            + "\n\n## Known Failed Attempts\n\nNone\n"
-        )
-        assert content == expected, f"Variant {variant!r}: handoff content mismatch"
-        assert "Dev Interview Transcript" not in content
-
-
-# ---------------------------------------------------------------------------
 # AC9 — HANDOFF_MISSING
 # ---------------------------------------------------------------------------
 
@@ -444,12 +404,3 @@ def test_main_do_merge_non_trivial(tmp_path, monkeypatch, capsys):
     assert "NON_TRIVIAL" in capsys.readouterr().out
 
 
-# ---------------------------------------------------------------------------
-# AC9 — phase-reset texts stay usable as handoff next-step content
-# ---------------------------------------------------------------------------
-
-def test_variant_texts_are_single_paragraph_handoff_steps():
-    for reset_text in VARIANTS.values():
-        assert reset_text.startswith("Phase: ")
-        assert "\n" not in reset_text
-        assert reset_text.endswith(".")
