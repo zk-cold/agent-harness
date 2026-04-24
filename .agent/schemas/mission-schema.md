@@ -30,3 +30,6 @@ Submit for fast-path approval if either of the following is true:
 
 ## Stubbing and Runtime-Patching Policy
 Each `TDD` or `Test-Only` mission must declare, under mission.md's `## Invariants` section, an invariant titled `Stubbing and Runtime-Patching Policy`. The invariant's body enumerates, as two separate allowlists, the symbols a test may replace with a mock, stub, fake, or spy (the stubbing allowlist) and the modules, classes, functions, attributes, or constants a test may mutate, replace, or rebind at runtime (the runtime-patching allowlist). An empty allowlist permits none.
+
+## AC Behavioral Scope
+An Acceptance Criterion must not originate a runtime behavior requirement for a deliverable's shipped production code (e.g. inputs/outputs, state transitions, error handling, observable side effects). Any such requirement must first be captured as an invariant or external constraint, and the AC may only verify the persistence or satisfaction of that invariant or external constraint. ACs that assert on build, test, or process tooling (e.g. test pass/fail, coverage thresholds, linter results) are out of this rule's scope.

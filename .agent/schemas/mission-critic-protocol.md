@@ -59,6 +59,9 @@ When the review context explicitly identifies the mission as fast-path and the d
 - No consideration overrides
 - Scope <5 files
 
+## AC Behavioral Scope
+Reject any AC that originates a runtime behavior requirement for a deliverable's shipped production code (e.g. inputs/outputs, state transitions, error handling, observable side effects) instead of verifying persistence or satisfaction of an invariant or external constraint that captures that behavior. ACs asserting on build, test, or process tooling are out of this rule's scope.
+
 # Considerations
 
 ## Inevident Exclusions
