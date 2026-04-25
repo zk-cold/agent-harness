@@ -41,7 +41,7 @@ Reject if `Test-Only` is declared and any proposed invariant or external constra
 
 ## Fast-Path Eligibility
 When the review context explicitly identifies the mission as fast-path and the delivery mode is not `Test-Only`, all criteria must be met:
-- No more than one governed artifact change
+- No more than three governance artifact modifications or removals
 - No consideration overrides
 
 ## Stubbing and Runtime-Patching Policy Declaration

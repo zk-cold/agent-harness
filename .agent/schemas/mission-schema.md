@@ -18,7 +18,7 @@ Assumptions must materially enable, shape, or constrain the mission. They must n
 ## Prefer Fast Path
 Submit for fast-path approval if either of the following is true:
 - The delivery mode is `Test-Only`.
-- We propose/remove/modify at most one governed artifact and do not override considerations.
+- We modify or remove at most three governed artifacts and do not override considerations.
 
 ## Stubbing Policy
 Each `TDD` or `Test-Only` mission must declare, under mission.md's `## Invariants` section, an invariant whose body establishes the stubbing policy for the mission. The body must be either an unambiguous blanket ban, or an enumerated allowlist of the symbols a test may replace with a mock, stub, fake, or spy (an empty allowlist permits none).
