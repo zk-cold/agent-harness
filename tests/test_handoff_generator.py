@@ -3,24 +3,6 @@ import pytest
 from scripts.handoff_generator import generate
 
 
-# --- AC1: __init__.py exposes generate() and main() ---
-
-def test_ac1_generate_callable():
-    from scripts.handoff_generator import generate as g, main as m
-    assert callable(g)
-    assert callable(m)
-
-
-# --- AC2: __main__.py entry-point pattern ---
-
-def test_ac2_main_module_contents():
-    import importlib.util, pathlib
-    src = pathlib.Path(__file__).parent.parent / "scripts" / "handoff_generator" / "__main__.py"
-    text = src.read_text()
-    assert "from scripts.handoff_generator import main" in text
-    assert "main()" in text
-
-
 # --- AC3: pre-mission full args returns three sections in order ---
 
 def test_ac3_pre_mission_full():

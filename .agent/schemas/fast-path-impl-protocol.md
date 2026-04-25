@@ -23,7 +23,9 @@ Execute the applicable flow below in order:
    d. If the target repo provides a formatter and/or linter, run them, ensure clean results, and write the raw output to `lint-output.txt`
    e. If coverage verification is explicitly required by the mission or target-repo governance, run it and write the raw output to `coverage-output.txt`
 
+## Fail-Fast on Governance Breach
+If completing the mission would breach a governance artifact not amended or overridden by the approved mission, halt and follow `abort-protocol.md`.
+
 # Considerations
 ## Fast-Path Validation Timing
-1. Fail fast whenever we have to override a consideration
-2. Upon creating/modifying/removing a new file, verify the file count criteria
+Upon creating/modifying/removing a new file, verify the file count criteria.

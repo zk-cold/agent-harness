@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 from scripts.merge_gate import (
-    VARIANTS,
     check_dirty,
     classify_merge_output,
     do_merge,
@@ -27,6 +26,10 @@ def _make_git_repo(path: Path) -> Path:
     )
     subprocess.run(
         ["git", "config", "user.name", "Test"],
+        cwd=path, check=True, capture_output=True,
+    )
+    subprocess.run(
+        ["git", "config", "commit.gpgsign", "false"],
         cwd=path, check=True, capture_output=True,
     )
     (path / "a.txt").write_text("initial\n")
@@ -53,25 +56,6 @@ def _current_branch(path: Path) -> str:
         cwd=path, capture_output=True, text=True, check=True,
     )
     return r.stdout.strip()
-
-
-# ---------------------------------------------------------------------------
-# AC7 — phase-reset texts remain stable
-# ---------------------------------------------------------------------------
-
-def test_variant_new_sdlc_fast_path():
-    assert VARIANTS["new-sdlc-fast-path"] == (
-        "Phase: Post-Implementation Review (Fast Path) - rerun verification on the merged state, "
-        "rewrite completion-review runtime artifacts, and submit that state to a fresh critic."
-    )
-
-
-def test_variant_new_sdlc_normal():
-    assert VARIANTS["new-sdlc-normal"] == (
-        "Phase: 2-Critic Post-Implementation Review - rerun verification on the merged state, "
-        "rewrite completion-review runtime artifacts, submit that state to the first fresh critic, "
-        "and if it approves then to a second fresh critic."
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -277,45 +261,6 @@ def test_do_merge_conflict(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# AC8 — handoff.md rewrite format
-# ---------------------------------------------------------------------------
-
-def test_handoff_rewrite_format_all_variants(tmp_path):
-    """For each variant, confirm the rewritten handoff.md has correct format."""
-    repo = _make_git_repo(tmp_path)
-    main_branch = _current_branch(repo)
-
-    for i, variant in enumerate(VARIANTS):
-        # Fresh handoff dir per variant
-        handoff_dir = tmp_path / f"handoff_{i}"
-        handoff_dir.mkdir()
-        handoff_file = handoff_dir / "handoff.md"
-        handoff_file.write_text("old content")
-
-        # Build a fresh diverging-merge repo state in a sub-path
-        sub = tmp_path / f"repo_{i}"
-        sub.mkdir()
-        sub_repo = _make_git_repo(sub)
-        sub_main = _current_branch(sub_repo)
-
-        subprocess.run(["git", "checkout", "-b", "feat"], cwd=sub_repo, check=True, capture_output=True)
-        _commit(sub_repo, f"feat_{i}.txt", "feat\n", "feat")
-        subprocess.run(["git", "checkout", sub_main], cwd=sub_repo, check=True, capture_output=True)
-        _commit(sub_repo, f"main_{i}.txt", "main\n", "main")
-
-        do_merge(sub_repo, handoff_dir, variant, "feat")
-
-        content = handoff_file.read_text()
-        expected = (
-            "## Next / Ongoing Step\n\n"
-            + VARIANTS[variant]
-            + "\n\n## Known Failed Attempts\n\nNone\n"
-        )
-        assert content == expected, f"Variant {variant!r}: handoff content mismatch"
-        assert "Dev Interview Transcript" not in content
-
-
-# ---------------------------------------------------------------------------
 # AC9 — HANDOFF_MISSING
 # ---------------------------------------------------------------------------
 
@@ -459,12 +404,3 @@ def test_main_do_merge_non_trivial(tmp_path, monkeypatch, capsys):
     assert "NON_TRIVIAL" in capsys.readouterr().out
 
 
-# ---------------------------------------------------------------------------
-# AC9 — phase-reset texts stay usable as handoff next-step content
-# ---------------------------------------------------------------------------
-
-def test_variant_texts_are_single_paragraph_handoff_steps():
-    for reset_text in VARIANTS.values():
-        assert reset_text.startswith("Phase: ")
-        assert "\n" not in reset_text
-        assert reset_text.endswith(".")

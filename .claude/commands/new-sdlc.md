@@ -22,7 +22,7 @@ Once approved, `mission.md` must not be modified.
 During Mission Draft, each proposed addition, modification, or removal of a governance artifact must be presented to the user one artifact at a time and must receive user approval before it is included in `mission.md`. If critic feedback requires change, the revised text must get user approval again before resubmission.
 
 ## API Design
-API designs must be explicit as hard constraints, such that tests can be written without knowing the implementations.
+API designs must be explicit as invariants or external constraints, such that tests can be written without knowing the implementations.
 
 ## Coverage Tool Requirement
 When TDD applies, a working coverage tool must be in place before the Mission Draft step in Phase: Mission Creation.
@@ -47,6 +47,9 @@ Each critic round spawns a fresh critic agent. Executor sub-agents (SDE, SDET) p
 ## Default Coverage Threshold
 The default coverage threshold is 80% line coverage on modified code. The target repo's hard constraints or considerations may override this default.
 
+## Reframe Procedural Steps as Deliverables
+During the Interview and Mission Draft steps, each procedural step should be reframed as a concrete deliverable before it enters mission scope.
+
 ## Phase: Mission Creation
 1. Identify target repo
 2. Check for `.claude/worktrees/*/` for related `handoff.md` and follow `handoff-protocol.md` if so
@@ -55,14 +58,14 @@ The default coverage threshold is 80% line coverage on modified code. The target
 ### Interview
 For any single invariant requested, try ask questions to uncover if there is actually an external constraint / consideration / belief behind it.
 ### Coverage Tooling Gate
-When the Coverage Tool Requirement blocks mission drafting, the lead confirms or suggests the tech stack with the user and sets up the applicable coverage tool before proceeding. `Test-Only` missions skip this gate unless target-repo governance explicitly requires coverage tooling for the in-scope test work.
+When the Coverage Tool Requirement blocks mission drafting, the lead confirms or suggests the tech stack with the user and sets up the applicable coverage tool before proceeding.
 ### Mission Draft
 Follow `mission-schema.md`.
 ### Coverage Verification
-Run per submission, unless the mission is `TDD-exempt` or `Test-Only`, or there is no change to prod-scope code in-scope since the previous run.
+Run per submission, unless the mission is `TDD-exempt` or `Test-Only`, or there has been no change to prod-scope code since the previous run.
 #### Greenfield Baseline
-When no prod-scope code in-scope exists yet (greenfield), record baseline coverage as N/A.
-1. Measure and record baseline coverage against the prod-scope code in-scope.
+When no prod-scope code touched by the mission exists yet (greenfield), record baseline coverage as N/A.
+1. Measure and record baseline coverage against the prod-scope code touched by the mission.
 2. If the baseline coverage is below threshold, abort, surfacing the insufficient baseline coverage and the affected code.
 3. If baseline coverage is satisfactory, record a transient consideration in the mission.
 ### Submission
