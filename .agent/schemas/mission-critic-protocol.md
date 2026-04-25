@@ -62,6 +62,9 @@ When the review context explicitly identifies the mission as fast-path and the d
 ## AC Behavioral Scope
 Reject any AC that originates a runtime behavior requirement for a deliverable's shipped production code (e.g. inputs/outputs, state transitions, error handling, observable side effects) instead of verifying persistence or satisfaction of an invariant or external constraint that captures that behavior. ACs asserting on build, test, or process tooling are out of this rule's scope.
 
+## Stubbing and Runtime-Patching Policy Declaration
+For missions whose delivery mode is `TDD` or `Test-Only`, reject unless the mission's `## Invariants` section declares a stubbing-policy invariant and a runtime-patching-policy invariant (titles need not match specific strings, but each invariant must be unambiguous about which policy it establishes). Each such invariant's body must be either an unambiguous blanket ban or an enumerated allowlist.
+
 # Considerations
 
 ## Inevident Exclusions
