@@ -58,14 +58,14 @@ During the Interview and Mission Draft steps, each procedural step should be ref
 ### Interview
 For any single invariant requested, try ask questions to uncover if there is actually an external constraint / consideration / belief behind it.
 ### Coverage Tooling Gate
-When the Coverage Tool Requirement blocks mission drafting, the lead confirms or suggests the tech stack with the user and sets up the applicable coverage tool before proceeding. `Test-Only` missions skip this gate unless target-repo governance explicitly requires coverage tooling for the in-scope test work.
+When the Coverage Tool Requirement blocks mission drafting, the lead confirms or suggests the tech stack with the user and sets up the applicable coverage tool before proceeding.
 ### Mission Draft
 Follow `mission-schema.md`.
 ### Coverage Verification
-Run per submission, unless the mission is `TDD-exempt` or `Test-Only`, or there is no change to prod-scope code in-scope since the previous run.
+Run per submission, unless the mission is `TDD-exempt` or `Test-Only`, or there has been no change to prod-scope code since the previous run.
 #### Greenfield Baseline
-When no prod-scope code in-scope exists yet (greenfield), record baseline coverage as N/A.
-1. Measure and record baseline coverage against the prod-scope code in-scope.
+When no prod-scope code touched by the mission exists yet (greenfield), record baseline coverage as N/A.
+1. Measure and record baseline coverage against the prod-scope code touched by the mission.
 2. If the baseline coverage is below threshold, abort, surfacing the insufficient baseline coverage and the affected code.
 3. If baseline coverage is satisfactory, record a transient consideration in the mission.
 ### Submission

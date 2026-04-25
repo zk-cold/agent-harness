@@ -13,4 +13,4 @@ Every testable invariant or external constraint must have a corresponding test.
 Each new test must express an identified invariant or external constraint.
 
 ## Test-Only Qualification
-When the mission delivery mode is `Test-Only`, each new or modified test must map to an in-scope item explicitly qualified as `Already-Satisfied Behavior`.
+When the mission delivery mode is `Test-Only`, each new or modified test must map to a proposed invariant or external constraint explicitly qualified as `Already-Satisfied Behavior`.

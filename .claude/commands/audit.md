@@ -4,7 +4,7 @@
 This command applies only during governance audits.
 
 ## TODO Lifecycle
-`TODO.md` is a transient governance-audit artifact. Before deleting `TODO.md` from the active worktree root, the active `mission.md` must account for every concrete item listed under `Contradictions`, `Ambiguities`, and `Markdown to Script Conversions` by either placing it in `Scope` or naming it in `Out of scope`.
+`TODO.md` is a transient governance-audit artifact. Before deleting `TODO.md` from the active worktree root, the active `mission.md` must account for every concrete item listed under `Contradictions`, `Ambiguities`, and `Markdown to Script Conversions` by either addressing it through a proposed governance artifact or explicitly naming it under `Out of scope`.
 
 ## Review Surface Discovery
 Always include repo-root `CLAUDE.md`. Include repo-root `AGENTS.md` if it exists. Include every Markdown file directly inside repo-root `.agent/schemas/`. Include every Markdown file directly inside repo-root `.claude/commands/`. Do not recurse into nested subdirectories.
