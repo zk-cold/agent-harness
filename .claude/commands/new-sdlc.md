@@ -22,7 +22,7 @@ Once approved, `mission.md` must not be modified.
 During Mission Draft, each proposed addition, modification, or removal of a governance artifact must be presented to the user one artifact at a time and must receive user approval before it is included in `mission.md`. If critic feedback requires change, the revised text must get user approval again before resubmission.
 
 ## API Design
-API designs must be explicit as hard constraints, such that tests can be written without knowing the implementations.
+API designs must be explicit as invariants or external constraints, such that tests can be written without knowing the implementations.
 
 ## Coverage Tool Requirement
 When TDD applies, a working coverage tool must be in place before the Mission Draft step in Phase: Mission Creation.

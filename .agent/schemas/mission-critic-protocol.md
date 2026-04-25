@@ -34,7 +34,7 @@ Each proposed consideration must be evaluated of its lasting governance value be
 It must be persisted if such value exists, or must otherwise be exempted for its persistence.
 
 ## Persistence AC Specificity
-Except for hard constraints persisted as tests, each persistence AC must name the artifact title, the target document, and the matching top-level section.
+Except for invariants or external constraints persisted as tests, each persistence AC must name the artifact title, the target document, and the matching top-level section.
 
 ## Governance Artifact Completeness
 Proposed governance artifacts must present full text.
@@ -74,7 +74,7 @@ Out-of-scope items without stated or obvious reasons may signal unexamined scope
 Challenge each in-scope item's boundary to be concrete enough.
 
 ## Test Feasibility
-When a hard constraint's persistence AC is by test, challenge the feasibility.
+When an invariant's or external constraint's persistence AC is by test, challenge the feasibility.
 
 ## Persisting Hard Constraint as Test
-Hard constraints' preferred form of persistence are automated tests. Challenge any proposed text persistence for hard constraints, if an automated test is viable.
+Invariants' and external constraints' preferred form of persistence are automated tests. Challenge any proposed text persistence for them, if an automated test is viable.
