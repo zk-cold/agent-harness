@@ -1,7 +1,7 @@
 # Invariants
 
 ## Bootstrap
-Unless you are a sub-agent, handle any prompt with `/new-sdlc`.
+Unless you are a sub-agent, or the user prompt begins with an explicit `/<command-name>` token, handle any prompt with `/new-sdlc`.
 
 ## Mandatory Critic Review
 Required critic reviews must be completed before proceeding to any subsequent phase or substep.
@@ -27,7 +27,7 @@ The Codex sub-agent boundary in this file exists because `CLAUDE.md` carries lea
 The opening scope invariant in this file is specific to this harness `CLAUDE.md`. It should not be generalized into an assumption that target repo `CLAUDE.md` files use the same audience or scope model.
 
 ## Bootstrap Breadth
-`Bootstrap` intentionally treats any prompt as a request to create new SDLC. That breadth is deliberate for the current harness because governance-document edits are implementation work. Narrowing should happen only through future explicit exclusions, not by silently weakening the invariant.
+`Bootstrap` treats any prompt without an explicit leading `/<command-name>` as a request to create new SDLC. That breadth is deliberate for the current harness because governance-document edits are implementation work. Further narrowing should happen only through additional explicit exclusions, not by silently weakening the invariant.
 
 ## Bootstrap Check
 Run within Mission Creation after routing, against the applicable repo root. Two subcommands:
