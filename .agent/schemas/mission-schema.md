@@ -7,7 +7,7 @@ Copy `.agent/templates/mission.md` to the target path and fill in the placeholde
 Each mission must declare exactly one delivery mode: `TDD`, `TDD-exempt`, or `Test-Only`.
 
 ## Test-Only Scope Qualification
-When the delivery mode is `Test-Only`, every invariant or external constraint that the mission proposes for test persistence must explicitly identify itself as `Already-Satisfied Behavior`.
+When the delivery mode is `Test-Only`, every proposed invariant or external constraint must explicitly identify itself as `Already-Satisfied Behavior` and must not declare `_persist: <governed-document>_`.
 
 ## Full Texts for Governance Artifacts
 For new or updated governance artifacts and templates, full proposed text must be presented in their respective optional sections.

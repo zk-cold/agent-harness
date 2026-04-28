@@ -63,11 +63,12 @@ When the Coverage Tool Requirement blocks mission drafting, the lead confirms or
 Follow `mission-schema.md`.
 ### Coverage Verification
 Run per submission, unless the mission is `TDD-exempt` or `Test-Only`, or there has been no change to prod-scope code since the previous run.
-#### Greenfield Baseline
-When no prod-scope code touched by the mission exists yet (greenfield), record baseline coverage as N/A.
-1. Measure and record baseline coverage against the prod-scope code touched by the mission.
-2. If the baseline coverage is below threshold, abort, surfacing the insufficient baseline coverage and the affected code.
-3. If baseline coverage is satisfactory, record a transient consideration in the mission.
+#### Baseline Coverage
+- **Greenfield (no prod-scope code touched by the mission exists yet):** record baseline coverage as N/A.
+- **Non-greenfield:**
+  1. Measure and record baseline coverage against the prod-scope code touched by the mission.
+  2. If the baseline coverage is below threshold, abort, surfacing the insufficient baseline coverage and the affected code.
+  3. If baseline coverage is satisfactory, record a transient consideration in the mission.
 ### Submission
 Submit to 1 agent using `Fast-Path Mission Creation Critic` template when the mission is `Test-Only` or fast-path is plausible. Enter `Phase: Fast-Path Execution` if approved.
 Submit to 2 sequential agents using `Mission Creation Critic` for normal flow. If approved by both critics, enter `Phase: SDET Execution`.

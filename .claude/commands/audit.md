@@ -31,3 +31,6 @@ This command is TDD-exempt because every deliverable is a non-executable Markdow
 
 ## C4 — Meta Governance vs External Constraints
 This harness supports SDLCs for itself and for other target repos. The External Constraints category in `governance-schema.md` exists for target repos to use. This harness itself cannot have External Constraints, so the Meta Governance invariant in `CLAUDE.md` is correct and non-contradictory with the schema definition.
+
+## C2 — Handoff Resumption "Otherwise" Maps to Aborted
+The apparent gap between `handoff-protocol.md` `## Resumption`'s "otherwise → `recovery-protocol.md`" and recovery's aborted-only `## Governance Scope` is benign. `new-sdlc.md` `## Phase: Mission Creation` only invokes `handoff-protocol.md` when `handoff.md` exists, so only `RESUMABLE` and `ABORTED` (per `scripts/bootstrap_check`) reach Resumption — "otherwise" resolves to aborted.
