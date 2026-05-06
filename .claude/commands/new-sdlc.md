@@ -45,7 +45,7 @@ This happens at start of any phase, except `Phase: Mission Creation`.
 Each critic round spawns a fresh critic agent. Executor sub-agents (SDE, SDET) persist across fix-and-resubmit cycles within a phase.
 
 ## Default Coverage Threshold
-The default coverage threshold is 80% line coverage on modified code. The target repo's hard constraints or considerations may override this default.
+The default coverage threshold is 80% line coverage on modified code.
 
 ## Reframe Procedural Steps as Deliverables
 During the Interview and Mission Draft steps, each procedural step should be reframed as a concrete deliverable before it enters mission scope.
@@ -108,7 +108,10 @@ Commit the changes and **record the hash**. Close SDET and test-critic agents. E
 ## Phase: SDE Execution
 Spawn agent using `SDE Execution` template.
 ### Submission
-When SDE reports ready, **validate HEAD hash against recorded test commit**. Enter `Phase: Post-Impl Critic`.
+When SDE reports ready:
+1. If a test commit hash was recorded for this mission, validate that `HEAD` exactly matches it; on mismatch, abort.
+2. Fetch and merge the target repo's root branch into the worktree.
+3. Enter `Phase: Post-Impl Critic`.
 
 ## Phase: Post-Impl Critic
 Spawn 1 agent using `Post-Impl Critic` template.
@@ -116,7 +119,7 @@ Spawn 1 agent using `Post-Impl Critic` template.
 - Reject -> abort if `mission.md` requires changes. Otherwise delegate the feedback to the SDE agent. Wait for its fix & resubmit.
 
 ## Phase: Cleanup
-Close all sub-agents. 
+Close all sub-agents.
 Apply target repo's commit/merge rules (default: commit-only). If the merge back is not trivial, reset to the applicable post-impl critic phase.
-Remove runtime artifacts (`handoff.md` last), verify worktree clean, and do `git worktree remove`.
+After the commit/merge step completes, remove every remaining uncommitted file under the worktree root (with `handoff.md` removed last), verify worktree clean, and do `git worktree remove`.
 Present results to user.
