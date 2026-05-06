@@ -63,12 +63,6 @@ The active worktree (main repo root) is at `4967396` with a clean working tree b
 
 - **`recovery-protocol.md` reset baseline.** `## Reuse Worktree` says "Any governed document by `governance-schema.md` must be reset" without naming the source of truth (`HEAD`, root branch tip, last approved mission state, etc.).
 
-- **`new-sdlc.md` `## Phase: Cleanup` "runtime artifacts".** "Remove runtime artifacts (`handoff.md` last)" does not enumerate the artifacts. Likely candidates include `mission.md`, `test-output.txt`, `coverage-output.txt`, `lint-output.txt`, and audit `TODO.md`, but the set must be made explicit for cleanup to be reproducible.
-
-- **Coverage threshold override location.** `new-sdlc.md` `## Default Coverage Threshold` permits a target repo's hard constraints or considerations to override 80% but does not specify where the override is recorded (target-repo `CLAUDE.md`, `mission.md`, an external constraint), so SDE and impl-critic cannot deterministically discover the effective threshold.
-
-- **`new-sdlc.md` Phase: SDE Execution HEAD-hash failure path.** "validate HEAD hash against recorded test commit" prescribes the check but not what to do on mismatch (abort? escalate? re-run?). The next behavior is left implicit.
-
 - **Fast-Path Post-Impl Critic reject-cause routing.** `new-sdlc.md` `## Phase: Fast-Path Post-Impl Critic` distinguishes "Reject (by fast-path eligibility)" from generic "Reject" with different downstream phases, but `critic-protocol.md` requires `REJECT` with free-form reasons. No structured signal lets the lead deterministically pick the path.
 
 - **`sde-protocol.md` `## Final Verifications` test-output coupling.** The numbered procedure runs coverage (1), optional lint (2), then merges the root branch (3); it does not call out a test run. The trailer nonetheless requires raw output from tests to be written to `test-output.txt`. Whether tests must be re-run after the root-branch merge in step 3, or whether prior test output suffices, is unstated.
