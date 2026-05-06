@@ -7,10 +7,7 @@ The implementation review must use `test-output.txt` from the worktree root. All
 When formatter or linter verification is required, the implementation review must use `lint-output.txt` from the worktree root. All checks reported in that file must pass.
 
 ## Coverage Threshold Verification
-Modified prod-scope code must meet the coverage threshold.
-
-## TDD Exemption Validation
-When the mission assumes `TDD-exempt`, all implementation artifacts must be non-testable.
+Modified prod-scope code must meet the coverage threshold, except files excluded by the repo's coverage configuration.
 
 ## Test-Only Validation
 When the mission assumes `Test-Only`, all implementation artifacts must be test-scope only.
