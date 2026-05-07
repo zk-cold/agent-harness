@@ -49,13 +49,7 @@ The active worktree (main repo root) is at `4967396` with a clean working tree b
 
 - **Relatedness test cited but not defined.** `CLAUDE.md` (`## Bootstrap Check`) states the relatedness test is "defined in `.agent/schemas/handoff-protocol.md` and `.claude/commands/new-sdlc.md`", but neither file actually defines such a test. `new-sdlc.md` `## Phase: Mission Creation` step 2 only uses the bare phrase "related `handoff.md`" without specifying how relatedness is determined.
 
-- **Fast-path eligibility asymmetry between mission-time and impl-time.** `mission-schema.md` `## Prefer Fast Path` and `mission-critic-protocol.md` `## Fast-Path Eligibility` cap governance modifications/removals at three and ban consideration overrides. `fast-path-impl-critic-protocol.md` `## Fast-Path Eligibility Verification` adds a "no more than 7 git-tracked files have uncommitted changes" cap not present at mission time. Whether this asymmetry is intentional, and whether the mission-critic should preview the file-count cap, is unclear.
-
-- **`fast-path-impl-critic-protocol.md` "git-tracked files with uncommitted changes" boundary.** It is unstated whether the cap counts files that were newly created and `git add`ed during the mission, untracked files, or only modifications to previously-committed files. Combined with `fast-path-impl-protocol.md` `## Leave Changes Uncommitted`, the boundary materially changes which fast-path missions remain eligible.
-
 - **`fast-path-impl-protocol.md` "once locked".** Steps 1b and 3b say "Verification against `sdet-protocol.md` — once locked, no further additions/modifications/deletions" without specifying what the lock applies to: only test files, all worktree files, or only tests expressing hard constraints.
-
-- **`mission-critic-protocol.md` fast-path identification channel.** `## Fast-Path Eligibility` triggers "When the review context explicitly identifies the mission as fast-path", but no document specifies how that identification reaches the critic — via the prompt context, a flag in `mission.md`, or another channel.
 
 - **`audit.md` "changed worktree copy" definition.** `## Worktree Proposal Detection` does not define "changed": differs from `HEAD`, has uncommitted changes, or differs from the most recent merge-base. When the active worktree is itself the repo root, the repo-root vs. proposal distinction also collapses.
 

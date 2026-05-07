@@ -40,7 +40,7 @@ Reject if `TDD-exempt` is declared but any proposed invariant or external constr
 Reject if `Test-Only` is declared and any proposed invariant or external constraint is not explicitly qualified as `Already-Satisfied Behavior`.
 
 ## Fast-Path Eligibility
-When the review context explicitly identifies the mission as fast-path and the delivery mode is not `Test-Only`, all criteria must be met:
+When invoked via the `Fast-Path Mission Creation Critic` prompt template and the delivery mode is not `Test-Only`, all criteria must be met:
 - No more than three governance artifact modifications or removals
 - No consideration overrides
 
