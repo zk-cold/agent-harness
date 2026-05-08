@@ -47,8 +47,6 @@ The active worktree (main repo root) is at `4967396` with a clean working tree b
 
 # Ambiguities
 
-- **Relatedness test cited but not defined.** `CLAUDE.md` (`## Bootstrap Check`) states the relatedness test is "defined in `.agent/schemas/handoff-protocol.md` and `.claude/commands/new-sdlc.md`", but neither file actually defines such a test. `new-sdlc.md` `## Phase: Mission Creation` step 2 only uses the bare phrase "related `handoff.md`" without specifying how relatedness is determined.
-
 - **`fast-path-impl-protocol.md` "once locked".** Steps 1b and 3b say "Verification against `sdet-protocol.md` — once locked, no further additions/modifications/deletions" without specifying what the lock applies to: only test files, all worktree files, or only tests expressing hard constraints.
 
 - **`audit.md` "changed worktree copy" definition.** `## Worktree Proposal Detection` does not define "changed": differs from `HEAD`, has uncommitted changes, or differs from the most recent merge-base. When the active worktree is itself the repo root, the repo-root vs. proposal distinction also collapses.
@@ -68,8 +66,6 @@ The active worktree (main repo root) is at `4967396` with a clean working tree b
 - **`critic-protocol.md` `## Counting Governance Artifacts` unit for tests.** "Each semantically-modified test count as 1 change in its respective category" does not say whether the unit is per file, per test case, or per hard constraint expressed by the test.
 
 - **`test-critic-protocol.md` `## Hard Constraint Coverage` scope.** "Every testable invariant or external constraint must have a corresponding test" does not scope the rule to mission-affected constraints; read literally it imposes a whole-repo completeness check on every test review.
-
-- **`handoff-protocol.md` "resumable" defined out of band.** `## Resumption` keys behavior on whether the mission is "resumable" without defining it. The operational definition lives in `scripts/bootstrap_check` (`RESUMABLE` / `ABORTED` / `NO_HANDOFF`) and is referenced from `CLAUDE.md`, but not from this protocol.
 
 - **`abort-protocol.md` worktree lifecycle.** `## Worktree Preservation` forbids removing the worktree during abort but does not specify when, or by what command, a permanently-aborted worktree is eventually cleaned up. This permits unbounded worktree accumulation.
 
