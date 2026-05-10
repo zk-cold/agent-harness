@@ -53,8 +53,6 @@ The active worktree (main repo root) is at `4967396` with a clean working tree b
 
 - **`recovery-protocol.md` reset baseline.** `## Reuse Worktree` says "Any governed document by `governance-schema.md` must be reset" without naming the source of truth (`HEAD`, root branch tip, last approved mission state, etc.).
 
-- **`sde-protocol.md` `## Final Verifications` test-output coupling.** The numbered procedure runs coverage (1), optional lint (2), then merges the root branch (3); it does not call out a test run. The trailer nonetheless requires raw output from tests to be written to `test-output.txt`. Whether tests must be re-run after the root-branch merge in step 3, or whether prior test output suffices, is unstated.
-
 - **`sdet-protocol.md` external-constraint anchoring location.** `## Document External Constraints` requires anchor info, but `## No Governed Document Changes` blocks writing it to governed prose files. The protocol does not specify whether anchors belong in test names, code comments, fixtures, or elsewhere.
 
 - **`sdet-protocol.md` API-change exception.** `## No Prod-Scope Code` exempts "an API change made explicit in the mission". "API change" is undefined here; `new-sdlc.md` `## API Design` only describes the form an API design takes (invariant or external constraint). The interaction with TDD's test-first ordering is also unstated.

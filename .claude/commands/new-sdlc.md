@@ -110,7 +110,7 @@ Spawn agent using `SDE Execution` template.
 ### Submission
 When SDE reports ready:
 1. If a test commit hash was recorded for this mission, validate that `HEAD` exactly matches it; on mismatch, abort.
-2. Fetch and merge the target repo's root branch into the worktree.
+2. Fetch and merge the target repo's root branch into the worktree. Abort if the merge is not `Already up to date.` or a clean fast-forward, so that the SDE's pre-merge `test-output.txt` remains canonical.
 3. Enter `Phase: Post-Impl Critic`.
 
 ## Phase: Post-Impl Critic

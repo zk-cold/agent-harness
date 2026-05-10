@@ -8,11 +8,12 @@ Do not create, modify, or delete any test.
 
 ## Final Verifications
 Before reporting ready-for-review:
-1. Run the coverage tool for new/modified code. Verify coverage threshold is met.
-2. If the target repo provides a formatter and/or linter, run them and ensure clean results
-3. Verify every governance artifact proposed in the mission is persisted per its declaration
+1. Run the full test suite. Write its raw output to `test-output.txt` under the worktree root.
+2. Run the coverage tool for new/modified code. Verify coverage threshold is met.
+3. If the target repo provides a formatter and/or linter, run them and ensure clean results
+4. Verify every governance artifact proposed in the mission is persisted per its declaration
 
-The raw output from tests, coverage, and linter (if available) must be written to fixed files under worktree root: `test-output.txt`, `coverage-output.txt`, and `lint-output.txt` respectively.
+The raw outputs from coverage and linter (if available) must also be written to fixed files under worktree root: `coverage-output.txt` and `lint-output.txt` respectively. `test-output.txt` reflects the pre-merge tree; the lead's subsequent root-branch merge in `new-sdlc.md` `## Phase: SDE Execution` `### Submission` aborts on any non-trivial outcome, so the pre-merge output remains canonical for `Phase: Post-Impl Critic`.
 
 ## Refactoring Justification
 Refactor only if a proposed invariant or external constraint cannot be fulfilled without such refactoring.
