@@ -47,23 +47,17 @@ The active worktree (main repo root) is at `4967396` with a clean working tree b
 
 # Ambiguities
 
-- **`fast-path-impl-protocol.md` "once locked".** Steps 1b and 3b say "Verification against `sdet-protocol.md` — once locked, no further additions/modifications/deletions" without specifying what the lock applies to: only test files, all worktree files, or only tests expressing hard constraints.
-
 - **`audit.md` "changed worktree copy" definition.** `## Worktree Proposal Detection` does not define "changed": differs from `HEAD`, has uncommitted changes, or differs from the most recent merge-base. When the active worktree is itself the repo root, the repo-root vs. proposal distinction also collapses.
 
 - **`mission-schema.md` "respective optional sections" and `mission-critic-protocol.md` violation-resolution location.** `## Full Texts for Governance Artifacts` requires text "in their respective optional sections" without naming or defining those sections. `mission-critic-protocol.md` `## Mission Justification` requires "a consideration about violation-resolution" without saying where in `mission.md` that consideration belongs.
 
 - **`recovery-protocol.md` reset baseline.** `## Reuse Worktree` says "Any governed document by `governance-schema.md` must be reset" without naming the source of truth (`HEAD`, root branch tip, last approved mission state, etc.).
 
-- **Fast-Path Post-Impl Critic reject-cause routing.** `new-sdlc.md` `## Phase: Fast-Path Post-Impl Critic` distinguishes "Reject (by fast-path eligibility)" from generic "Reject" with different downstream phases, but `critic-protocol.md` requires `REJECT` with free-form reasons. No structured signal lets the lead deterministically pick the path.
-
 - **`sde-protocol.md` `## Final Verifications` test-output coupling.** The numbered procedure runs coverage (1), optional lint (2), then merges the root branch (3); it does not call out a test run. The trailer nonetheless requires raw output from tests to be written to `test-output.txt`. Whether tests must be re-run after the root-branch merge in step 3, or whether prior test output suffices, is unstated.
 
 - **`sdet-protocol.md` external-constraint anchoring location.** `## Document External Constraints` requires anchor info, but `## No Governed Document Changes` blocks writing it to governed prose files. The protocol does not specify whether anchors belong in test names, code comments, fixtures, or elsewhere.
 
 - **`sdet-protocol.md` API-change exception.** `## No Prod-Scope Code` exempts "an API change made explicit in the mission". "API change" is undefined here; `new-sdlc.md` `## API Design` only describes the form an API design takes (invariant or external constraint). The interaction with TDD's test-first ordering is also unstated.
-
-- **`critic-protocol.md` `## Counting Governance Artifacts` unit for tests.** "Each semantically-modified test count as 1 change in its respective category" does not say whether the unit is per file, per test case, or per hard constraint expressed by the test.
 
 - **`test-critic-protocol.md` `## Hard Constraint Coverage` scope.** "Every testable invariant or external constraint must have a corresponding test" does not scope the rule to mission-affected constraints; read literally it imposes a whole-repo completeness check on every test review.
 

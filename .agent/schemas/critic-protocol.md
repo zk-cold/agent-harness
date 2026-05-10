@@ -10,6 +10,6 @@ If there are any feedback, caveats, requested changes, the response must be `REJ
 # Considerations
 
 ## Counting Governance Artifacts
-Each new/modified/removed prose rule count as 1 change in its respective category.
-Each template change count as 1 consideration change.
-Each semantically-modified test count as 1 change in its respective category (invariant or external constraint).
+Each modified or removed prose rule count as 1 change in its respective category.
+Each modified or removed template count as 1 consideration change.
+Each semantically-modified test count as 1 change per hard constraint it expresses, in that hard constraint's respective category (invariant or external constraint).
