@@ -13,12 +13,12 @@ All changes must remain uncommitted.
 Execute the applicable flow below in order:
 1. If the mission delivery mode is `TDD`:
    a. Writing tests - follow `sdet-protocol.md` as an SDET
-   b. Verification against `sdet-protocol.md` - once locked, no further additions/modifications/deletions
+   b. Verification against `sdet-protocol.md` - once approved, no further test additions, modifications, or deletions are permitted in this mission
    c. Follow `sde-protocol.md` as an SDE
 2. If the mission delivery mode is `TDD-exempt`, follow `sde-protocol.md` as an SDE
 3. If the mission delivery mode is `Test-Only`:
    a. Writing tests - follow `sdet-protocol.md` as an SDET
-   b. Verification against `sdet-protocol.md` - once locked, no further additions/modifications/deletions
+   b. Verification against `sdet-protocol.md` - once approved, no further test additions, modifications, or deletions are permitted in this mission
    c. Run the relevant tests and write their raw output to `test-output.txt`
    d. If the target repo provides a formatter and/or linter, run them, ensure clean results, and write the raw output to `lint-output.txt`
    e. If coverage verification is explicitly required by the mission or target-repo governance, run it and write the raw output to `coverage-output.txt`
