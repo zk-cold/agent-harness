@@ -47,8 +47,6 @@ The active worktree (main repo root) is at `4967396` with a clean working tree b
 
 # Ambiguities
 
-- **`audit.md` "changed worktree copy" definition.** `## Worktree Proposal Detection` does not define "changed": differs from `HEAD`, has uncommitted changes, or differs from the most recent merge-base. When the active worktree is itself the repo root, the repo-root vs. proposal distinction also collapses.
-
 - **`mission-schema.md` "respective optional sections" and `mission-critic-protocol.md` violation-resolution location.** `## Full Texts for Governance Artifacts` requires text "in their respective optional sections" without naming or defining those sections. `mission-critic-protocol.md` `## Mission Justification` requires "a consideration about violation-resolution" without saying where in `mission.md` that consideration belongs.
 
 - **`recovery-protocol.md` reset baseline.** `## Reuse Worktree` says "Any governed document by `governance-schema.md` must be reset" without naming the source of truth (`HEAD`, root branch tip, last approved mission state, etc.).
@@ -56,12 +54,6 @@ The active worktree (main repo root) is at `4967396` with a clean working tree b
 - **`sdet-protocol.md` external-constraint anchoring location.** `## Document External Constraints` requires anchor info, but `## No Governed Document Changes` blocks writing it to governed prose files. The protocol does not specify whether anchors belong in test names, code comments, fixtures, or elsewhere.
 
 - **`sdet-protocol.md` API-change exception.** `## No Prod-Scope Code` exempts "an API change made explicit in the mission". "API change" is undefined here; `new-sdlc.md` `## API Design` only describes the form an API design takes (invariant or external constraint). The interaction with TDD's test-first ordering is also unstated.
-
-- **`test-critic-protocol.md` `## Hard Constraint Coverage` scope.** "Every testable invariant or external constraint must have a corresponding test" does not scope the rule to mission-affected constraints; read literally it imposes a whole-repo completeness check on every test review.
-
-- **`abort-protocol.md` worktree lifecycle.** `## Worktree Preservation` forbids removing the worktree during abort but does not specify when, or by what command, a permanently-aborted worktree is eventually cleaned up. This permits unbounded worktree accumulation.
-
-- **`AGENTS.md` `## Slash Commands` classification.** "/name commands are interpreted as .claude/commands/name.md" documents Claude Code runtime behavior, not a default-binding rule on agent behavior. Whether this passes `governance-schema.md` `## Consideration Qualification` (especially the "obvious enough that it adds no interpretive or implementation value" disqualifier) is debatable.
 
 - No material ambiguities found in:
   `.agent/schemas/governance-schema.md`,

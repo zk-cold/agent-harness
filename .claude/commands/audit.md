@@ -10,7 +10,7 @@ This command applies only during governance audits.
 Always include repo-root `CLAUDE.md`. Include repo-root `AGENTS.md` if it exists. Include every Markdown file directly inside repo-root `.agent/schemas/`. Include every Markdown file directly inside repo-root `.claude/commands/`. Do not recurse into nested subdirectories.
 
 ## Worktree Proposal Detection
-If any path discovered by the review surface rule also has a changed worktree copy in the active worktree, inspect that changed worktree copy as a proposal while still treating the repo-root copy as authoritative.
+If any path discovered by the review surface rule has a worktree copy in the active worktree whose content differs from the same path's content at repo-root `HEAD`, inspect that worktree copy as a proposal while still treating the repo-root copy as authoritative. When the active worktree is itself the repo root, no proposal copies exist.
 
 ## Deliverable
 Create or overwrite `TODO.md` at the active worktree's repo root. No other files may be added inside the repository worktree by this command.
@@ -34,3 +34,6 @@ This harness supports SDLCs for itself and for other target repos. The External 
 
 ## C2 — Handoff Resumption "Otherwise" Maps to Aborted
 The apparent gap between `handoff-protocol.md` `## Resumption`'s "otherwise → `recovery-protocol.md`" and recovery's aborted-only `## Governance Scope` is benign. `new-sdlc.md` `## Phase: Mission Creation` only invokes `handoff-protocol.md` when `handoff.md` exists, so only `RESUMABLE` and `ABORTED` (per `scripts/bootstrap_check`) reach Resumption — "otherwise" resolves to aborted.
+
+## AGENTS.md Audience
+`AGENTS.md` exists for runtimes that do not read `CLAUDE.md` (e.g., Codex). `governance-schema.md` `## Consideration Qualification`'s obviousness disqualifier applies relative to the readers of the file in which a consideration is recorded, so a consideration in `AGENTS.md` is judged against AGENTS.md readers rather than against Claude Code's built-in knowledge.
