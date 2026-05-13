@@ -11,3 +11,6 @@ Do not remove the worktree during abort.
 
 ## Terminal Halt
 Do not continue execution, review, or cleanup after abort.
+
+## Worktree Cleanup
+A permanently-aborted worktree may only be removed via `python3 -m scripts.cleanup_aborted_worktree <worktree-path>`.
