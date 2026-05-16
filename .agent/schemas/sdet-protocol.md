@@ -4,7 +4,7 @@
 This document only applies to SDETs.
 
 ## No Prod-Scope Code
-Do not create, modify, or delete any prod-scope code, unless it's an API change made explicit in the mission.
+Do not create, modify, or delete any prod-scope code. API scaffolding is the lead's responsibility per `new-sdlc.md` `## API Design`.
 
 ## No Governed Document Changes
 Do not create, modify, or delete any governed document by `governance-schema.md`.

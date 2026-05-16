@@ -10,7 +10,7 @@ Recovery must not begin unless the user provides input that addresses the blocke
 Mission phase is reset to `Mission Creation` after Blocker Removal.
 
 ## Reuse Worktree
-Recovery reuses the existing worktree. Any governed document by `governance-schema.md` must be reset
+Recovery reuses the existing worktree. Any governed document by `governance-schema.md` must be reset to its content at the root branch's current HEAD (e.g., `git checkout <root-branch> -- <governed-path>`).
 
 # Considerations
 
