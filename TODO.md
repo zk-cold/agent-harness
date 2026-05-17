@@ -47,14 +47,6 @@ The active worktree (main repo root) is at `4967396` with a clean working tree b
 
 # Ambiguities
 
-- **`mission-schema.md` "respective optional sections" and `mission-critic-protocol.md` violation-resolution location.** `## Full Texts for Governance Artifacts` requires text "in their respective optional sections" without naming or defining those sections. `mission-critic-protocol.md` `## Mission Justification` requires "a consideration about violation-resolution" without saying where in `mission.md` that consideration belongs.
-
-- **`recovery-protocol.md` reset baseline.** `## Reuse Worktree` says "Any governed document by `governance-schema.md` must be reset" without naming the source of truth (`HEAD`, root branch tip, last approved mission state, etc.).
-
-- **`sdet-protocol.md` external-constraint anchoring location.** `## Document External Constraints` requires anchor info, but `## No Governed Document Changes` blocks writing it to governed prose files. The protocol does not specify whether anchors belong in test names, code comments, fixtures, or elsewhere.
-
-- **`sdet-protocol.md` API-change exception.** `## No Prod-Scope Code` exempts "an API change made explicit in the mission". "API change" is undefined here; `new-sdlc.md` `## API Design` only describes the form an API design takes (invariant or external constraint). The interaction with TDD's test-first ordering is also unstated.
-
 - No material ambiguities found in:
   `.agent/schemas/governance-schema.md`,
   `.agent/schemas/impl-critic-protocol.md`.

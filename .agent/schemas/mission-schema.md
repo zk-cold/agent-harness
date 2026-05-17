@@ -10,7 +10,7 @@ Each mission must declare exactly one delivery mode: `TDD`, `TDD-exempt`, or `Te
 When the delivery mode is `Test-Only`, every proposed invariant or external constraint must explicitly identify itself as `Already-Satisfied Behavior` and must not declare `_persist: <governed-document>_`.
 
 ## Full Texts for Governance Artifacts
-For new or updated governance artifacts and templates, full proposed text must be presented in their respective optional sections.
+For new or updated governance artifacts and templates, full proposed text must be presented in the mission section that matches the artifact's category: invariants in `## Invariants`, external constraints in `## External Constraints`, considerations (including template proposals per `governance-schema.md` `## Template Files` and any violation-resolution consideration required by `mission-critic-protocol.md` `## Mission Justification`) in `## Considerations`.
 
 ## Assumptions Contents
 Assumptions must materially enable, shape, or constrain the mission. They must not be verifiable during Mission Creation.

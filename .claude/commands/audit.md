@@ -29,6 +29,9 @@ This command is TDD-exempt because every deliverable is a non-executable Markdow
 
 # Considerations
 
+## A3 — SDET External-Constraint Anchor Location
+`sdet-protocol.md` `## Document External Constraints` does not name a specific location for the anchor info that `governance-schema.md` `## External Constraint Qualification` requires (named source and version). Because the SDET writes only tests, the anchor info naturally lands inside the test artifact (e.g., docstring, fixture, or test-data file). No in-flight mission has surfaced the gap; treat as non-actionable until a concrete mission demonstrates harm.
+
 ## C4 — Meta Governance vs External Constraints
 This harness supports SDLCs for itself and for other target repos. The External Constraints category in `governance-schema.md` exists for target repos to use. This harness itself cannot have External Constraints, so the Meta Governance invariant in `CLAUDE.md` is correct and non-contradictory with the schema definition.
 
