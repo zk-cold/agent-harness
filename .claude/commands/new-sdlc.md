@@ -31,7 +31,7 @@ When TDD applies, a working coverage tool must be in place before the Mission Dr
 A mission declared `Test-Only` must stay on fast path and must not enter normal-flow execution phases.
 
 ## Mission-Draft Challenger
-During Mission Draft, before any proposed governance artifact is presented to the user for approval under `Mission-Draft Governance Artifact Approval`, a fresh challenger sub-agent must challenge every proposed governance artifact. The challenge repeats as a loop: each round spawns a fresh challenger, and the loop ends only when every disposition in a round is either resolved by revising the draft or overturned by the dev. Any consideration a disposition produces re-enters the challenge. Only a surviving artifact is then presented for approval under `Mission-Draft Governance Artifact Approval`.
+During Mission Draft, before any proposed governance artifact is presented to the user for approval under `Mission-Draft Governance Artifact Approval`, a fresh challenger sub-agent must challenge every proposed governance artifact. The challenge repeats as a loop: each round spawns a fresh challenger, and any consideration a disposition produces re-enters the challenge. The loop ends — releasing the surviving artifacts to approval under `Mission-Draft Governance Artifact Approval` — only when every disposition in a round is either resolved by revising the draft or overturned by the dev.
 
 ## Adversarial Feedback Alignment
 Before the lead revises a draft in response to adversarial feedback — a challenger disposition or a critic rejection — that feedback and the lead's evaluation of whether the revision aligns with or contradicts the `## Dev Interview Transcript` of `handoff.md` must be recorded in that file's `## Known Failed Attempts`. A revision the lead judges to contradict dev intention must be flagged to the dev rather than carried silently forward.
@@ -57,10 +57,10 @@ The default coverage threshold is 80% line coverage on modified code.
 During the Interview and Mission Draft steps, each procedural step should be reframed as a concrete deliverable before it enters mission scope.
 
 ## Challenger Checks
-The `Mission-Draft Challenger`'s scrutiny is a design for mission governance quality — the mission-creation critics carry many responsibilities at once and give it less focused attention, so a fresh sub-agent scoped to only the following is more reliable and runs before the dev's approval rather than only at the later critic round. The challenge is confined to exactly these three checks, in priority order, persisted through the `# Mission-Draft Challenger` prompt template:
+The challenge is confined to these three checks, in priority order:
 1. Conformance to the content and disqualification clauses of `governance-schema.md`.
 2. For a proposed invariant, whether it is a real business mandate rather than an external constraint or a derived implementation detail, dispositioned per `Invariant Business-Mandate Triage`.
-3. Whether the artifact, or the part thereof, carries lasting governance value beyond the mission.
+3. Whether the artifact carries lasting governance value beyond the mission.
 
 ## Invariant Business-Mandate Triage
 A proposed invariant that the challenger finds is not a real business mandate does not survive as an invariant: an external constraint is reclassified as an external constraint; a derived implementation detail is rewritten as an accompanying consideration when non-obvious, or dropped when obvious. When the challenger cannot cleanly classify the invariant among business mandate, external constraint, and derived implementation detail, the lead prompts the dev for clarification and applies no disposition until the classification is resolved.
