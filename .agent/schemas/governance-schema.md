@@ -30,6 +30,9 @@ Git-tracked artifacts that are not classified as Governed Documents
 ## Overrides
 A consideration may be overridden only when it is explicitly referenced and the justification is stated clearly enough to withstand adversarial review.
 
+## API Design
+An API is any signature, type, or module structure visible from outside its defining module, and any data or wire format exposed outside the module that defines it. Unless it is an External Constraint, the specification of an API being introduced or changed must be recorded as an invariant.
+
 # Considerations
 
 ## Invariant Qualification
