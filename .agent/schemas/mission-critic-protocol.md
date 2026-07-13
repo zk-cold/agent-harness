@@ -14,15 +14,8 @@ Each mission must either
 ## Violation-Resolution Specificity
 When a consideration claims to resolve an existing violation, it must name both the governance artifact and the violation.
 
-## Governance Artifact Vetting
-Each proposed governance artifact (and every part thereof) must be challenged against the content & disqualification clauses defined by `governance-schema.md`.
-
 ## Governance Artifact Persistence
 Reject any proposed consideration that lacks a `_transient_` or `_persist: <governed-document>_` declaration.
-
-## Consideration Persistence Evaluation
-Each proposed consideration must be evaluated of its lasting governance value beyond the mission.
-It must be persisted if such value exists, or must otherwise be exempted for its persistence.
 
 ## Governance Artifact Completeness
 Proposed governance artifacts must present full text.

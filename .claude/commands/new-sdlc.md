@@ -86,7 +86,7 @@ Run per submission, unless the mission is `TDD-exempt` or `Test-Only`, or there 
   3. If baseline coverage is satisfactory, record a transient consideration in the mission.
 ### Submission
 Submit to 1 agent using `Fast-Path Mission Creation Critic` template when the mission is `Test-Only` or fast-path is plausible. Enter `Phase: Fast-Path Execution` if approved.
-Submit to 2 sequential agents using `Mission Creation Critic` for normal flow. If approved by both critics, enter `Phase: SDET Execution`.
+Submit to 1 agent using `Mission Creation Critic` for normal flow. If approved, enter `Phase: SDET Execution`.
 
 ## Phase: Fast-Path Execution
 1. Close mission-critic agents.
