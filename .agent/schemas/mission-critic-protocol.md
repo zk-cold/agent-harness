@@ -45,7 +45,7 @@ When invoked via the `Fast-Path Mission Creation Critic` prompt template and the
 - No consideration overrides
 
 ## Stubbing and Runtime-Patching Policy Declaration
-For missions whose delivery mode is `TDD` or `Test-Only`, reject unless the mission's `## Invariants` section declares a stubbing-policy invariant and a runtime-patching-policy invariant (titles need not match specific strings, but each invariant must be unambiguous about which policy it establishes). Each such invariant's body must be either an unambiguous blanket ban or an enumerated allowlist.
+For missions whose delivery mode is `TDD` or `Test-Only`, reject unless the mission's `## Considerations` section declares a stubbing-policy consideration and a runtime-patching-policy consideration (titles need not match specific strings, but each consideration must be unambiguous about which policy it establishes). Each such consideration must carry a `_transient_` persistence declaration, and its body must be either an unambiguous blanket ban or an enumerated allowlist.
 
 # Considerations
 

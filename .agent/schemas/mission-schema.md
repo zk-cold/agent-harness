@@ -21,10 +21,10 @@ Submit for fast-path approval if either of the following is true:
 - We modify or remove at most three governed artifacts and do not override considerations.
 
 ## Stubbing Policy
-Each `TDD` or `Test-Only` mission must declare, under mission.md's `## Invariants` section, an invariant whose body establishes the stubbing policy for the mission. The body must be either an unambiguous blanket ban, or an enumerated allowlist of the symbols a test may replace with a mock, stub, fake, or spy (an empty allowlist permits none).
+Each `TDD` or `Test-Only` mission must declare, under mission.md's `## Considerations` section, a `_transient_` consideration whose body establishes the stubbing policy for the mission. The body must be either an unambiguous blanket ban, or an enumerated allowlist of the symbols a test may replace with a mock, stub, fake, or spy (an empty allowlist permits none).
 
 ## Runtime-Patching Policy
-Each `TDD` or `Test-Only` mission must declare, under mission.md's `## Invariants` section, an invariant whose body establishes the runtime-patching policy for the mission. The body must be either an unambiguous blanket ban, or an enumerated allowlist of the modules, classes, functions, attributes, or constants a test may mutate, replace, or rebind at runtime (an empty allowlist permits none).
+Each `TDD` or `Test-Only` mission must declare, under mission.md's `## Considerations` section, a `_transient_` consideration whose body establishes the runtime-patching policy for the mission. The body must be either an unambiguous blanket ban, or an enumerated allowlist of the modules, classes, functions, attributes, or constants a test may mutate, replace, or rebind at runtime (an empty allowlist permits none).
 
 ## Governance Artifact Persistence
 Each governance artifact proposed for addition or modification in a mission must end with a trailing italics line declaring its persistence:
