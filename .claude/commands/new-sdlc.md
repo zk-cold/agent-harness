@@ -31,7 +31,7 @@ When TDD applies, a working coverage tool must be in place before the Mission Dr
 A mission declared `Test-Only` must stay on fast path and must not enter normal-flow execution phases.
 
 ## Mission-Draft Challenger
-During Mission Draft, before any proposed governance artifact is presented to the user for approval under `Mission-Draft Governance Artifact Approval`, a fresh challenger sub-agent must challenge every proposed governance artifact. The challenge repeats as a loop: each round spawns a fresh challenger, and any consideration a disposition produces re-enters the challenge. The loop ends — releasing the surviving artifacts to approval under `Mission-Draft Governance Artifact Approval` — only when every disposition in a round is either resolved by revising the draft or overturned by the dev.
+During Mission Draft, a fresh challenger sub-agent must challenge every governance artifact proposed or revised in the draft, and an artifact may be presented to the user for approval under `Mission-Draft Governance Artifact Approval` only after it survives a challenge or the dev overturns every adverse disposition against it.
 
 ## Adversarial Feedback Alignment
 Before the lead revises a draft in response to adversarial feedback — a challenger disposition or a critic rejection — that feedback and the lead's evaluation of whether the revision aligns with or contradicts the `## Dev Interview Transcript` of `handoff.md` must be recorded in that file's `## Known Failed Attempts`. A revision the lead judges to contradict dev intention must be flagged to the dev rather than carried silently forward.
