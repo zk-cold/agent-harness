@@ -30,8 +30,14 @@ When TDD applies, a working coverage tool must be in place before the Mission Dr
 ## Test-Only Routing
 A mission declared `Test-Only` must stay on fast path and must not enter normal-flow execution phases.
 
-## Mission Redraft After Rejection
-Before redrafting a mission following a critic rejection, each rejection reason must be recorded in `## Known Failed Attempts` together with a note on whether it contradicts the `## Dev Interview Transcript` section of `handoff.md`.
+## Mission-Draft Challenger
+During Mission Draft, a fresh challenger sub-agent must challenge every governance artifact proposed or revised in the draft, and an artifact may be presented to the user for approval under `Mission-Draft Governance Artifact Approval` only after it survives a challenge or the dev overturns every adverse disposition against it.
+
+## Adversarial Feedback Alignment
+Before the lead revises a draft in response to adversarial feedback — a challenger disposition or a critic rejection — that feedback and the lead's evaluation of whether the revision aligns with or contradicts the `## Dev Interview Transcript` of `handoff.md` must be recorded in that file's `## Known Failed Attempts`. A revision the lead judges to contradict dev intention must be flagged to the dev rather than carried silently forward.
+
+## Lead Context Is Facts Only
+Lead-authored context injected into a sub-agent prompt must state only facts, never instructions to the sub-agent.
 
 # Considerations
 
@@ -49,6 +55,15 @@ The default coverage threshold is 80% line coverage on modified code.
 
 ## Reframe Procedural Steps as Deliverables
 During the Interview and Mission Draft steps, each procedural step should be reframed as a concrete deliverable before it enters mission scope.
+
+## Challenger Checks
+The challenge is confined to these three checks, in priority order:
+1. Conformance to the content and disqualification clauses of `governance-schema.md`.
+2. For a proposed invariant, whether it is a real business mandate rather than an external constraint or a derived implementation detail, dispositioned per `Invariant Business-Mandate Triage`.
+3. Whether the artifact carries lasting governance value beyond the mission.
+
+## Invariant Business-Mandate Triage
+A proposed invariant that the challenger finds is not a real business mandate does not survive as an invariant: an external constraint is reclassified as an external constraint; a derived implementation detail is rewritten as an accompanying consideration when non-obvious, or dropped when obvious. When the challenger cannot cleanly classify the invariant among business mandate, external constraint, and derived implementation detail, the lead prompts the dev for clarification and applies no disposition until the classification is resolved.
 
 ## Phase: Mission Creation
 1. Identify target repo
