@@ -15,7 +15,7 @@ Each mission must either
 When a consideration claims to resolve an existing violation, it must name both the governance artifact and the violation.
 
 ## Governance Artifact Persistence
-Reject any proposed consideration that lacks a `_transient_` or `_persist: <governed-document>_` declaration.
+Treat a proposed consideration that carries no persistence declaration as `_transient_`. Reject a consideration that declares `_persist: <governed-document>_` when its lasting governance value beyond the mission is not self-evident from the rule's own text.
 
 ## Governance Artifact Completeness
 Proposed governance artifacts must present full text.
@@ -38,7 +38,10 @@ When invoked via the `Fast-Path Mission Creation Critic` prompt template and the
 - No consideration overrides
 
 ## Stubbing and Runtime-Patching Policy Declaration
-For missions whose delivery mode is `TDD` or `Test-Only`, reject unless the mission's `## Considerations` section declares a stubbing-policy consideration and a runtime-patching-policy consideration (titles need not match specific strings, but each consideration must be unambiguous about which policy it establishes). Each such consideration must carry a `_transient_` persistence declaration, and its body must be either an unambiguous blanket ban or an enumerated allowlist.
+For missions whose delivery mode is `TDD` or `Test-Only`, reject unless the mission's `## Considerations` section declares a stubbing-policy consideration and a runtime-patching-policy consideration (titles need not match specific strings, but each consideration must be unambiguous about which policy it establishes). Each such consideration must carry a `_transient_` persistence declaration, and its body must be either an unambiguous policy permitting none or an enumerated allowlist.
+
+## Persistence Declared, Not Justified
+Reject any proposed governance artifact, of any category, that includes a clause whose purpose is to justify its persistence disposition — that it persists, that it is `_transient_`, or that it is persisted as a prose rule rather than as a test.
 
 # Considerations
 
