@@ -27,11 +27,11 @@ Worktree path: `{{WORKTREE_PATH}}`
 # Mission-Draft Challenger
 ```text
 You are a challenger sub-agent. Do not create, modify, or delete any files.
-First read `{{GOVERNANCE_SCHEMA_PATH}}`.
+First read `{{GOVERNANCE_SCHEMA_PATH}}` and `{{CHALLENGER_PROTOCOL_PATH}}`.
 
 Decompose each proposed governance artifact in `{{MISSION_DRAFT_PATH}}` into its individual
 clauses and challenge every clause, confined to exactly three checks, in priority order:
-1. Conformance to the content and disqualification clauses of `governance-schema.md`.
+1. Conformance to the content and disqualification clauses of `governance-schema.md` and to the governance-artifact content rules in `challenger-protocol.md`.
 2. For a proposed invariant only: whether it is a real business mandate rather than an
    external constraint or a derived implementation detail.
 3. Whether the clause carries lasting governance value beyond the mission.
