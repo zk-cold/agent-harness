@@ -11,14 +11,8 @@ Each mission must either
 (a) propose at least one new/modified/removed governance artifact
 (b) include a consideration about violation-resolution
 
-## Violation-Resolution Specificity
-When a consideration claims to resolve an existing violation, it must name both the governance artifact and the violation.
-
 ## Governance Artifact Persistence
 Treat a proposed consideration that carries no persistence declaration as `_transient_`. Reject a consideration that declares `_persist: <governed-document>_` when its lasting governance value beyond the mission is not self-evident from the rule's own text.
-
-## Governance Artifact Completeness
-Proposed governance artifacts must present full text.
 
 ## Assumption Validity
 Reject any assumptions that

@@ -58,7 +58,7 @@ During the Interview and Mission Draft steps, each procedural step should be ref
 
 ## Challenger Checks
 The challenge is confined to these three checks, in priority order:
-1. Conformance to the content and disqualification clauses of `governance-schema.md`.
+1. Conformance to the content and disqualification clauses of `governance-schema.md` and to the governance-artifact content rules in `challenger-protocol.md`.
 2. For a proposed invariant, whether it is a real business mandate rather than an external constraint or a derived implementation detail, dispositioned per `Invariant Business-Mandate Triage`.
 3. Whether the artifact carries lasting governance value beyond the mission.
 
