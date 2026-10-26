@@ -7,4 +7,4 @@ Unless you are a sub-agent, or the user prompt begins with an explicit `/<comman
 No governed file in this harness may contain an `# External Constraints` section.
 
 ## Roadmap
-This repo's roadmap is its open GitHub issues, excluding pull requests.
+This harness's roadmap is its open GitHub issues, excluding pull requests.
