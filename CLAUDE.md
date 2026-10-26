@@ -6,5 +6,5 @@ Unless you are a sub-agent, or the user prompt begins with an explicit `/<comman
 ## Meta Governance
 No governed file in this harness may contain an `# External Constraints` section.
 
-## Codex Sub-Agent Boundary
-Codex sub-agents must ignore this `CLAUDE.md` while remaining free to continue reading `AGENTS.md`.
+## Roadmap
+This repo's roadmap is its open GitHub issues, excluding pull requests.
