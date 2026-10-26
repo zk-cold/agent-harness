@@ -1,71 +1,22 @@
 # Invariants
 
 ## Governed Documents
-`AGENTS.md`, `CLAUDE.md`, `.agent/schemas/*.md`, and `.claude/commands/*.md` in this harness and the target repo.
+`AGENTS.md`, `CLAUDE.md`, `.agent/schemas/*.md`, `.claude/commands/*.md`, and `.claude/agents/*.md` in this harness and the target repo.
 
 ## Governance Artifacts
-**Invariants**, **External Constraints**, and **Considerations**
-
-## Hard Constraints
-**Invariants** and **External Constraints**
-
-## Allowed Top-Level Sections
-Governed documents may only define governance artifacts, with their category being top-level sections (`#`).
+Governed documents, after any frontmatter, may only define governance artifacts, with their category as a top-level (`#`) section:
+- **Invariants**: always-binding constraints.
+- **External Constraints**: currently binding constraints imposed by an external authority, anchored to a named source and version.
+- **Considerations**: default-binding rules. A consideration may be overridden only when it is explicitly referenced and the justification is stated clearly enough to withstand adversarial review.
 
 ## Authoritative Definitions
-The definitions in this document are authoritative and final. Agents must not edit this file.
-
-## Invariant Content
-Invariants must define always-binding constraints.
-
-## External Constraint Content
-External Constraints must define constraints imposed by external authorities that are currently binding.
-
-## Consideration Content
-Considerations must define default-binding rules.
-
-## Implementation Artifact
-Git-tracked artifacts that are not classified as Governed Documents
-
-## Overrides
-A consideration may be overridden only when it is explicitly referenced and the justification is stated clearly enough to withstand adversarial review.
+Agents must not edit this file.
 
 ## API Design
 An API is any signature, type, or module structure visible from outside its defining module, and any data or wire format exposed outside the module that defines it. Unless it is an External Constraint, the specification of an API being introduced or changed must be recorded as an invariant.
 
-# Considerations
+## No Unsanctioned Prose
+Prose outside governed documents that standing governance does not sanction must not be written, and must be removed on encounter.
 
-## Invariant Qualification
-A statement is disqualified as an invariant when any of the following is true:
-- It is not objectively testable from its own wording.
-- It is a preference, habit, convention, style choice, or explanation rather than a binding constraint.
-- It is already derivable from other governance artifacts or target-repo contents.
-
-## External Constraint Qualification
-A statement is disqualified as an external constraint when any of the following is true:
-- It is not objectively enforceable from its own wording.
-- It lacks an anchor to a named source and version.
-
-## Consideration Qualification
-A statement is disqualified as a consideration when any of the following is true:
-- It contradicts a hard constraint.
-- It is obvious enough that it adds no interpretive or implementation value.
-- It cannot be traced back to at least one governance or implementation artifact.
-- It is actually an always binding rule and therefore belongs in hard constraints instead.
-
-## Violation Clauses
-Hard Constraints should not contain an explicit violation clause. They should be concrete enough that a reviewer can determine whether it was followed, from its own wording.
-
-## Traceability
-Traceability should usually be obvious from the content. If it must be declared explicitly to make sense, that usually signals a missing hard constraint or consideration.
-
-## Cross References
-Cross-file references are allowed when they are necessary to identify the governance artifact or protocol being applied. Do not use them to smuggle in unstated assumptions about repo or filesystem structure.
-
-## Template Files
-Template files (`*.template`) are not governance files. They, however, when referenced by a governance file, materially shape how the governance artifacts are enforced. They are, hence, regarded as **considerations** during planning, coding, and review.
-
-## Code Comments
-Comments are not not governance artifacts. They may, however, shape agent behavior with similar impact as governance artifacts, or otherwise dilute contexts.
-They are, hence, subject to Consideration Qualification during coding and review.
-
+## Earn Its Place
+A token may be written or kept only if it directly shapes or governs production behavior, it cannot be derived from this harness or the target repo, and the work could not be equal or better without it.
