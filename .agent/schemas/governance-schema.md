@@ -16,7 +16,7 @@ Target repo governance must not conflict with this harness's invariants.
 Governance binds as it stands in the working tree.
 
 ## Sanctioned Files
-In this harness and the target repo:
+Exempt from `No Unsanctioned Prose` and `Earn Its Place` in this harness and the target repo:
 - `.gitignore`
 - `LICENSE`
 
