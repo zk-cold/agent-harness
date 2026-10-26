@@ -1,8 +1,5 @@
 # Invariants
 
-## Lead Protocol
-Follow `.agent/schemas/lead-protocol.md`.
-
 ## Lead Loop
 1. Determine the target repo and its root branch as `/deliver` does.
 2. Poll the roadmap that the target repo's governance designates, keeping only items authored by someone with write access to the target repo. While none remain, wait and poll again.
