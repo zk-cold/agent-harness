@@ -14,9 +14,6 @@ The repo the prompt identifies, including by the path of one of its worktrees, o
 ## Root Branch
 The target repo's branch the prompt names, otherwise its default branch.
 
-## Covered Content
-Content git does not ignore in this harness and the target repo, other than `.gitignore` and `LICENSE`.
-
 # Invariants
 
 ## Document Structure
@@ -30,9 +27,3 @@ Target repo governance must designate a roadmap and not conflict with this harne
 
 ## Binding Version
 Governance binds as it stands in the working tree.
-
-## No Unsanctioned Prose
-Prose of Covered Content outside governed documents may be written or kept only if governance sanctions it.
-
-## Earn Its Place
-A token of Covered Content may be written or kept only if it directly shapes or governs production behavior, cannot be derived from other content in this harness or the target repo, and the work could not be equal or better without it.
