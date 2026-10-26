@@ -7,7 +7,7 @@ Use the definitions in `.agent/schemas/governance-schema.md`.
 Each delivery corresponds to exactly one item on the roadmap that the target repo's governance designates. Once step 1's checks pass and before dispatching any of the user's request, find the item whose request it is, otherwise add one holding it verbatim, and close any other item duplicating it. If the request slices an item, split that item into sub-items that together cover its request, this one among them.
 
 ## Closing Items
-Close a roadmap item whose work was not delivered as not planned, or, if the roadmap lacks such a state, as completed with a comment saying so; close any other as completed.
+Close as not planned a roadmap item whose work was not delivered, or, if the roadmap lacks such a state, as completed with a comment saying so; close any other as completed.
 
 ## Removing Worktrees
 Remove an `impl` agent's worktree and branch once its branch is merged, or once Abort or Replace drops it.
