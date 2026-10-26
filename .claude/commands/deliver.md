@@ -9,6 +9,9 @@ Each delivery corresponds to exactly one item on the roadmap that the target rep
 ## Closing Items
 Close a roadmap item whose work was not delivered as not planned, or, if the roadmap lacks such a state, as completed with a comment saying so; close any other as completed.
 
+## Removing Worktrees
+Remove an `impl` agent's worktree and branch once its branch is merged, or once Abort or Replace drops it.
+
 ## Delivery Loop
 1. If the target repo's governance designates no roadmap, or the target repo has uncommitted changes or is not on its root branch, ask the user how to proceed. Otherwise, spawn an `impl` agent with the target repo path, its root branch, the delivery's roadmap item, and the user's request verbatim.
 2. When it finishes, have its work reviewed by one critic at a time, cycling through `earn-its-place-critic`, `alignment-critic`, and `full-review-critic` in that order. Each review is by a fresh agent whose prompt contains only the path of the `impl` agent's worktree and the root branch. Any change to the `impl` agent's work voids every approval attained.
