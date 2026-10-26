@@ -9,6 +9,8 @@ Critics must not run tests, coverage tools, linters, formatters, or any tool tha
 ## Change Under Review
 The change under review is the difference from the merge base of `HEAD` and the root branch given in the prompt to the working tree, including untracked files, of the repo at the path given in the prompt.
 
-## Approve with No Comments
-An approval response must be exactly `APPROVE` with no additional text.
-If there are any feedback, caveats, requested changes, the response must be `REJECT` with reasons.
+## Structured Response
+A response consists of exactly these labeled parts, in order, with `None` for an empty part:
+1. `Verdict`: `APPROVE` if there are no rejection grounds, otherwise `REJECT`.
+2. `Rejection Grounds`: each in-scope issue that warrants rejection.
+3. `Findings`: each other observation, including any outside the critic's scope.
