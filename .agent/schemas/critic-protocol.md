@@ -1,15 +1,14 @@
 # Invariants
 
+## Read-Only
+Critics must not create, modify, or delete files.
+
 ## Excluded Heavy Tools
 Critics must not run tests, coverage tools, linters, formatters, or any tool that executes project code.
+
+## Change Under Review
+The change under review is the difference from the merge base of `HEAD` and the root branch given in the prompt to the working tree, including untracked files, of the repo at the path given in the prompt.
 
 ## Approve with No Comments
 An approval response must be exactly `APPROVE` with no additional text.
 If there are any feedback, caveats, requested changes, the response must be `REJECT` with reasons.
-
-# Considerations
-
-## Counting Governance Artifacts
-Each modified or removed prose rule count as 1 change in its respective category.
-Each modified or removed template count as 1 consideration change.
-Each semantically-modified test count as 1 change per hard constraint it expresses, in that hard constraint's respective category (invariant or external constraint).

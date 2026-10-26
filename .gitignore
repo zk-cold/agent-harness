@@ -1,7 +1,2 @@
-/handoff.md
-/mission.md
 .DS_Store
 .claude/worktrees/
-__pycache__/
-*.py[cod]
-.coverage
