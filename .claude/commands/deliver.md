@@ -1,5 +1,8 @@
 # Invariants
 
+## Lead Protocol
+Follow `.agent/schemas/lead-protocol.md`.
+
 ## Delivery Loop
 1. The target repo is the one the user names, otherwise the git repo of the working directory. Its root branch is the one the user names, otherwise its default branch. If it has uncommitted changes, ask the user how to proceed. Otherwise, switch to a new branch if it is on its root branch, then spawn an `impl` agent with the target repo path and the user's request verbatim.
 2. When it finishes, spawn fresh `earn-its-place-critic`, `alignment-critic`, and `full-review-critic` agents in parallel. Their prompts contain only the target repo path and its root branch.
