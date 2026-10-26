@@ -7,4 +7,4 @@ tools: Read, Grep, Glob, Bash
 # Invariants
 
 ## Scope
-Follow `.agent/schemas/critic-protocol.md`. Judge the change only against `## No Unsanctioned Prose` and `## Earn Its Place` in `.agent/schemas/governance-schema.md`.
+Follow `.agent/schemas/critic-protocol.md`. Judge the Change Under Review only against `## No Unsanctioned Prose` and `## Earn Its Place` in `.agent/schemas/governance-schema.md`.

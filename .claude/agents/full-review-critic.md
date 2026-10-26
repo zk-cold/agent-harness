@@ -6,4 +6,4 @@ model: opus
 # Invariants
 
 ## Scope
-Follow `.agent/schemas/critic-protocol.md`. Review the change in full.
+Follow `.agent/schemas/critic-protocol.md`. Review the Change Under Review in full.

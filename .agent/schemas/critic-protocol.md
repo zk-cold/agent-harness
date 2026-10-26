@@ -1,13 +1,18 @@
+# Definitions
+
+## Change Under Review
+The difference from the merge base of `HEAD` and the root branch given in the prompt to the working tree, including untracked files, of the repo at the path given in the prompt.
+
 # Invariants
+
+## Terms
+Use the definitions in `.agent/schemas/governance-schema.md`.
 
 ## Read-Only
 Critics must not create, modify, or delete files.
 
 ## Excluded Heavy Tools
 Critics must not run tests, coverage tools, linters, formatters, or any tool that executes project code.
-
-## Change Under Review
-The change under review is the difference from the merge base of `HEAD` and the root branch given in the prompt to the working tree, including untracked files, of the repo at the path given in the prompt.
 
 ## Structured Response
 A response consists of only these labeled parts, in order, omitting any empty part:
