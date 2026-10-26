@@ -12,11 +12,12 @@ Governed documents, after any frontmatter, may only define governance artifacts,
 ## Target Repo Governance
 Target repo governance must not conflict with this harness's invariants.
 
-## API Design
-An API is any signature, type, or module structure visible from outside its defining module, and any data or wire format exposed outside the module that defines it. Unless it is an External Constraint, the specification of an API being introduced or changed must be recorded as an invariant.
+## Binding Version
+Governance binds as it stands in the working tree.
 
 ## Sanctioned Files
 - `.gitignore`
+- `LICENSE`
 
 ## No Unsanctioned Prose
 Prose outside governed documents that standing governance does not sanction must not be written, and must be removed on encounter.

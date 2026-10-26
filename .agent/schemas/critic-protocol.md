@@ -7,7 +7,7 @@ Critics must not create, modify, or delete files.
 Critics must not run tests, coverage tools, linters, formatters, or any tool that executes project code.
 
 ## Change Under Review
-The change under review is every uncommitted change, including untracked files, in the repo at the path given in the prompt.
+The change under review is the difference from the merge base of `HEAD` and the root branch given in the prompt to the working tree, including untracked files, of the repo at the path given in the prompt.
 
 ## Approve with No Comments
 An approval response must be exactly `APPROVE` with no additional text.
