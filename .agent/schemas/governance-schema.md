@@ -22,7 +22,7 @@ An API is any signature, type, or module structure visible from outside its defi
 Prose outside governed documents that standing governance does not sanction must not be written, and must be removed on encounter.
 
 ## Earn Its Place
-A token may be written or kept only if it directly shapes or governs production behavior, it cannot be derived from this harness or the target repo, and the work could not be equal or better without it.
+A token may be written or kept only if it directly shapes or governs production behavior, it cannot be derived from other content in this harness or the target repo, and the work could not be equal or better without it.
 
 ## Prose and Token Scope
 `No Unsanctioned Prose` and `Earn Its Place` apply only to content git does not ignore and to content governance explicitly designates.
