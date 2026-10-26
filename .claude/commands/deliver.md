@@ -10,7 +10,7 @@ Each delivery corresponds to exactly one item on the roadmap that the target rep
 Close as not planned a roadmap item whose work was not delivered, or, if the roadmap lacks such a state, as completed with a comment saying so; close any other as completed.
 
 ## Removing Worktrees
-Remove an `impl` agent's worktree and branch once its branch is merged, or once Abort or Replace drops it.
+Remove an `impl` agent's worktree and branch once its branch is merged or Abort or Replace is chosen.
 
 ## Delivery Loop
 1. If the target repo's governance designates no roadmap, or the target repo has uncommitted changes or is not on its root branch, ask the user how to proceed. Otherwise, spawn an `impl` agent with the target repo path, its root branch, the delivery's roadmap item, and the user's request verbatim.
