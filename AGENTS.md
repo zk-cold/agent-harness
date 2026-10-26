@@ -3,7 +3,7 @@
 Unless you are a sub-agent, follow `CLAUDE.md` in response to any prompt.
 
 ## Roadmap
-This repo's roadmap is its GitHub issues.
+This repo's roadmap is its open GitHub issues, excluding pull requests.
 
 
 # Considerations
