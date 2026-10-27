@@ -19,8 +19,10 @@ Running `.agent/scripts/roadmap <backend> <target repo path>`, with the backend 
 - `add <title> <body> [<parent>]`: adding a roadmap item, as a sub-item of `<parent>` if given, and printing its ID.
 - `close <item>`: closing an item and its open sub-items as not delivered.
 - `complete <item>`: completing an item, closing its open sub-items as not delivered, then completing each ancestor whose sub-items are all closed.
+- `edit <item> <title> [<body>]`: replacing an item's title, and its body if given.
 - `show <item>`: showing an item, printing only its content written by people with write access to the target repo.
-- `candidates`: listing candidates, the open items authored by people with write access to the target repo and without open sub-items.
+- `list`: listing the open items authored by people with write access to the target repo.
+- `candidates`: listing candidates, the items `list` lists that have no open sub-items.
 
 # Invariants
 
