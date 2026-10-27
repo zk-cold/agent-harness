@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 r='repos/{owner}/{repo}'
-
-writer() {
-  [ "$2" = OWNER ] || [[ $(gh api "$r/collaborators/$1/permission" --jq .permission 2>/dev/null) =~ ^(admin|write)$ ]]
-}
+trusted='select(.author_association | IN("OWNER", "MEMBER", "COLLABORATOR"))'
 
 open_subs() {
   gh api --paginate "$r/issues/$1/sub_issues?per_page=100" --jq '.[] | select(.state == "open") | .number'
@@ -12,10 +9,7 @@ open_subs() {
 
 items() {
   gh api --paginate "$r/issues?state=open&per_page=100" \
-    --jq '.[] | select(.pull_request == null) | [.number, .user.login, .author_association, (.sub_issues_summary.total // 0), .title] | @tsv' |
-    while IFS=$'\t' read -r n login assoc total title; do
-      if writer "$login" "$assoc"; then printf '%s\t%s\t%s\n' "$n" "$total" "$title"; fi
-    done
+    --jq ".[] | select(.pull_request == null) | $trusted | [.number, (.sub_issues_summary.total // 0), .title] | @tsv"
 }
 
 list() {
@@ -32,12 +26,8 @@ candidates() {
 }
 
 show() {
-  {
-    gh api "$r/issues/$1" --jq '[.user.login, .author_association, ((.title + "\n\n" + (.body // "")) | @base64)] | @tsv'
-    gh api --paginate "$r/issues/$1/comments?per_page=100" --jq '.[] | [.user.login, .author_association, (.body | @base64)] | @tsv'
-  } | while IFS=$'\t' read -r login assoc text; do
-    if writer "$login" "$assoc"; then base64 -d <<<"$text"; printf '\n\n'; fi
-  done
+  gh api "$r/issues/$1" --jq "$trusted"' | .title + "\n\n" + (.body // "") + "\n"'
+  gh api --paginate "$r/issues/$1/comments?per_page=100" --jq ".[] | $trusted"' | .body + "\n"'
 }
 
 add() {
