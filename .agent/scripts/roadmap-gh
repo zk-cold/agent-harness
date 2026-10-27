@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -euo pipefail
+r='repos/{owner}/{repo}'
+
+writer() {
+  [ "$2" = OWNER ] || [[ $(gh api "$r/collaborators/$1/permission" --jq .permission 2>/dev/null) =~ ^(admin|write)$ ]]
+}
+
+open_subs() {
+  gh api --paginate "$r/issues/$1/sub_issues?per_page=100" --jq '.[] | select(.state == "open") | .number'
+}
+
+candidates() {
+  local subs
+  gh api --paginate "$r/issues?state=open&per_page=100" \
+    --jq '.[] | select(.pull_request == null) | [.number, .user.login, .author_association, .sub_issues_summary.total, .title] | @tsv' |
+    while IFS=$'\t' read -r n login assoc total title; do
+      subs=
+      [ "$total" = 0 ] || subs=$(open_subs "$n")
+      if [ -z "$subs" ] && writer "$login" "$assoc"; then printf '%s\t%s\n' "$n" "$title"; fi
+    done
+}
+
+show() {
+  {
+    gh api "$r/issues/$1" --jq '[.user.login, .author_association, ((.title + "\n\n" + (.body // "")) | @base64)] | @tsv'
+    gh api --paginate "$r/issues/$1/comments?per_page=100" --jq '.[] | [.user.login, .author_association, (.body | @base64)] | @tsv'
+  } | while IFS=$'\t' read -r login assoc text; do
+    if writer "$login" "$assoc"; then base64 -d <<<"$text"; printf '\n\n'; fi
+  done
+}
+
+add() {
+  local new
+  new=$(gh api "$r/issues" -f title="$1" -f body="$2" --jq '"\(.number) \(.id)"')
+  [ -z "${3-}" ] || gh api "$r/issues/$3/sub_issues" -F sub_issue_id="${new#* }" >/dev/null
+  echo "${new% *}"
+}
+
+shut() {
+  local state subs s
+  state=$(gh api "$r/issues/$1" --jq .state)
+  [ "$state" = open ] || return 0
+  subs=$(open_subs "$1")
+  for s in $subs; do shut "$s" not_planned; done
+  gh api -X PATCH "$r/issues/$1" -f state=closed -f state_reason="$2" >/dev/null
+}
+
+close() {
+  shut "$1" not_planned
+}
+
+complete() {
+  local parent subs
+  shut "$1" completed
+  parent=$(gh api "$r/issues/$1" --jq '(.parent_issue_url // "" | split("/") | last) // ""')
+  [ -n "$parent" ] || return 0
+  subs=$(open_subs "$parent")
+  [ -n "$subs" ] || complete "$parent"
+}
+
+case $1 in
+  candidates | show | add | close | complete) "$@" ;;
+  *) exit 2 ;;
+esac

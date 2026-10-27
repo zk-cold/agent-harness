@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+backend=$(cd "$(dirname "$0")" && pwd)/roadmap-$1
+cd "$2"
+exec "$backend" "${@:3}"

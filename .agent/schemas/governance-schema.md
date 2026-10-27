@@ -14,6 +14,14 @@ The repo the prompt identifies, including by the path of one of its worktrees, o
 ## Root Branch
 The target repo's branch the prompt names, otherwise its default branch.
 
+## Roadmap Operations
+Running `.agent/scripts/roadmap <backend> <target repo path>`, with the backend the target repo's governance names, followed by one of:
+- `add <title> <body> [<parent>]`: adding a roadmap item, as a sub-item of `<parent>` if given, and printing its ID.
+- `close <item>`: closing an item and its open sub-items as not delivered.
+- `complete <item>`: completing an item, closing its open sub-items as not delivered, then completing each ancestor whose sub-items are all closed.
+- `show <item>`: showing an item, printing only its content written by people with write access to the target repo.
+- `candidates`: listing candidates, the open items authored by people with write access to the target repo and without open sub-items.
+
 # Invariants
 
 ## Document Structure
@@ -23,7 +31,10 @@ After any frontmatter, a governed document consists only of top-level (`#`) sect
 A consideration may be overridden only by explicitly referencing it with a justification that withstands adversarial review.
 
 ## Target Repo Governance
-Target repo governance must designate a roadmap and not conflict with this harness's definitions or invariants.
+Target repo governance must designate a roadmap and its backend, and not conflict with this harness's definitions or invariants.
+
+## Roadmap Backends
+Each `.agent/scripts/roadmap-<backend>` must implement `## Roadmap Operations`.
 
 ## Binding Version
 Governance binds as it stands in the working tree.

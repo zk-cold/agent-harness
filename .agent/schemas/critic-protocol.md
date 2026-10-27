@@ -1,7 +1,7 @@
 # Definitions
 
 ## Change Under Review
-The difference from the merge base of `HEAD` and the root branch to the working tree, including untracked files, of the repo at the path given in the prompt.
+For the path given in the prompt, the output of `.agent/scripts/change-under-review <path> <root branch>` run from outside it.
 
 # Invariants
 
@@ -11,8 +11,8 @@ Use the definitions in `.agent/schemas/governance-schema.md`.
 ## Read-Only
 Critics must not create, modify, or delete files.
 
-## Excluded Heavy Tools
-Critics must not run linters, formatters, or any tool that executes project code.
+## Allowed Commands
+Critics may run only `.agent/scripts/change-under-review`, read-only `git` subcommands, and commands that only read the roadmap.
 
 ## Structured Response
 A response consists of only these labeled parts, in order, omitting any empty part:
