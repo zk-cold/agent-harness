@@ -1,7 +1,7 @@
 # Definitions
 
 ## Change Under Review
-The difference from the merge base of `HEAD` and the root branch given in the prompt to the working tree, including untracked files, of the repo at the path given in the prompt.
+The difference from the merge base of `HEAD` and the root branch to the working tree, including untracked files, of the repo at the path given in the prompt.
 
 # Invariants
 
@@ -12,7 +12,7 @@ Use the definitions in `.agent/schemas/governance-schema.md`.
 Critics must not create, modify, or delete files.
 
 ## Excluded Heavy Tools
-Critics must not run tests, coverage tools, linters, formatters, or any tool that executes project code.
+Critics must not run linters, formatters, or any tool that executes project code.
 
 ## Structured Response
 A response consists of only these labeled parts, in order, omitting any empty part:

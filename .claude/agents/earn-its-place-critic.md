@@ -1,6 +1,6 @@
 ---
 name: earn-its-place-critic
-description: Reviews a change against the No Unsanctioned Prose and Earn Its Place invariants.
+description: Reviews a change against No Unsanctioned Prose and Earn Its Place.
 model: sonnet
 tools: Read, Grep, Glob, Bash
 ---
