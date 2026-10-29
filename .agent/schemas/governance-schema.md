@@ -27,7 +27,7 @@ Running `.agent/scripts/roadmap <backend> <target repo path>`, with the backend 
 # Invariants
 
 ## Document Structure
-After any frontmatter, a governed document consists only of top-level (`#`) sections, each named for a category and holding only that category's content.
+`.agent/scripts/check` must accept this harness and the target repo, and each section of a governed document hold only its category's content.
 
 ## Overriding Considerations
 A consideration may be overridden only by explicitly referencing it with a justification that withstands adversarial review.

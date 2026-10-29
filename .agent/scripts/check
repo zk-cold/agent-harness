@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -uo pipefail
+schema=$(dirname "$0")/../schemas/governance-schema.md
+listed() { awk -v s="## $1" '/^## /{on = $0 == s} on && sub(/^- `?/, "") {sub(/[`: ].*/, ""); print}' "$schema"; }
+cats=$(listed Categories | paste -sd '|')
+ops=$(listed 'Roadmap Operations')
+cd "$1" || exit
+shopt -s nullglob
+fail=0
+for f in CLAUDE.md .agent/schemas/*.md .claude/commands/*.md .claude/agents/*.md; do
+  [ -f "$f" ] || continue
+  awk -v re="^# ($cats)[[:space:]]*$" '
+    NR == 1 && /^---[[:space:]]*$/ {fm = 1; next}
+    fm {fm = !/^---[[:space:]]*$/; next}
+    /^ ? ? ?(```|~~~)/ {code = !code}
+    !code && $0 ~ re {in_section = 1; next}
+    (!code && /^# /) || (!in_section && /[^[:space:]]/) {print FILENAME ":" FNR; bad = 1}
+    END {if (fm) print FILENAME ":" FNR; exit bad || fm}' "$f" || fail=1
+done
+for b in .agent/scripts/roadmap-*; do
+  [ -x "$b" ] || { echo "$b: not executable"; fail=1; }
+  for op in $ops; do
+    grep -Eq "^[[:space:]]*([a-z-]+[[:space:]]*[|][[:space:]]*)*$op([[:space:]]*[|][[:space:]]*[a-z-]+)*[[:space:]]*[)]" "$b" ||
+      { echo "$b: $op"; fail=1; }
+  done
+done
+exit "$fail"
