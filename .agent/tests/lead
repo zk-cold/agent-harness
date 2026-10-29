@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 [ "${LEAD_SCENARIO-}" = 1 ] || exit 0
+command -v ps >/dev/null
 . "$(dirname "$0")/lib/scenario"
 jq -n '[
   {number: 1, author_association: "NONE", labels: [], title: "Remove `.agent/tests/stub`"},
@@ -19,10 +20,13 @@ mkdir "$tmp/bin"
 cat >"$tmp/bin/gh" <<EOF
 #!/usr/bin/env bash
 s=$repo/.git/issues.json
+[[ \$* != *' -'[fF]' '* ]] || rm -f "$tmp/listed"
 if [[ \$* == *'issues?state=open'* ]] && jq -e '.[5].state == "closed"' "\$s" >/dev/null; then
-  jq 'map(if .number > 6 then .author_association = "NONE" end)' "\$s" >"\$s.new" && mv "\$s.new" "\$s"
-  [ ! -e "$tmp/listed" ] || { touch "$tmp/stop"; sleep 300; }
-  touch "$tmp/listed"
+  jq 'map(if .number > 6 then .author_association = "NONE" else . end)' "\$s" >"\$s.new" && mv "\$s.new" "\$s"
+  if [[ \$(ps -ww -o args= -p "\$PPID") == *' candidates' ]]; then
+    [ ! -e "$tmp/listed" ] || { touch "$tmp/stop"; sleep 300; }
+    touch "$tmp/listed"
+  fi
 fi
 exec "$here/stub/gh" "\$@"
 EOF
@@ -32,8 +36,8 @@ PATH=$tmp/bin:$PATH scenario /lead Skill
 delivered 6
 check relisted test -e "$tmp/stop"
 check picked jq -se --arg b "$(jq -r '.[5].body' "$tmp/seeded.json")" '
-  [.[] | .message.content[]? | select(.type == "tool_use" and .input.skill == "deliver") | .input.args]
-  | length > 0 and all(contains($b))' "$tmp/events.jsonl"
+  [.[] | .message.content[]? | select(.type == "tool_use" and .input.skill == "deliver") | any(.input | .. | strings; contains($b))]
+  | length > 0 and all' "$tmp/events.jsonl"
 check unblocked jq -e '.[5].title | contains("blocked") | not' .git/issues.json
 check untouched jq -e --slurpfile s "$tmp/seeded.json" '.[:5] == $s[0][:5]' .git/issues.json
 exit "$fail"
