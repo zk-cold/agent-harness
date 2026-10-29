@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
-docs=(':(top)CLAUDE.md' ':(top,glob).agent/schemas/*.md' ':(top,glob).claude/commands/*.md' ':(top,glob).claude/agents/*.md')
+. "$(dirname "$0")/schema"
+mapfile -t docs < <(governed)
+[ ${#docs[@]} -gt 0 ] || { echo "$schema: no docs" >&2; exit 1; }
+docs=("${docs[@]/#/:(top,glob)}")
 words() { { git grep -hoE -e '[^[:space:]]+' "$1" -- "${docs[@]}" || [ $? = 1 ]; } | wc -l; }
 root=$(git --git-dir="$(git rev-parse --git-common-dir)" rev-parse HEAD)
 old=$(words "$(git merge-base "$root" "$1")")

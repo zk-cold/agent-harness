@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 set -uo pipefail
-schema=$(dirname "$0")/../schemas/governance-schema.md
-section() { awk -v s="## $1" '/^## /{on = $0 == s} on' "$schema"; }
-listed() { section "$1" | awk 'sub(/^- `?/, "") {sub(/[`: ].*/, ""); print}'; }
+. "$(dirname "$0")/schema" || exit
 cats=$(listed Categories | paste -sd '|')
 ops=$(listed 'Roadmap Operations')
-docs=$(section 'Governed Documents' | grep -o '`[^`]*`' | tr -d '`')
+docs=$(governed)
 for v in cats ops docs; do [ -n "${!v}" ] || { echo "$schema: no $v"; exit 1; }; done
 cd "$1" || exit
 shopt -s nullglob

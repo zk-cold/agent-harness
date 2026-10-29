@@ -86,9 +86,16 @@ test_approved() {
   same "$(for n in 1 2; do road approved "$n" && echo "$n"; done)" 1
 }
 
+harness() {
+  rm -rf "$tmp/harness"
+  mkdir -p "$tmp/harness/.agent/schemas"
+  cp -r "$scripts" "$tmp/harness/.agent/scripts"
+  sed "$1" "$here/../schemas/governance-schema.md" >"$tmp/harness/.agent/schemas/governance-schema.md"
+}
+
 test_governance_growth() {
   local r=$tmp/growth w=$tmp/growth-work
-  growth() { (cd "$1" && "$scripts/governance-growth" work "$2"); }
+  growth() { (cd "$1" && "${3:-$scripts}/governance-growth" work "$2"); }
   at() { git -C "$1" -c user.name=t -c user.email=t@t "${@:2}"; }
   git init -q -b main "$r"
   jq -n '[{number: 1, labels: [{name: "approved"}]}, {number: 2, labels: []}]' >"$r/.git/issues.json"
@@ -97,11 +104,16 @@ test_governance_growth() {
   at "$r" worktree add -q -b work "$w"
   mkdir -p "$w/.claude/agents" "$r/sub"
   echo 'd e' >"$w/.claude/agents/x.md"
-  echo 'not governed' >"$w/notes.md"
+  echo 'not governed by default' >"$w/notes.md"
   at "$w" add . && at "$w" commit -qm b
   same "$(growth "$r" 2)" 2
   same "$(growth "$r/sub" 2)" 2
   same "$(growth "$w" 2)" 2
+  harness '/^## Governed Documents$/{n;s/.*/`notes.md` in this harness/}'
+  same "$(growth "$r" 1 "$tmp/harness/.agent/scripts")" 4
+  harness '/^## Governed Documents$/{n;s/.*/none/}'
+  same "$(growth "$r" 1 "$tmp/harness/.agent/scripts" 2>&1; echo $?)" \
+    "$tmp/harness/.agent/scripts/../schemas/governance-schema.md: no docs"$'\n1'
   growth "$r" 2 >/dev/null && return 1
   growth "$r" 1 >/dev/null
   echo a >"$w/CLAUDE.md"
@@ -165,10 +177,8 @@ test_check() {
   governed 'case $1 in\n  list | show | add | edit | close | complete) ;;\nesac\n' .agent/scripts/roadmap-x
   rejects $'.agent/scripts/roadmap-x: not executable\n.agent/scripts/roadmap-x: candidates'
   local h=$tmp/harness/.agent
-  mkdir -p "$h/scripts" "$h/schemas"
-  cp "$scripts/check" "$h/scripts"
   for s in Categories:cats 'Roadmap Operations:ops' 'Governed Documents:docs'; do
-    sed "s/^## ${s%:*}\$/## X/" "$here/../schemas/governance-schema.md" >"$h/schemas/governance-schema.md"
+    harness "s/^## ${s%:*}\$/## X/"
     same "$("$h/scripts/check" "$tmp/repo"; echo $?)" "$h/scripts/../schemas/governance-schema.md: no ${s#*:}"$'\n1'
   done
 }
