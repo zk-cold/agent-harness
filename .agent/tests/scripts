@@ -78,6 +78,40 @@ test_complete() {
   same "$(states | cut -f 1-3 | sed -n '1,3p;8p')" $'1\tclosed\tcompleted\n2\tclosed\tnot_planned\n3\tclosed\tcompleted\n8\tclosed\tnot_planned'
 }
 
+test_approved() {
+  jq -n '[
+      {number: 1, labels: [{name: "ok"}, {name: "approved"}]},
+      {number: 2, labels: [{name: "ok"}]}
+    ]' >"$issues"
+  same "$(for n in 1 2; do road approved "$n" && echo "$n"; done)" 1
+}
+
+test_governance_growth() {
+  local r=$tmp/growth w=$tmp/growth-work
+  growth() { (cd "$1" && "$scripts/governance-growth" work "$2"); }
+  at() { git -C "$1" -c user.name=t -c user.email=t@t "${@:2}"; }
+  git init -q -b main "$r"
+  jq -n '[{number: 1, labels: [{name: "approved"}]}, {number: 2, labels: []}]' >"$r/.git/issues.json"
+  echo 'a b c' >"$r/CLAUDE.md"
+  at "$r" add . && at "$r" commit -qm a
+  at "$r" worktree add -q -b work "$w"
+  mkdir -p "$w/.claude/agents" "$r/sub"
+  echo 'd e' >"$w/.claude/agents/x.md"
+  echo 'not governed' >"$w/notes.md"
+  at "$w" add . && at "$w" commit -qm b
+  same "$(growth "$r" 2)" 2
+  same "$(growth "$r/sub" 2)" 2
+  same "$(growth "$w" 2)" 2
+  growth "$r" 2 >/dev/null && return 1
+  growth "$r" 1 >/dev/null
+  echo a >"$w/CLAUDE.md"
+  at "$w" commit -qam c
+  echo 'f g' >>"$r/CLAUDE.md"
+  at "$r" commit -qam d
+  same "$(growth "$r" 2)" 0
+  growth "$r" 2 >/dev/null
+}
+
 test_unknown_operation() {
   seed
   road bogus && return 1

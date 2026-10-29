@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+docs=(':(top)CLAUDE.md' ':(top,glob).agent/schemas/*.md' ':(top,glob).claude/commands/*.md' ':(top,glob).claude/agents/*.md')
+words() { { git grep -hoE -e '[^[:space:]]+' "$1" -- "${docs[@]}" || [ $? = 1 ]; } | wc -l; }
+root=$(git --git-dir="$(git rev-parse --git-common-dir)" rev-parse HEAD)
+old=$(words "$(git merge-base "$root" "$1")")
+new=$(words "$1")
+echo $((new - old))
+[ "$new" -le "$old" ] || "$(dirname "$0")/roadmap" gh . approved "$2"

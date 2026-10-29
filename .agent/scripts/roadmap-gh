@@ -63,7 +63,11 @@ complete() {
   [ -n "$subs" ] || complete "$parent"
 }
 
+approved() {
+  gh api "$r/issues/$1" --jq 'any(.labels[]; .name == "approved")' | grep -qx true
+}
+
 case $1 in
-  candidates | list | show | add | edit | close | complete) "$@" ;;
+  candidates | list | show | add | edit | close | complete | approved) "$@" ;;
   *) exit 2 ;;
 esac

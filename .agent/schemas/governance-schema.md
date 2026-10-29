@@ -14,8 +14,11 @@ The repo the prompt identifies, including by the path of one of its worktrees, o
 ## Root Branch
 The target repo's branch the prompt names, otherwise its default branch.
 
+## Roadmap
+The roadmap the target repo's governance designates.
+
 ## Roadmap Operations
-Running `.agent/scripts/roadmap <backend> <target repo path>`, with the backend the target repo's governance names, followed by one of:
+Running `.agent/scripts/roadmap <backend> <target repo path>`, with the roadmap's backend, followed by one of:
 - `add <title> <body> [<parent>]`: adding a roadmap item, as a sub-item of `<parent>` if given, and printing its ID.
 - `close <item>`: closing an item and its open sub-items as not delivered.
 - `complete <item>`: completing an item, closing its open sub-items as not delivered, then completing each ancestor whose sub-items are all closed.

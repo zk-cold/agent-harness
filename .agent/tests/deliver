@@ -15,7 +15,7 @@ git -C "$repo" init -q -b main
 git -C "$repo" add -A
 git -C "$repo" commit -qm seed
 git -C "$repo" tag seed
-jq -n '[{number: 1, state: "open", author_association: "OWNER", comments: [],
+jq -n '[{number: 1, state: "open", author_association: "OWNER", comments: [], labels: [{name: "approved"}],
   title: "Make `roadmap-gh close` close items as not planned",
   body: "`.agent/tests/scripts` fails because `close` closes items as completed."}]' >"$repo/.git/issues.json"
 export PATH=$here/stub:$PATH
