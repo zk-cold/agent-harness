@@ -81,7 +81,7 @@ test_complete() {
 test_approved() {
   jq -n '[
       {number: 1, labels: [{name: "ok"}, {name: "approved"}]},
-      {number: 2, labels: [{name: "ok"}]}
+      {number: 2, labels: [{name: "ok"}], parent: 1}
     ]' >"$issues"
   same "$(for n in 1 2; do road approved "$n" && echo "$n"; done)" 1
 }
