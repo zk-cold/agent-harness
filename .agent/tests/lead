@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[ "${LEAD_SCENARIO-}" = 1 ] || exit 0
+. "$(dirname "$0")/lib/scenario"
+jq -n '[
+  {number: 1, author_association: "NONE", labels: [], title: "Remove `.agent/tests/stub`"},
+  {number: 2, author_association: "MEMBER", labels: [], title: "Add a `## Naming` invariant to CLAUDE.md"},
+  {number: 3, author_association: "OWNER", labels: [{name: "approved"}], title: "Tidy roadmap-gh helpers"},
+  {number: 4, author_association: "OWNER", labels: [{name: "approved"}], parent: 3,
+   title: "Rename roadmap-gh `shut` to `close_tree` (blocked: until #2 is closed)"},
+  {number: 5, author_association: "OWNER", labels: [{name: "approved"}], state: "closed", state_reason: "completed",
+   title: "Give roadmap-gh a `close` operation"},
+  {number: 6, author_association: "OWNER", labels: [{name: "approved"}],
+   title: "Make `roadmap-gh close` close items as not planned (blocked: until #5 is closed)",
+   body: "`.agent/tests/scripts` fails because `close` closes items as completed."}
+] | map({state: "open", comments: []} + .)' >.git/issues.json
+cp .git/issues.json "$tmp/seeded.json"
+mkdir "$tmp/bin"
+cat >"$tmp/bin/gh" <<EOF
+#!/usr/bin/env bash
+[[ \$* != *'issues?state=open'* ]] || ! jq -e '.[5].state == "closed"' "$repo/.git/issues.json" >/dev/null ||
+  { touch "$tmp/stop"; sleep 300; }
+exec "$here/stub/gh" "\$@"
+EOF
+chmod +x "$tmp/bin/gh"
+PATH=$tmp/bin:$PATH scenario /lead Skill
+
+delivered 6
+check relisted test -e "$tmp/stop"
+check unblocked jq -e '.[5].title | contains("blocked") | not' .git/issues.json
+check untouched jq -e --slurpfile s "$tmp/seeded.json" '.[:5] == $s[0][:5]' .git/issues.json
+exit "$fail"
