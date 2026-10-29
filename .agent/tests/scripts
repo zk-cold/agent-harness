@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+set -uo pipefail
+here=$(cd "$(dirname "$0")" && pwd)
+scripts=$here/../scripts
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+export PATH=$here/stub:$PATH
+git init -q "$tmp/road"
+issues=$tmp/road/.git/issues.json
+
+same() { diff <(printf '%s\n' "$1") <(printf '%s\n' "$2"); }
+road() { "$scripts/roadmap" gh "$tmp/road" "$@"; }
+states() { jq -r '.[] | [.number, .state, .state_reason // "", .parent // "", .title, .body // ""] | @tsv' "$issues"; }
+seed() {
+  jq -n '[
+    {number: 1, title: "one", body: "b1", state: "open", author_association: "OWNER",
+     comments: [{body: "c1", author_association: "MEMBER"}, {body: "spam", author_association: "NONE"}]},
+    {number: 2, title: "two", state: "open", author_association: "MEMBER", parent: 1},
+    {number: 3, title: "three", state: "closed", state_reason: "completed", author_association: "OWNER", parent: 1},
+    {number: 4, title: "four", state: "open", author_association: "CONTRIBUTOR"},
+    {number: 5, title: "five", state: "open", author_association: "OWNER", pull_request: {}},
+    {number: 6, title: "six", state: "open", author_association: "COLLABORATOR"},
+    {number: 7, title: "seven", state: "closed", state_reason: "completed", author_association: "OWNER", parent: 6},
+    {number: 8, title: "eight", state: "open", author_association: "OWNER", parent: 2},
+    {number: 9, title: "nine", state: "open", author_association: "OWNER", parent: 6}
+  ] | map({comments: []} + .)' >"$issues"
+}
+
+test_list() {
+  seed
+  same "$(road list)" $'1\tone\n2\ttwo\n6\tsix\n8\teight\n9\tnine'
+}
+
+test_candidates() {
+  seed
+  same "$(road candidates)" $'8\teight\n9\tnine'
+  road close 9
+  same "$(road candidates)" $'6\tsix\n8\teight'
+}
+
+test_show() {
+  seed
+  same "$(road show 1)" $'one\n\nb1\n\nc1'
+  same "$(road show 2)" two
+  same "$(road show 4)" ''
+}
+
+test_add() {
+  seed
+  same "$(road add t b)" 10
+  same "$(road add u c 1)" 11
+  same "$(states | tail -2)" $'10\topen\t\t\tt\tb\n11\topen\t\t1\tu\tc'
+}
+
+test_edit() {
+  seed
+  road edit 1 uno
+  same "$(states | head -1)" $'1\topen\t\t\tuno\tb1'
+  road edit 1 eins ''
+  same "$(states | head -1)" $'1\topen\t\t\teins\t'
+}
+
+test_close() {
+  seed
+  road close 1
+  same "$(states | head -3 | cut -f 1-3)" $'1\tclosed\tnot_planned\n2\tclosed\tnot_planned\n3\tclosed\tcompleted'
+  same "$(states | sed -n 8p | cut -f 1-3)" $'8\tclosed\tnot_planned'
+}
+
+test_complete() {
+  seed
+  road complete 8
+  same "$(states | cut -f 1-3 | sed -n '1,3p;8p')" $'1\tclosed\tcompleted\n2\tclosed\tcompleted\n3\tclosed\tcompleted\n8\tclosed\tcompleted'
+  road complete 9
+  same "$(states | cut -f 1-3 | sed -n '6p;9p')" $'6\tclosed\tcompleted\n9\tclosed\tcompleted'
+  seed
+  road complete 1
+  same "$(states | cut -f 1-3 | sed -n '1,3p;8p')" $'1\tclosed\tcompleted\n2\tclosed\tnot_planned\n3\tclosed\tcompleted\n8\tclosed\tnot_planned'
+}
+
+test_unknown_operation() {
+  seed
+  road bogus && return 1
+  [ $? = 2 ]
+}
+
+test_verdict() {
+  local input expected
+  while IFS='|' read -r input expected; do
+    same "$(printf "$input" | "$scripts/verdict" 2>&1)" "$expected"
+  done <<'EOF'
+Verdict: APPROVE|APPROVE
+\nVerdict: APPROVE \nFindings:\n- f\n\n- g|APPROVE
+Verdict: REJECT\nRejection Grounds: r\nFindings:\n- f|REJECT
+Verdict: REJECT|line 1
+Verdict: APPROVE\nRejection Grounds: r|line 2
+Verdict: REJECT\nFindings: f\nRejection Grounds: r|line 3
+Verdict: REJECT\nRejection Grounds:\nFindings: f|line 3
+Verdict: APPROVE\nFindings:|line 2
+Verdict: APPROVE\nstray|line 2
+Verdict: APPROVE\nFindings: f\nFindings: g|line 3
+preamble\nVerdict: APPROVE|line 1
+Verdict: approve|line 1
+EOF
+}
+
+governed() {
+  rm -rf "$tmp/repo"
+  mkdir -p "$tmp/repo/.agent/scripts" "$tmp/repo/.claude/agents"
+  printf '%b' "$1" >"$tmp/repo/$2"
+}
+
+rejects() {
+  local out status=0
+  out=$("$scripts/check" "$tmp/repo") || status=$?
+  [ "$status" != 0 ] && same "$out" "$1"
+}
+
+test_check() {
+  "$scripts/check" "$here/../.."
+  governed '# Invariants\n\n## A\nx\n```\n# Notes\n```\n' CLAUDE.md
+  "$scripts/check" "$tmp/repo"
+  governed '---\nname: a\n---\n# Definitions\n## A\nx\n' .claude/agents/a.md
+  "$scripts/check" "$tmp/repo"
+  governed 'x\n# Invariants\n' CLAUDE.md
+  rejects CLAUDE.md:1
+  governed '# Invariants\n# Notes\n' CLAUDE.md
+  rejects CLAUDE.md:2
+  governed '---\nname: a\n# Invariants\n' .claude/agents/a.md
+  rejects .claude/agents/a.md:3
+  governed 'case $1 in\n  list | show | add | edit | close | complete) ;;\nesac\n' .agent/scripts/roadmap-x
+  rejects $'.agent/scripts/roadmap-x: not executable\n.agent/scripts/roadmap-x: candidates'
+}
+
+test_change_under_review() {
+  local r=$tmp/cur
+  rm -rf "$r"
+  git init -q -b main "$r"
+  echo old >"$r/a"
+  echo ignored >"$r/.gitignore"
+  git -C "$r" add . && git -C "$r" -c user.name=t -c user.email=t@t commit -qm a
+  git -C "$r" checkout -qb work
+  echo new >"$r/a"
+  git -C "$r" -c user.name=t -c user.email=t@t commit -qam b
+  echo added >"$r/b"
+  echo x >"$r/ignored"
+  echo next >>"$r/a"
+  same "$("$scripts/change-under-review" "$r" main | grep '^[-+][^-+]')" $'-old\n+new\n+next\n+added'
+}
+
+fail=0
+for t in $(declare -F | awk '$3 ~ /^test_/ {print $3}'); do
+  (set -e; "$t")
+  [ $? = 0 ] || { echo "$t"; fail=1; }
+done
+exit "$fail"

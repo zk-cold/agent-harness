@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[ "$1" = api ] || exit 1
+shift
+method= path= expr=. fields='{}'
+while [ $# -gt 0 ]; do
+  case $1 in
+    -X) method=$2; shift ;;
+    --jq) expr=$2; shift ;;
+    -f) fields=$(jq -c --arg k "${2%%=*}" --arg v "${2#*=}" '.[$k] = $v' <<<"$fields"); shift ;;
+    -F) fields=$(jq -c --arg k "${2%%=*}" --argjson v "${2#*=}" '.[$k] = $v' <<<"$fields"); shift ;;
+    --paginate) ;;
+    *) path=${1%%\?*} ;;
+  esac
+  shift
+done
+[ -n "$method" ] || { [ "$fields" = '{}' ] && method=GET || method=POST; }
+IFS=/ read -r _ _ _ _ n kind <<<"$path"
+state=$(git rev-parse --git-common-dir)/issues.json
+result=$(jq -c --arg op "$method ${kind:-${n:+issue}}" --argjson n "${n:-0}" --argjson f "$fields" '
+  . as $all
+  | def view: . as $i | del(.parent, .comments) + {
+      id: (1000 + .number),
+      sub_issues_summary: {total: [$all[] | select(.parent == $i.number)] | length},
+      parent_issue_url: (if .parent then "issues/\(.parent)" else null end)};
+    def one($m): [.[] | select(.number == $m)] | if length == 1 then .[0] else error end;
+    def put($m; $g): map(if .number == $m then . + $g else . end);
+    if $op == "GET " then {state: ., out: [.[] | select(.state == "open") | view]}
+    elif $op == "POST " then
+      ((map(.number) | max) + 1) as $m
+      | . + [$f + {number: $m, state: "open", author_association: "OWNER", comments: []}]
+      | {state: ., out: (one($m) | view)}
+    elif $op == "GET issue" then {state: ., out: (one($n) | view)}
+    elif $op == "PATCH issue" then one($n) as $_ | put($n; $f) | {state: ., out: (one($n) | view)}
+    elif $op == "GET comments" then {state: ., out: one($n).comments}
+    elif $op == "GET sub_issues" then {state: ., out: [.[] | select(.parent == $n) | view]}
+    elif $op == "POST sub_issues" then
+      one($n) as $_ | one($f.sub_issue_id - 1000) as $s
+      | put($s.number; {parent: $n})
+      | {state: ., out: (one($n) | view)}
+    else error end' "$state")
+jq '.state' <<<"$result" >"$state"
+jq -r ".out | $expr" <<<"$result"

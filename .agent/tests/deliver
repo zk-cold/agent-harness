@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[ "${DELIVER_SCENARIO-}" = 1 ] || exit 0
+export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
+here=$(cd "$(dirname "$0")" && pwd)
+root=$here/../..
+tmp=$(mktemp -d)
+repo=$tmp/repo
+echo "$tmp"
+mkdir "$repo"
+git -C "$root" ls-files -z -co --exclude-standard | (cd "$root" && tar --null -T - -c) | tar -x -C "$repo"
+sed -i 's/shut "$1" not_planned$/shut "$1" completed/' "$repo/.agent/scripts/roadmap-gh"
+[ "$("$repo/.agent/tests/scripts" 2>&1 | grep '^test_')" = test_close ]
+git -C "$repo" init -q -b main
+git -C "$repo" add -A
+git -C "$repo" commit -qm seed
+git -C "$repo" tag seed
+jq -n '[{number: 1, state: "open", author_association: "OWNER", comments: [],
+  title: "Make `roadmap-gh close` close items as not planned",
+  body: "`.agent/tests/scripts` fails because `close` closes items as completed."}]' >"$repo/.git/issues.json"
+export PATH=$here/stub:$PATH
+cd "$repo"
+env -u DELIVER_SCENARIO timeout 2h claude -p "/deliver $(.agent/scripts/roadmap gh . show 1)" \
+  --max-budget-usd 40 --setting-sources project --add-dir "$tmp" \
+  --permission-mode dontAsk --allowedTools Agent Bash Edit Glob Grep Read Write \
+  --output-format stream-json --verbose >"$tmp/events.jsonl" || :
+
+approved() {
+  jq -rs --arg c "$1" '
+    [.[] | .message.content[]? | select(.type == "tool_use" and .input.subagent_type == $c) | .id] as $ids
+    | [.[] | .message.content[]? | select(.type == "tool_result" and (.tool_use_id | IN($ids[])))] | last.content
+    | if type == "string" then . else map(.text? // empty) | join("\n") end' "$tmp/events.jsonl" |
+    grep -Eqx '[[:space:]]*Verdict: APPROVE[[:space:]]*'
+}
+
+fail=0
+check() { "${@:2}" >/dev/null 2>&1 || { echo "$1"; fail=1; }; }
+check result jq -e 'select(.type == "result") | .subtype == "success"' "$tmp/events.jsonl"
+for c in earn-its-place-critic alignment-critic full-review-critic; do
+  check "$c" approved "$c"
+done
+check completed jq -e '.[0] | .state == "closed" and .state_reason == "completed"' .git/issues.json
+check clean test -z "$(git status --porcelain)"
+check on-root test "$(git branch --show-current)" = main
+check branches test "$(git branch --format='%(refname:short)')" = main
+check worktrees test "$(git worktree list | wc -l)" = 1
+check tests-untouched git diff --quiet seed main -- .agent/tests
+check fixed .agent/tests/scripts
+exit "$fail"
