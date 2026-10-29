@@ -18,8 +18,12 @@ cp .git/issues.json "$tmp/seeded.json"
 mkdir "$tmp/bin"
 cat >"$tmp/bin/gh" <<EOF
 #!/usr/bin/env bash
-[[ \$* != *'issues?state=open'* ]] || ! jq -e '.[5].state == "closed"' "$repo/.git/issues.json" >/dev/null ||
-  { touch "$tmp/stop"; sleep 300; }
+s=$repo/.git/issues.json
+if [[ \$* == *'issues?state=open'* ]] && jq -e '.[5].state == "closed"' "\$s" >/dev/null; then
+  jq 'map(if .number > 6 then .author_association = "NONE" end)' "\$s" >"\$s.new" && mv "\$s.new" "\$s"
+  [ ! -e "$tmp/listed" ] || { touch "$tmp/stop"; sleep 300; }
+  touch "$tmp/listed"
+fi
 exec "$here/stub/gh" "\$@"
 EOF
 chmod +x "$tmp/bin/gh"
@@ -27,6 +31,9 @@ PATH=$tmp/bin:$PATH scenario /lead Skill
 
 delivered 6
 check relisted test -e "$tmp/stop"
+check picked jq -se --arg b "$(jq -r '.[5].body' "$tmp/seeded.json")" '
+  [.[] | .message.content[]? | select(.type == "tool_use" and .input.skill == "deliver") | .input.args]
+  | length > 0 and all(contains($b))' "$tmp/events.jsonl"
 check unblocked jq -e '.[5].title | contains("blocked") | not' .git/issues.json
 check untouched jq -e --slurpfile s "$tmp/seeded.json" '.[:5] == $s[0][:5]' .git/issues.json
 exit "$fail"
