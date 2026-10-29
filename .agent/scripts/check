@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 set -uo pipefail
 schema=$(dirname "$0")/../schemas/governance-schema.md
-listed() { awk -v s="## $1" '/^## /{on = $0 == s} on && sub(/^- `?/, "") {sub(/[`: ].*/, ""); print}' "$schema"; }
+section() { awk -v s="## $1" '/^## /{on = $0 == s} on' "$schema"; }
+listed() { section "$1" | awk 'sub(/^- `?/, "") {sub(/[`: ].*/, ""); print}'; }
 cats=$(listed Categories | paste -sd '|')
 ops=$(listed 'Roadmap Operations')
+docs=$(section 'Governed Documents' | grep -o '`[^`]*`' | tr -d '`')
+for v in cats ops docs; do [ -n "${!v}" ] || { echo "$schema: no $v"; exit 1; }; done
 cd "$1" || exit
 shopt -s nullglob
 fail=0
-for f in CLAUDE.md .agent/schemas/*.md .claude/commands/*.md .claude/agents/*.md; do
+for f in $docs; do
   [ -f "$f" ] || continue
   awk -v re="^# ($cats)[[:space:]]*$" '
     NR == 1 && /^---[[:space:]]*$/ {fm = 1; next}

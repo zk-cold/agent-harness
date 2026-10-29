@@ -164,6 +164,13 @@ test_check() {
   rejects .claude/agents/a.md:3
   governed 'case $1 in\n  list | show | add | edit | close | complete) ;;\nesac\n' .agent/scripts/roadmap-x
   rejects $'.agent/scripts/roadmap-x: not executable\n.agent/scripts/roadmap-x: candidates'
+  local h=$tmp/harness/.agent
+  mkdir -p "$h/scripts" "$h/schemas"
+  cp "$scripts/check" "$h/scripts"
+  for s in Categories:cats 'Roadmap Operations:ops' 'Governed Documents:docs'; do
+    sed "s/^## ${s%:*}\$/## X/" "$here/../schemas/governance-schema.md" >"$h/schemas/governance-schema.md"
+    same "$("$h/scripts/check" "$tmp/repo"; echo $?)" "$h/scripts/../schemas/governance-schema.md: no ${s#*:}"$'\n1'
+  done
 }
 
 test_change_under_review() {
