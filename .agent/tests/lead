@@ -36,7 +36,7 @@ PATH=$tmp/bin:$PATH scenario /lead Skill
 delivered 6
 check relisted test -e "$tmp/stop"
 check picked jq -se --arg b "$(jq -r '.[5].body' "$tmp/seeded.json")" '
-  [.[] | .message.content[]? | select(.type == "tool_use" and .input.skill == "deliver") | any(.input | .. | strings; contains($b))]
+  [.[] | .message.content[]? | select(.type == "tool_use" and .input.skill == "agent-harness:deliver") | any(.input | .. | strings; contains($b))]
   | length > 0 and all' "$tmp/events.jsonl"
 check unblocked jq -e '.[5].title | contains("blocked") | not' .git/issues.json
 check untouched jq -e --slurpfile s "$tmp/seeded.json" '.[:5] == $s[0][:5]' .git/issues.json

@@ -1,7 +1,10 @@
+---
+description: Delivers roadmap items one after another.
+---
 # Invariants
 
 ## Terms
-Use the definitions in `.agent/schemas/governance-schema.md`.
+Use the definitions in `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/governance-schema.md`.
 
 ## Lead Protocol
 Do only these yourself: read or write the roadmap, run one command, and talk from your own context. Dispatch everything else to sub-agents, including any search for information that one command cannot trivially complete, and read only the sub-agent's report of it.

@@ -3,7 +3,7 @@ set -uo pipefail
 . "$(dirname "$0")/schema" || exit
 cats=$(listed Categories | paste -sd '|')
 ops=$(listed 'Roadmap Operations')
-docs=$(governed)
+docs=$(governed "$1")
 for v in cats ops docs; do [ -n "${!v}" ] || { echo "$schema: no $v"; exit 1; }; done
 cd "$1" || exit
 shopt -s nullglob

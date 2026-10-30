@@ -152,7 +152,7 @@ EOF
 
 governed() {
   rm -rf "$tmp/repo"
-  mkdir -p "$tmp/repo/.agent/scripts" "$tmp/repo/.claude/agents"
+  mkdir -p "$tmp/repo/.agent/scripts" "$tmp/repo/.claude/agents" "$(dirname "$tmp/repo/$2")"
   printf '%b' "$1" >"$tmp/repo/$2"
 }
 
@@ -181,6 +181,15 @@ test_check() {
     harness "s/^## ${s%:*}\$/## X/"
     same "$("$h/scripts/check" "$tmp/repo"; echo $?)" "$h/scripts/../schemas/governance-schema.md: no ${s#*:}"$'\n1'
   done
+}
+
+test_harness_documents() {
+  governed 'x\n' commands/a.md
+  mkdir "$tmp/repo/agents" && cp "$tmp/repo/commands/a.md" "$tmp/repo/agents"
+  "$scripts/check" "$tmp/repo"
+  harness ''
+  cp -r "$tmp/repo/commands" "$tmp/repo/agents" "$tmp/harness"
+  same "$("$tmp/harness/.agent/scripts/check" "$tmp/harness"; echo $?)" $'commands/a.md:1\nagents/a.md:1\n1'
 }
 
 test_change_under_review() {

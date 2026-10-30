@@ -1,4 +1,9 @@
 schema=$(dirname "${BASH_SOURCE[0]}")/../schemas/governance-schema.md
 section() { awk -v s="## $1" '/^## /{on = $0 == s} on' "$schema"; }
 listed() { section "$1" | awk 'sub(/^- `?/, "") {sub(/[`: ].*/, ""); print}'; }
-governed() { section 'Governed Documents' | grep -o '`[^`]*`' | tr -d '`'; }
+governed() {
+  local s
+  s=$(section 'Governed Documents')
+  [ "$(cd "$1" && pwd -P)" = "$(cd "$(dirname "$schema")/../.." && pwd -P)" ] || s=${s%%in this harness and the target repo*}
+  grep -o '`[^`]*`' <<<"$s" | tr -d '`'
+}

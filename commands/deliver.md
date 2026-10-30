@@ -1,7 +1,10 @@
+---
+description: Delivers a request through the impl and critic loop.
+---
 # Invariants
 
 ## Terms
-Use the definitions in `.agent/schemas/governance-schema.md`.
+Use the definitions in `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/governance-schema.md`.
 
 ## Roadmap Item
 Each delivery corresponds to exactly one item on the roadmap. Once step 1's checks pass and before dispatching any of the user's request, find the item whose request it is, otherwise add one holding it verbatim, and close any other item duplicating it. If the request slices an item, split that item into sub-items that together cover its request, this one among them.

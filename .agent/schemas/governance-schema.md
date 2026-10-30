@@ -1,7 +1,10 @@
 # Definitions
 
 ## Governed Documents
-`CLAUDE.md`, `.agent/schemas/*.md`, `.claude/commands/*.md`, and `.claude/agents/*.md` in this harness and the target repo.
+`CLAUDE.md`, `.agent/schemas/*.md`, `.claude/commands/*.md`, and `.claude/agents/*.md` in this harness and the target repo, and `commands/*.md` and `agents/*.md` in this harness.
+
+## This Harness
+The directory whose `.agent/schemas/` holds this file, against which `.agent/` paths in its governed documents resolve.
 
 ## Categories
 - Definitions: meanings of terms, containing no rules.

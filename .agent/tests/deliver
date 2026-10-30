@@ -17,7 +17,7 @@ approved() {
 
 check result jq -e 'select(.type == "result") | .subtype == "success"' "$tmp/events.jsonl"
 for c in earn-its-place-critic alignment-critic full-review-critic; do
-  check "$c" approved "$c"
+  check "$c" approved "agent-harness:$c"
 done
 delivered 1
 exit "$fail"
