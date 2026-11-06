@@ -138,15 +138,15 @@ test_verdict() {
 Verdict: APPROVE|APPROVE
 \nVerdict: APPROVE \nFindings:\n- f\n\n- g|APPROVE
 Verdict: REJECT\nRejection Grounds: r\nFindings:\n- f|REJECT
-Verdict: REJECT|line 1
-Verdict: APPROVE\nRejection Grounds: r|line 2
-Verdict: REJECT\nFindings: f\nRejection Grounds: r|line 3
-Verdict: REJECT\nRejection Grounds:\nFindings: f|line 3
-Verdict: APPROVE\nFindings:|line 2
-Verdict: APPROVE\nstray|line 2
-Verdict: APPROVE\nFindings: f\nFindings: g|line 3
-preamble\nVerdict: APPROVE|line 1
-Verdict: approve|line 1
+Verdict: REJECT|line 1: REJECT needs Rejection Grounds
+Verdict: APPROVE\nRejection Grounds: None|line 2: APPROVE must omit Rejection Grounds
+Verdict: REJECT\nFindings: f\nRejection Grounds: r|line 3: Rejection Grounds and Findings each appear at most once, in that order
+Verdict: REJECT\nRejection Grounds:\nFindings: f|line 2: Rejection Grounds is empty
+Verdict: APPROVE\nFindings:|line 2: Findings is empty
+Verdict: APPROVE\nstray|line 2: text must be under Rejection Grounds or Findings
+Verdict: APPROVE\nFindings: f\nFindings: g|line 3: Rejection Grounds and Findings each appear at most once, in that order
+preamble\nVerdict: APPROVE|line 1: first line must be Verdict: APPROVE or Verdict: REJECT
+Verdict: approve|line 1: first line must be Verdict: APPROVE or Verdict: REJECT
 EOF
 }
 
@@ -157,10 +157,10 @@ test_critic_hook() {
     jq -n "$2" | CLAUDE_PROJECT_DIR=$here/../.. sh -c "$cmd" 2>&1; echo $?
   }
   same "$(hook SubagentStop '{last_assistant_message: "Verdict: APPROVE"}')" $'APPROVE\n0'
-  same "$(hook SubagentStop '{last_assistant_message: "Approved."}')" $'line 1\n2'
+  same "$(hook SubagentStop '{last_assistant_message: "Approved."}')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
   same "$(hook PreToolUse '{agent_type: "full-review-critic", tool_input: {message: "Verdict: APPROVE"}}')" $'APPROVE\n0'
-  same "$(hook PreToolUse '{agent_type: "full-review-critic", tool_input: {message: "Approved."}}')" $'line 1\n2'
-  same "$(hook PreToolUse '{agent_type: "full-review-critic", tool_input: {}}')" $'line 0\n2'
+  same "$(hook PreToolUse '{agent_type: "full-review-critic", tool_input: {message: "Approved."}}')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
+  same "$(hook PreToolUse '{agent_type: "full-review-critic", tool_input: {}}')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
   same "$(hook PreToolUse '{agent_type: "impl", tool_input: {message: "Approved."}}')" 0
   same "$(hook PreToolUse '{tool_input: {message: "Approved."}}')" 0
 }
