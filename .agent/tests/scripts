@@ -151,11 +151,18 @@ EOF
 }
 
 test_critic_hook() {
-  local cmd
-  cmd=$(jq -r '.hooks.SubagentStop[0].hooks[0].command' "$here/../../.claude/settings.json")
-  hook() { jq -n --arg m "$1" '{last_assistant_message: $m}' | CLAUDE_PROJECT_DIR=$here/../.. sh -c "$cmd" 2>&1; echo $?; }
-  same "$(hook 'Verdict: APPROVE')" $'APPROVE\n0'
-  same "$(hook 'Approved.')" $'line 1\n2'
+  hook() {
+    local cmd
+    cmd=$(jq -r --arg e "$1" '.hooks[$e][0].hooks[0].command' "$here/../../.claude/settings.json")
+    jq -n "$2" | CLAUDE_PROJECT_DIR=$here/../.. sh -c "$cmd" 2>&1; echo $?
+  }
+  same "$(hook SubagentStop '{last_assistant_message: "Verdict: APPROVE"}')" $'APPROVE\n0'
+  same "$(hook SubagentStop '{last_assistant_message: "Approved."}')" $'line 1\n2'
+  same "$(hook PreToolUse '{agent_type: "full-review-critic", tool_input: {message: "Verdict: APPROVE"}}')" $'APPROVE\n0'
+  same "$(hook PreToolUse '{agent_type: "full-review-critic", tool_input: {message: "Approved."}}')" $'line 1\n2'
+  same "$(hook PreToolUse '{agent_type: "full-review-critic", tool_input: {}}')" $'line 0\n2'
+  same "$(hook PreToolUse '{agent_type: "impl", tool_input: {message: "Approved."}}')" 0
+  same "$(hook PreToolUse '{tool_input: {message: "Approved."}}')" 0
 }
 
 governed() {
