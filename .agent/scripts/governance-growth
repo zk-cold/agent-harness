@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 . "$(dirname "$0")/schema"
-mapfile -t docs < <(governed "$(git rev-parse --show-toplevel)")
+mapfile -t docs < <(governed)
 [ ${#docs[@]} -gt 0 ] || { echo "$schema: no docs" >&2; exit 1; }
 docs=("${docs[@]/#/:(top,glob)}")
 words() { { git grep -hoE -e '[^[:space:]]+' "$1" -- "${docs[@]}" || [ $? = 1 ]; } | wc -l; }

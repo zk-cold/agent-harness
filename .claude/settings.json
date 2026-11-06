@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "m=$(jq -er 'select(.agent_type // \"\" | endswith(\"critic\")) | .tool_input.message // \"\"') || exit 0; printf %s \"$m\" | \"$CLAUDE_PROJECT_DIR\"/.agent/scripts/verdict || exit 2"
+            "command": "[ -z \"$CLAUDE_PLUGIN_ROOT\" ] || ! cmp -s \"$CLAUDE_PLUGIN_ROOT\"/.claude/settings.json \"$CLAUDE_PROJECT_DIR\"/.claude/settings.json || exit 0; m=$(jq -er 'select(.agent_type // \"\" | endswith(\"critic\")) | .tool_input.message // \"\"') || exit 0; printf %s \"$m\" | \"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR}\"/.agent/scripts/verdict || exit 2"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.last_assistant_message // empty' | \"$CLAUDE_PROJECT_DIR\"/.agent/scripts/verdict || exit 2"
+            "command": "[ -z \"$CLAUDE_PLUGIN_ROOT\" ] || ! cmp -s \"$CLAUDE_PLUGIN_ROOT\"/.claude/settings.json \"$CLAUDE_PROJECT_DIR\"/.claude/settings.json || exit 0; jq -r '.last_assistant_message // empty' | \"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR}\"/.agent/scripts/verdict || exit 2"
           }
         ]
       }

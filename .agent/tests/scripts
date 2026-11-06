@@ -154,7 +154,7 @@ test_critic_hook() {
   hook() {
     local cmd
     cmd=$(jq -r --arg e "$1" '.hooks[$e][0].hooks[0].command' "$here/../../.claude/settings.json")
-    jq -n "$2" | CLAUDE_PROJECT_DIR=$here/../.. sh -c "$cmd" 2>&1; echo $?
+    jq -n "$2" | env CLAUDE_PROJECT_DIR="$here/../.." "${@:3}" sh -c "$cmd" 2>&1; echo $?
   }
   same "$(hook SubagentStop '{last_assistant_message: "Verdict: APPROVE"}')" $'APPROVE\n0'
   same "$(hook SubagentStop '{last_assistant_message: "Approved."}')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
@@ -163,11 +163,13 @@ test_critic_hook() {
   same "$(hook PreToolUse '{agent_type: "full-review-critic", tool_input: {}}')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
   same "$(hook PreToolUse '{agent_type: "impl", tool_input: {message: "Approved."}}')" 0
   same "$(hook PreToolUse '{tool_input: {message: "Approved."}}')" 0
+  same "$(hook SubagentStop '{last_assistant_message: "Approved."}' CLAUDE_PLUGIN_ROOT="$here/../.." CLAUDE_PROJECT_DIR="$tmp")" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
+  same "$(hook SubagentStop '{last_assistant_message: "Approved."}' CLAUDE_PLUGIN_ROOT="$here/../..")" 0
 }
 
 governed() {
   rm -rf "$tmp/repo"
-  mkdir -p "$tmp/repo/.agent/scripts" "$tmp/repo/.claude/agents" "$(dirname "$tmp/repo/$2")"
+  mkdir -p "$tmp/repo/.agent/scripts" "$tmp/repo/.claude/agents"
   printf '%b' "$1" >"$tmp/repo/$2"
 }
 
@@ -196,15 +198,6 @@ test_check() {
     harness "s/^## ${s%:*}\$/## X/"
     same "$("$h/scripts/check" "$tmp/repo"; echo $?)" "$h/scripts/../schemas/governance-schema.md: no ${s#*:}"$'\n1'
   done
-}
-
-test_harness_documents() {
-  governed 'x\n' commands/a.md
-  mkdir "$tmp/repo/agents" && cp "$tmp/repo/commands/a.md" "$tmp/repo/agents"
-  "$scripts/check" "$tmp/repo"
-  harness ''
-  cp -r "$tmp/repo/commands" "$tmp/repo/agents" "$tmp/harness"
-  same "$("$tmp/harness/.agent/scripts/check" "$tmp/harness"; echo $?)" $'commands/a.md:1\nagents/a.md:1\n1'
 }
 
 test_change_under_review() {

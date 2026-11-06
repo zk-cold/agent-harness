@@ -17,7 +17,7 @@ cd "$repo"
 
 scenario() {
   env -u DELIVER_SCENARIO -u LEAD_SCENARIO timeout -k 1m 2h claude -p "$1" \
-    --max-budget-usd 40 --setting-sources project --plugin-dir "$repo" --add-dir "$tmp" \
+    --max-budget-usd 40 --setting-sources project --add-dir "$tmp" \
     --permission-mode dontAsk --allowedTools Agent Bash Edit Glob Grep Read Write "${@:2}" \
     --output-format stream-json --verbose >"$tmp/events.jsonl" &
   local pid=$!
