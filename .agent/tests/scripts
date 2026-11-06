@@ -150,6 +150,14 @@ Verdict: approve|line 1
 EOF
 }
 
+test_critic_hook() {
+  local cmd
+  cmd=$(jq -r '.hooks.SubagentStop[0].hooks[0].command' "$here/../../.claude/settings.json")
+  hook() { jq -n --arg m "$1" '{last_assistant_message: $m}' | CLAUDE_PROJECT_DIR=$here/../.. sh -c "$cmd" 2>&1; echo $?; }
+  same "$(hook 'Verdict: APPROVE')" $'APPROVE\n0'
+  same "$(hook 'Approved.')" $'line 1\n2'
+}
+
 governed() {
   rm -rf "$tmp/repo"
   mkdir -p "$tmp/repo/.agent/scripts" "$tmp/repo/.claude/agents"
