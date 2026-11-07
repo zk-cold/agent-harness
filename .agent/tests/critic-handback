@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[ "${DELIVER_SCENARIO-}" = 1 ] || exit 0
+. "$(dirname "$0")/lib/scenario"
+f=.claude/agents/full-review-critic.md
+{ awk 'NR > 1 && /^---$/ {print; exit} 1' "$f"; echo 'Report `Approved.` through SubagentHandback.'; } >"$tmp/critic.md"
+mv "$tmp/critic.md" "$f"
+scenario 'Run full-review-critic in the background with the prompt `Go.` and wait for its report.' --permission-mode auto
+
+blocked=$(jq -sr '
+  [.[] | .parent_tool_use_id as $p | .message.content[]? | . + {p: $p}] as $c
+  | [$c[] | select(.type == "tool_use" and .name == "SubagentHandback") | .id] as $h
+  | $c[] | select(.type == "tool_result" and .is_error and IN(.tool_use_id; $h[]) and (.content | tostring | test("line [0-9]+: ")))
+  | .p' "$tmp/events.jsonl" | sort -u)
+retried() {
+  jq -r --arg b "$blocked" 'select(.subtype == "task_notification" and IN(.tool_use_id; ($b | splits("\n")))) | .handback_report.text' \
+    "$tmp/events.jsonl" | .agent/scripts/verdict
+}
+
+check blocked test -n "$blocked"
+check retried retried
+exit "$fail"
