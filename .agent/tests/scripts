@@ -196,7 +196,7 @@ test_critic_hook() {
   hook() {
     local cmd
     cmd=$(jq -r --arg e "$1" '.hooks[$e][0].hooks[0].command' "$here/../../.claude/settings.json")
-    jq -n "$2" | env CLAUDE_PROJECT_DIR="$here/../.." "${@:3}" sh -c "$cmd" 2>&1; echo $?
+    env CLAUDE_PROJECT_DIR="$here/../.." "${@:3}" sh -c "$cmd" <<<"$(jq -n "$2")" 2>&1; echo $?
   }
   same "$(hook SubagentStop '{last_assistant_message: "Verdict: APPROVE"}')" $'APPROVE\n0'
   same "$(hook SubagentStop '{last_assistant_message: "Approved."}')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
