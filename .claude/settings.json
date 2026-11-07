@@ -11,6 +11,17 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "SubagentHandback",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR}\"/.agent/scripts/critic-hook PostToolUse"
+          }
+        ]
+      }
+    ],
     "SubagentStop": [
       {
         "matcher": "critic$",

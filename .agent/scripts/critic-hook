@@ -4,10 +4,16 @@ p=${CLAUDE_PROJECT_DIR-}
   ! jq -e --arg e "$1" --slurpfile s "$CLAUDE_PLUGIN_ROOT/.claude/settings.json" '
     def m: .hooks[$e][]? | select(any(.hooks[]?.command; contains(".agent/scripts/critic-hook"))) | .matcher;
     any(m; IN($s[0] | m))' "$p/.claude/settings.json" >/dev/null 2>&1 || exit 0
+d=${TMPDIR:-/tmp}/critic-handbacks-$UID
 case $1 in
   PreToolUse)
     m=$(jq -ner 'input | select(has("agent_type") and (.agent_type | endswith("critic"))) | .tool_input.message // ""') ||
       { [ $? = 4 ] && exit 0; exit 2; } ;;
-  SubagentStop) m=$(jq -r '.last_assistant_message // empty') ;;
+  PostToolUse)
+    mkdir -p "$d" && jq -j 'select((.agent_type // "" | endswith("critic")) and .tool_response.success == true) |
+      "\(.agent_id)\n\(.tool_input.message)"' | { read -r id && cat >"$d/$id"; }
+    exit 0 ;;
+  SubagentStop) i=$(cat) f=$d/$(jq -r .agent_id <<<"$i")
+    { m=$(<"$f") && rm "$f"; } 2>/dev/null || m=$(jq -r '.last_assistant_message // empty' <<<"$i") ;;
 esac
 printf %s "${m-}" | "$(dirname "$0")/verdict" || exit 2

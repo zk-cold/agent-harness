@@ -197,7 +197,7 @@ test_critic_hook() {
   hook() {
     local cmd
     cmd=$(jq -r --arg e "$1" '.hooks[$e][0].hooks[0].command' "$here/../../.claude/settings.json")
-    env CLAUDE_PROJECT_DIR="$here/../.." "${@:3}" sh -c "$cmd" <<<"$(jq -nr "$2")" 2>&1; echo $?
+    env CLAUDE_PROJECT_DIR="$here/../.." TMPDIR="$tmp" "${@:3}" sh -c "$cmd" <<<"$(jq -nr "$2")" 2>&1; echo $?
   }
   same "$(hook SubagentStop '{last_assistant_message: "Verdict: APPROVE"}')" $'APPROVE\n0'
   same "$(hook SubagentStop '{last_assistant_message: "Approved."}')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
@@ -211,6 +211,19 @@ test_critic_hook() {
   done
   local root=$here/../.. p=$tmp/project e
   local reject=$'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
+  post() {
+    hook PostToolUse "{agent_type: \"$1\", agent_id: \"a\", tool_input: {message: \"$2\"}, tool_response: {success: $3}}"
+  }
+  stop() { hook SubagentStop "{agent_id: \"$1\"}"; }
+  same "$(post full-review-critic 'Verdict: APPROVE' false)" 0
+  same "$(post impl 'Verdict: APPROVE' true)" 0
+  same "$(stop a)" "$reject"
+  same "$(post full-review-critic 'Approved.' true)" 0
+  same "$(stop a)" "$reject"
+  same "$(post full-review-critic 'Verdict: APPROVE' true)" 0
+  same "$(stop b)" "$reject"
+  same "$(stop a)" $'APPROVE\n0'
+  same "$(stop a)" "$reject"
   local -A in=([SubagentStop]='{last_assistant_message: "Approved."}'
     [PreToolUse]='{agent_type: "full-review-critic", tool_input: {message: "Approved."}}')
   rm -rf "$p"
