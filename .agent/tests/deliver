@@ -10,16 +10,23 @@ scenario "/deliver $(.agent/scripts/roadmap gh . show 1)"
 critics=(earn-its-place-critic alignment-critic full-review-critic)
 verdicts() {
   jq -rs '
-    (map(.message.content[]? | select(.type == "tool_result") | {key: .tool_use_id, value: .content}) | from_entries) as $r
-    | .[] | .message.content[]? | select(.type == "tool_use" and (.input.subagent_type // "" | endswith("-critic")))
-    | [.input.subagent_type, ($r[.id] | if type == "array" then map(.text? // empty) | join("\n") else . // "" end
-        | [splits("\n") | capture("^\\s*Verdict: (?<v>APPROVE|REJECT)\\s*$").v] | first // "FAIL")] | @tsv' "$tmp/events.jsonl"
+    . as $e | length as $end
+    | ([range($end) as $i | $e[$i] | select(.subtype == "task_notification" and .tool_use_id)
+        | {key: .tool_use_id, value: [$i, .handback_report.text // .summary]}] | from_entries) as $n
+    | ([range($end) as $i | $e[$i].message.content[]? | select(.type == "tool_result")
+        | {key: .tool_use_id, value: [$i, .content]}] | from_entries) as $r
+    | range($end) as $i | $e[$i].message.content[]?
+    | select(.type == "tool_use" and (.input.subagent_type // "" | endswith("-critic")))
+    | (if .input.run_in_background then $n[.id] else $n[.id] // $r[.id] end // [$end, ""]) as [$f, $t]
+    | [.input.subagent_type, ($t | if type == "array" then map(.text? // empty) | join("\n") else . // "" end
+        | [splits("\n") | capture("^\\s*Verdict: (?<v>APPROVE|REJECT)\\s*$").v] | first // "FAIL"), $i, $f] | @tsv' "$tmp/events.jsonl"
 }
 approved() { verdicts | awk -v c="$1" '$1 == c {v = $2} END {exit v != "APPROVE"}'; }
 ordered() {
   verdicts | awk -v cs="${critics[*]}" '
-    BEGIN {k = split(cs, c); n = 1}
-    $1 != c[n] {exit 1}
+    BEGIN {k = split(cs, c); n = 1; f = -1}
+    $1 != c[n] || $3 < f {exit 1}
+    {f = $4}
     $2 == "REJECT" {n = 1}
     $2 == "APPROVE" {n = n % k + 1}'
 }
