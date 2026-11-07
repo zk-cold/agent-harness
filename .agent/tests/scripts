@@ -104,9 +104,11 @@ test_poll() {
   mv "$issues.bak" "$issues"
   poll >/dev/null
   poll >/dev/null
-  echo junk >"$state"
-  poll >/dev/null
-  same "$(paste -sd ' ' "$tmp/slept")" '30 30 60 120 240 480 480 30 60 120 240 480 30'
+  for w in junk 0 08; do echo "$w" >"$state"; poll >/dev/null; done
+  rm "$state"
+  mkdir "$state"
+  same "$(poll 2>/dev/null)" $'8\teight\n9\tnueve'
+  same "$(paste -sd ' ' "$tmp/slept")" '30 30 60 120 240 480 480 30 60 120 240 480 30 30 30 30'
 }
 
 test_lead_stop_hook() {
@@ -121,6 +123,8 @@ test_lead_stop_hook() {
   same "$(hook '{last_assistant_message: "Awaiting user.\nNone remain."}')" "$block"
   same "$(hook '{last_assistant_message: "Not Awaiting user."}')" "$block"
   same "$(hook '{}')" "$block"
+  same "$(hook '{last_assistant_message: "Waiting.", background_tasks: [{status: "running"}]}')" 0
+  same "$(hook '{last_assistant_message: "Waiting.", background_tasks: []}')" "$block"
 }
 
 harness() {
