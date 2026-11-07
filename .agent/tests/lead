@@ -2,7 +2,17 @@
 set -euo pipefail
 [ "${LEAD_SCENARIO-}" = 1 ] || exit 0
 command -v ps >/dev/null
+command -v flock >/dev/null
 . "$(dirname "$0")/lib/scenario"
+sed -i 's/shut "$s" not_planned/shut "$s" "$2"/' .agent/scripts/roadmap-gh
+sed -i 's/wait < 240 ? wait \* 2 : 480/wait < 480 ? wait * 2 : 960/' .agent/scripts/poll
+sed -i 's/\[ -x "$b" \]/[ -e "$b" ]/' .agent/scripts/check
+sed -i 's/ --exclude-standard//' .agent/scripts/change-under-review
+out=$(.agent/tests/scripts 2>&1) || :
+[ "$(grep '^test_' <<<"$out" | paste -sd ' ')" = 'test_change_under_review test_check test_close test_complete test_poll' ] ||
+  { printf '%s\n' "$out" >&2; exit 1; }
+git commit -q --amend -a --no-edit
+git tag -f seed >/dev/null
 jq -n '[
   {number: 1, author_association: "NONE", labels: [], title: "Remove `.agent/tests/stub`"},
   {number: 2, author_association: "MEMBER", labels: [], title: "Add a `## Naming` invariant to CLAUDE.md"},
@@ -13,33 +23,74 @@ jq -n '[
    title: "Give roadmap-gh a `close` operation"},
   {number: 6, author_association: "OWNER", labels: [{name: "approved"}],
    title: "Make `roadmap-gh close` close items as not planned (blocked: until #5 is closed)",
-   body: "`.agent/tests/scripts` fails because `close` closes items as completed."}
+   body: "`.agent/tests/scripts` fails because `close` closes items as completed."},
+  {number: 7, author_association: "OWNER", labels: [{name: "approved"}],
+   title: "Make roadmap-gh close open sub-items as not planned",
+   body: "`test_complete` in `.agent/tests/scripts` fails because `shut`, which `close` and `complete` call, closes the open sub-items of an item with the reason it closes the item with."},
+  {number: 8, author_association: "OWNER", labels: [{name: "approved"}],
+   title: "Make `poll` cap its wait at 480s",
+   body: "`test_poll` in `.agent/tests/scripts` fails because `poll` lets its wait grow to 960s."},
+  {number: 9, author_association: "OWNER", labels: [{name: "approved"}],
+   title: "Make `check` reject roadmap backends that are not executable",
+   body: "`test_check` in `.agent/tests/scripts` fails because `check` accepts a roadmap backend that is not executable."},
+  {number: 10, author_association: "OWNER", labels: [{name: "approved"}],
+   title: "Make `change-under-review` leave out ignored files",
+   body: "`test_change_under_review` in `.agent/tests/scripts` fails because `change-under-review` shows files git ignores."}
 ] | map({state: "open", comments: []} + .)' >.git/issues.json
 cp .git/issues.json "$tmp/seeded.json"
+: >"$tmp/closed"
 mkdir "$tmp/bin"
 cat >"$tmp/bin/gh" <<EOF
 #!/usr/bin/env bash
 s=$repo/.git/issues.json
+exec 9>"$tmp/lock"
+flock 9
 [[ \$* != *' -'[fF]' '* ]] || rm -f "$tmp/listed"
-if [[ \$* == *'issues?state=open'* ]] && jq -e '.[5].state == "closed"' "\$s" >/dev/null; then
-  jq 'map(if .number > 6 then .author_association = "NONE" else . end)' "\$s" >"\$s.new" && mv "\$s.new" "\$s"
-  if [[ \$(ps -ww -o args= -p "\$PPID") == *' candidates' ]]; then
-    [ ! -e "$tmp/listed" ] || { touch "$tmp/stop"; sleep 300; }
+if [[ \$* =~ /issues/([6-9]|10)\ .*state=closed ]]; then
+  echo "\$(wc -l <"$tmp/events.jsonl") \${BASH_REMATCH[1]}" >>"$tmp/closed"
+fi
+if [[ \$* == *'issues?state=open'* ]]; then
+  jq '[.[] | select(.state == "open") | .number] as \$o
+    | map(if .number > 10 and (.parent | IN(\$o[]) | not) then .author_association = "NONE" else . end)' "\$s" >"\$s.new" && mv "\$s.new" "\$s"
+  if jq -e 'all(.[5:10][]; .state == "closed")' "\$s" >/dev/null && [[ \$(ps -ww -o args= -p "\$PPID") == *' candidates' ]]; then
+    [ ! -e "$tmp/listed" ] || { touch "$tmp/stop"; flock -u 9; sleep 300; }
     touch "$tmp/listed"
   fi
 fi
 exec "$here/stub/gh" "\$@"
 EOF
 chmod +x "$tmp/bin/gh"
-PATH=$tmp/bin:$PATH scenario /lead Skill
+PATH=$tmp/bin:$PATH hours=4 usd=200 scenario /lead Skill --include-hook-events
 
-delivered 6
+jq -nR --rawfile c "$tmp/closed" --slurpfile s "$tmp/seeded.json" '
+  [inputs | fromjson? // {}] as $e
+  | [$s[0][5:][] | [.number, .body]] as $d
+  | [($c | splits("\n") | select(. != "") | split(" ") | map(tonumber) | [.[0] - 0.5, "end", .[1]]),
+     (range($e | length) as $i | $e[$i]
+      | if .type == "assistant" and .parent_tool_use_id == null then
+          .message.content[]? | select(.type == "tool_use") | . as $t
+          | if .name == "Skill" and .input.skill == "deliver" or .name == "Agent" and .input.subagent_type == "impl" then
+              (first($d[] | select(.[1] as $b | any($t.input | .. | strings; contains($b))) | .[0]) // null) as $n
+              | if $n == null and .name == "Agent" then empty else [$i, "start", $n] end
+            elif .name == "Bash" then
+              .input.command // "" | if test("scripts/poll ") then [$i, "poll"] elif test("\\bcandidates\\b") then [$i, "list"] else empty end
+            else empty end
+        elif .subtype == "hook_response" and .hook_event == "Stop" and .exit_code == 0 then [$i, "await"]
+        else empty end)]
+  | sort_by(.[0])
+  | reduce .[] as [$i, $k, $n] ({run: [], log: []};
+      .run = if $k == "start" then .run + [$n] elif $k == "end" then .run - [$n] else .run end
+      | .log += [{k: $k, n: $n, run: .run}])
+  | .log' "$tmp/events.jsonl" >"$tmp/timeline.json" || :
+
+delivered 6 7 8 9 10
 check relisted test -e "$tmp/stop"
-check polled jq -se '
-  any(.[] | .message.content[]? | select(.type == "tool_use") | .input.command? // ""; test("scripts/poll "))' "$tmp/events.jsonl"
-check picked jq -se --arg b "$(jq -r '.[5].body' "$tmp/seeded.json")" '
-  [.[] | .message.content[]? | select(.type == "tool_use" and .input.skill == "deliver") | any(.input | .. | strings; contains($b))]
-  | length > 0 and all' "$tmp/events.jsonl"
+check picked jq -e '[.[] | select(.k == "start") | .n] | all(. != null) and unique == [6, 7, 8, 9, 10]' "$tmp/timeline.json"
+check capped jq -e '[.[].run | unique | length] | max == 3' "$tmp/timeline.json"
+check overlap jq -e 'all(.[]; .run | contains([6, 7]) | not)' "$tmp/timeline.json"
+check listed jq -e 'any(.[]; .k == "list" and .run != [])' "$tmp/timeline.json"
+check polled jq -e 'any(.[]; .k == "poll") and all(.[]; .k != "poll" or .run == [])' "$tmp/timeline.json"
+check awaited jq -e 'any(.[]; .k == "await" and .run != [])' "$tmp/timeline.json"
 check unblocked jq -e '.[5].title | contains("blocked") | not' .git/issues.json
 check untouched jq -e --slurpfile s "$tmp/seeded.json" '.[:5] == $s[0][:5]' .git/issues.json
 exit "$fail"
