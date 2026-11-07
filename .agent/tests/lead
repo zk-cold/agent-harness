@@ -35,6 +35,8 @@ PATH=$tmp/bin:$PATH scenario /lead Skill
 
 delivered 6
 check relisted test -e "$tmp/stop"
+check polled jq -se '
+  any(.[] | .message.content[]? | select(.type == "tool_use") | .input.command? // ""; test("scripts/poll "))' "$tmp/events.jsonl"
 check picked jq -se --arg b "$(jq -r '.[5].body' "$tmp/seeded.json")" '
   [.[] | .message.content[]? | select(.type == "tool_use" and .input.skill == "deliver") | any(.input | .. | strings; contains($b))]
   | length > 0 and all' "$tmp/events.jsonl"

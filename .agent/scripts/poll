@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+state=$(git -C "$2" rev-parse --absolute-git-dir)/roadmap-poll
+wait= seen=
+{ read -r wait && seen=$(cat); } 2>/dev/null <"$state" || :
+[[ $wait =~ ^[0-9]+$ ]] || wait=30
+sleep "$wait"
+next=$((wait < 240 ? wait * 2 : 480))
+save() { printf '%s\n%s\n' "$next" "$1" >"$state"; }
+if out=$("$(dirname "$0")/roadmap" "$1" "$2" candidates); then
+  [ "$out" = "$seen" ] || next=30
+  save "$out"
+  printf '%s\n' "$out"
+else
+  save "$seen"
+  exit 1
+fi
