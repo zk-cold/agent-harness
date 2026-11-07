@@ -113,8 +113,8 @@ test_poll() {
 
 test_lead_stop_hook() {
   local cmd
-  cmd=$(awk 'NR > 1 && /^---$/ {exit} sub(/^          command: /, "")' "$here/../../.claude/commands/lead.md")
-  [ "$(wc -l <<<"$cmd")" = 1 ]
+  cmd=$(awk 'NR > 1 && /^---$/ {exit} NR > 1' "$here/../../.claude/commands/lead.md" |
+    yq -r '[.hooks.Stop[].hooks[].command] | if length == 1 then .[0] else error("not one Stop hook") end')
   hook() { jq -n "$1" | sh -c "$cmd" 2>&1; echo $?; }
   local block=$'Continue the Lead Loop, or end your message with the line "Awaiting user." to yield to the user.\n2'
   same "$(hook '{last_assistant_message: "Proceed?\n\n1. Abort\n2. Replace\n\nAwaiting user.\n"}')" 0

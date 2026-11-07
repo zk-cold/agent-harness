@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[ "${LEAD_SCENARIO-}" = 1 ] || exit 0
+. "$(dirname "$0")/lib/scenario"
+f=.claude/commands/lead.md
+{ awk 'NR > 1 && /^---$/ {print; exit} 1' "$f"; echo 'Reply with exactly `Done.`'; } >"$tmp/lead.md"
+mv "$tmp/lead.md" "$f"
+scenario /lead --include-hook-events
+
+check stopped jq -se '
+  [.[] | select(.subtype == "hook_response" and .hook_event == "Stop") | .exit_code] | .[0] == 2 and .[-1] == 0' "$tmp/events.jsonl"
+exit "$fail"
