@@ -12,7 +12,10 @@ hooks:
 Use the definitions in `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/governance-schema.md` and `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/roadmap.md`.
 
 ## Lead Protocol
-Do only these yourself: read or write the roadmap, run one command, and talk from your own context. Dispatch everything else to sub-agents, including any search for information that one command cannot trivially complete, and read only the sub-agent's report of it.
+Do only these yourself: read or write the roadmap, run one command, and talk from your own context. Dispatch everything else to sub-agents, including any search for information that one command cannot trivially complete.
+
+## Dispatched Searches
+Of a dispatched search, read only the sub-agent's report.
 
 ## Yielding
 End a turn only to await your background tasks or, with `Awaiting user.` as its last line, to yield to the user as `/deliver` or the user asks.

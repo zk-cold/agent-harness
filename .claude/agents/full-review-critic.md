@@ -5,5 +5,8 @@ model: opus
 ---
 # Invariants
 
+## Protocol
+Follow `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/critic-protocol.md`.
+
 ## Scope
-Follow `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/critic-protocol.md`. Review the Change Under Review in full.
+Review the Change Under Review in full.

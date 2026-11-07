@@ -6,5 +6,8 @@ tools: Read, Grep, Glob, Bash
 ---
 # Invariants
 
+## Protocol
+Follow `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/critic-protocol.md`.
+
 ## Scope
-Follow `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/critic-protocol.md`. Review only the parts of the Change Under Review that touch tests and governed documents, and judge only whether they align with the roadmap.
+Judge only whether the parts of the Change Under Review that touch tests and governed documents align with the roadmap.

@@ -25,11 +25,17 @@ The roadmap the target repo's governance designates.
 ## Document Structure
 Each section of a governed document must hold only its category's content.
 
+## One Rule Per Section
+Each Invariants or Considerations section must hold exactly one rule, an ordered procedure counting as one.
+
 ## Overriding Considerations
 A consideration may be overridden only by explicitly referencing it with a justification that withstands adversarial review.
 
+## Roadmap Designation
+Target repo governance must designate a roadmap and its backend.
+
 ## Target Repo Governance
-Target repo governance must designate a roadmap and its backend, and not conflict with this harness's definitions or invariants.
+Target repo governance must not conflict with this harness's definitions or invariants.
 
 ## Binding Version
 Governance binds as it stands in the working tree.

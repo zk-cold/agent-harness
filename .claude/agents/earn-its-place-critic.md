@@ -6,5 +6,8 @@ tools: Read, Grep, Glob, Bash
 ---
 # Invariants
 
+## Protocol
+Follow `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/critic-protocol.md`.
+
 ## Scope
-Follow `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/critic-protocol.md`. Judge the Change Under Review only against `## No Unsanctioned Prose` and `## Earn Its Place` in `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/engineering-protocol.md`.
+Judge the Change Under Review only against `## No Unsanctioned Prose` and `## Earn Its Place` in `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/engineering-protocol.md`.
