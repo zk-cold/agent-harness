@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 p=${CLAUDE_PROJECT_DIR-}
 [ -z "${CLAUDE_PLUGIN_ROOT-}" ] || [ ! -x "$p/.agent/scripts/critic-hook" ] ||
-  ! jq -e --arg e "$1" 'any(.hooks[$e][]?.hooks[]?.command; contains(".agent/scripts/critic-hook"))' \
-    "$p/.claude/settings.json" >/dev/null 2>&1 || exit 0
+  ! jq -e --arg e "$1" --slurpfile s "$CLAUDE_PLUGIN_ROOT/.claude/settings.json" '
+    def m: .hooks[$e][]? | select(any(.hooks[]?.command; contains(".agent/scripts/critic-hook"))) | .matcher;
+    any(m; IN($s[0] | m))' "$p/.claude/settings.json" >/dev/null 2>&1 || exit 0
 case $1 in
   PreToolUse)
     m=$(jq -ner 'input | select(has("agent_type") and (.agent_type | endswith("critic"))) | .tool_input.message // ""') ||

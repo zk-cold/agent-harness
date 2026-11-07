@@ -229,6 +229,8 @@ test_critic_hook() {
     same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
     jq --arg e "$e" 'del(.hooks[$e])' "$root/.claude/settings.json" >"$p/.claude/settings.json"
     same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
+    jq --arg e "$e" '.hooks[$e][0].matcher = "x"' "$root/.claude/settings.json" >"$p/.claude/settings.json"
+    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
   done
 }
 
