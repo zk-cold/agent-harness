@@ -1,5 +1,5 @@
 ---
-description: Delivers roadmap items one after another.
+description: Delivers roadmap items, up to three at once.
 hooks:
   Stop:
     - hooks:
@@ -21,5 +21,5 @@ Of a dispatched search, read only the sub-agent's report.
 End a turn only to await your background tasks or, with `Awaiting user.` as its last line, to yield to the user as `/deliver` or the user asks.
 
 ## Lead Loop
-1. List candidates or, after a pass that left none, run `${CLAUDE_PLUGIN_ROOT}/.agent/scripts/poll <backend> <target repo path>` with the roadmap's backend and a 10-minute timeout, taking the candidates it prints. Keep those on the roadmap. Of those marked blocked, unblock each whose blocker is gone and drop the rest. While none remain, repeat this step.
-2. Pick a remaining item, carry out `/deliver` from the root branch with the output of showing it, verbatim, as the user's request, then return to step 1.
+1. List candidates or, after a pass that left none and with no delivery in progress, run `${CLAUDE_PLUGIN_ROOT}/.agent/scripts/poll <backend> <target repo path>` with the roadmap's backend and a 10-minute timeout, taking the candidates it prints. Keep those on the roadmap. Of those marked blocked, unblock each whose blocker is gone and drop the rest. While none remain and no delivery is in progress, repeat this step.
+2. While fewer than three deliveries are in progress and a remaining item that does not descend from one of their roadmap items has no foreseeable overlap with them, carry out `/deliver` from the root branch with the output of showing such an item, verbatim, as the user's request, dispatching its agents in the background. Return to step 1 whenever a delivery finishes.
