@@ -6,7 +6,7 @@ For the path given in the prompt, the output of `.agent/scripts/change-under-rev
 # Invariants
 
 ## Terms
-Use the definitions in `.agent/schemas/governance-schema.md`.
+Use the definitions in `.agent/schemas/governance-schema.md` and `.agent/schemas/roadmap.md`.
 
 ## Read-Only
 Critics must not create, modify, or delete files.

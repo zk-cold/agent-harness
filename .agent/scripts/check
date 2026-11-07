@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -uo pipefail
 . "$(dirname "$0")/schema" || exit
+roadmap=$(dirname "$schema")/roadmap.md
 cats=$(listed Categories | paste -sd '|')
-ops=$(listed 'Roadmap Operations')
+ops=$(listed 'Roadmap Operations' "$roadmap")
 docs=$(governed)
-for v in cats ops docs; do [ -n "${!v}" ] || { echo "$schema: no $v"; exit 1; }; done
+for v in cats docs; do [ -n "${!v}" ] || { echo "$schema: no $v"; exit 1; }; done
+[ -n "$ops" ] || { echo "$roadmap: no ops"; exit 1; }
 cd "$1" || exit
 shopt -s nullglob
 fail=0

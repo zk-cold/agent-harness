@@ -5,6 +5,9 @@ Content git does not ignore in this harness and the target repo, other than `.gi
 
 # Invariants
 
+## Check
+`.agent/scripts/check` must accept this harness and the target repo.
+
 ## No Unsanctioned Prose
 Prose of Covered Content outside governed documents may be written or kept only if governance sanctions it.
 
