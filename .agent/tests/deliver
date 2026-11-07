@@ -7,17 +7,27 @@ jq -n '[{number: 1, state: "open", author_association: "OWNER", comments: [], la
   body: "`.agent/tests/scripts` fails because `close` closes items as completed."}]' >.git/issues.json
 scenario "/deliver $(.agent/scripts/roadmap gh . show 1)"
 
-approved() {
-  jq -rs --arg c "$1" '
-    [.[] | .message.content[]? | select(.type == "tool_use" and .input.subagent_type == $c) | .id] as $ids
-    | [.[] | .message.content[]? | select(.type == "tool_result" and (.tool_use_id | IN($ids[])))] | last.content
-    | if type == "string" then . else map(.text? // empty) | join("\n") end' "$tmp/events.jsonl" |
-    grep -Eqx '[[:space:]]*Verdict: APPROVE[[:space:]]*'
+critics=(earn-its-place-critic alignment-critic full-review-critic)
+verdicts() {
+  jq -rs '
+    (map(.message.content[]? | select(.type == "tool_result") | {key: .tool_use_id, value: .content}) | from_entries) as $r
+    | .[] | .message.content[]? | select(.type == "tool_use" and (.input.subagent_type // "" | endswith("-critic")))
+    | [.input.subagent_type, ($r[.id] | if type == "array" then map(.text? // empty) | join("\n") else . // "" end
+        | [splits("\n") | capture("^\\s*Verdict: (?<v>APPROVE|REJECT)\\s*$").v] | first // "FAIL")] | @tsv' "$tmp/events.jsonl"
+}
+approved() { verdicts | awk -v c="$1" '$1 == c {v = $2} END {exit v != "APPROVE"}'; }
+ordered() {
+  verdicts | awk -v cs="${critics[*]}" '
+    BEGIN {k = split(cs, c); n = 1}
+    $1 != c[n] {exit 1}
+    $2 == "REJECT" {n = 1}
+    $2 == "APPROVE" {n = n % k + 1}'
 }
 
 check result jq -e 'select(.type == "result") | .subtype == "success"' "$tmp/events.jsonl"
-for c in earn-its-place-critic alignment-critic full-review-critic; do
+for c in "${critics[@]}"; do
   check "$c" approved "$c"
 done
+check ordered ordered
 delivered 1
 exit "$fail"
