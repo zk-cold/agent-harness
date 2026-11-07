@@ -208,8 +208,39 @@ test_critic_hook() {
   for input in '"{"' '""' '{agent_type: 1}' '{agent_type: null}' '[]'; do
     same "$(hook PreToolUse "$input" | tail -n 1)" 2
   done
-  same "$(hook SubagentStop '{last_assistant_message: "Approved."}' CLAUDE_PLUGIN_ROOT="$here/../.." CLAUDE_PROJECT_DIR="$tmp")" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
-  same "$(hook SubagentStop '{last_assistant_message: "Approved."}' CLAUDE_PLUGIN_ROOT="$here/../..")" 0
+  local root=$here/../.. p=$tmp/project e
+  local reject=$'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
+  local -A in=([SubagentStop]='{last_assistant_message: "Approved."}'
+    [PreToolUse]='{agent_type: "full-review-critic", tool_input: {message: "Approved."}}')
+  rm -rf "$p"
+  mkdir -p "$p/.claude"
+  cp "$root/.claude/settings.json" "$p/.claude/"
+  for e in "${!in[@]}"; do
+    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$tmp")" "$reject"
+    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
+    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root")" 0
+  done
+  cp -r "$root/.agent" "$p/"
+  for e in "${!in[@]}"; do
+    jq '.version = 2' "$root/.claude/settings.json" >"$p/.claude/settings.json"
+    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" 0
+    jq 'del(.hooks)' "$root/.claude/settings.json" >"$p/.claude/settings.json"
+    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
+    jq --arg e "$e" 'del(.hooks[$e])' "$root/.claude/settings.json" >"$p/.claude/settings.json"
+    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
+  done
+}
+
+test_plugin_loads() {
+  local root=$here/../.. out c
+  for c in agents commands; do claude plugin validate --strict "$(readlink -f "$root/$c")" >/dev/null; done
+  out=$(CLAUDE_CONFIG_DIR=$tmp/config claude --plugin-dir "$root" plugin details agent-harness)
+  loaded() { sed -n "s/^  $1 ([0-9]*)  //p" <<<"$out" | sed 's/  (.*//; s/, /\n/g' | sort; }
+  names() { ls "$root/.claude/$1" | sed -n 's/\.md$//p' | sort; }
+  same "$(sed -n 2p <<<"$out")" '  Source: agent-harness@inline'
+  same "$(loaded Agents)" "$(names agents)"
+  same "$(loaded Skills)" "$(names commands)"
+  same "$(loaded Hooks)" "$(jq -r '.hooks | keys[]' "$root/.claude/settings.json" | sort)"
 }
 
 governed() {
