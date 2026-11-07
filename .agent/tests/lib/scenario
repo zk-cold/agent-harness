@@ -7,7 +7,8 @@ echo "$tmp"
 mkdir "$repo"
 git -C "$root" ls-files -z -co --exclude-standard | (cd "$root" && tar --null -T - -c) | tar -x -C "$repo"
 sed -i 's/shut "$1" not_planned$/shut "$1" completed/' "$repo/.agent/scripts/roadmap-gh"
-[ "$("$repo/.agent/tests/scripts" 2>&1 | grep '^test_')" = test_close ]
+out=$("$repo/.agent/tests/scripts" 2>&1) || :
+[ "$(grep '^test_' <<<"$out")" = test_close ] || { printf '%s\n' "$out" >&2; exit 1; }
 git -C "$repo" init -q -b main
 git -C "$repo" add -A
 git -C "$repo" commit -qm seed

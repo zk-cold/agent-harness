@@ -3,7 +3,7 @@ set -euo pipefail
 [ "${LEAD_SCENARIO-}" = 1 ] || exit 0
 . "$(dirname "$0")/lib/scenario"
 f=.claude/commands/lead.md
-{ awk 'NR > 1 && /^---$/ {print; exit} 1' "$f"; echo 'Reply with exactly `Done.`'; } >"$tmp/lead.md"
+{ awk 'NR > 1 && /^---$/ {print; exit} 1' "$f"; echo 'Reply with exactly `Done.`; once told to end with the line `Awaiting user.`, do so.'; } >"$tmp/lead.md"
 mv "$tmp/lead.md" "$f"
 scenario /lead --include-hook-events
 

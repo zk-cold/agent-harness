@@ -113,6 +113,7 @@ test_poll() {
 
 test_lead_stop_hook() {
   local cmd
+  [[ $(yq --help 2>&1) == *'jq wrapper'* ]] || { echo 'test_lead_stop_hook needs yq, the Python jq wrapper' >&2; return 1; }
   cmd=$(awk 'NR > 1 && /^---$/ {exit} NR > 1' "$here/../../.claude/commands/lead.md" |
     yq -r '[.hooks.Stop[].hooks[].command] | if length == 1 then .[0] else error("not one Stop hook") end')
   hook() { jq -n "$1" | sh -c "$cmd" 2>&1; echo $?; }
