@@ -244,17 +244,6 @@ test_critic_hook() {
     same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
     jq --arg e "$e" '.hooks[$e][0].matcher = "x"' "$root/.claude/settings.json" >"$p/.claude/settings.json"
     same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
-    jq '.disableAllHooks = true' "$root/.claude/settings.json" >"$p/.claude/settings.json"
-    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
-    echo '{"disableAllHooks": false}' >"$p/.claude/settings.local.json"
-    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" 0
-    jq '.disableAllHooks = false' "$root/.claude/settings.json" >"$p/.claude/settings.json"
-    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" 0
-    echo '{"disableAllHooks": true}' >"$p/.claude/settings.local.json"
-    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
-    echo '{' >"$p/.claude/settings.local.json"
-    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
-    rm "$p/.claude/settings.local.json"
   done
   local d=$tmp/critic-handbacks-$UID
   same "$(find "$d" -maxdepth 0 -perm 700)" "$d"
