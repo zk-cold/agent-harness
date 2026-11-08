@@ -3,8 +3,12 @@ set -euo pipefail
 r='repos/{owner}/{repo}'
 trusted='select(.author_association | IN("OWNER", "MEMBER", "COLLABORATOR"))'
 
+subs() {
+  gh api --paginate "$r/issues/$1/sub_issues?per_page=100" --jq ".[] | select(.repository_url == \"$self\") | $2"
+}
+
 open_subs() {
-  gh api --paginate "$r/issues/$1/sub_issues?per_page=100" --jq '.[] | select(.state == "open") | .number'
+  subs "$1" 'select(.state == "open") | .number'
 }
 
 items() {
@@ -27,8 +31,7 @@ candidates() {
 
 descendants() {
   local n ok title
-  gh api --paginate "$r/issues/$1/sub_issues?per_page=100" \
-    --jq '.[] | [.number, .state == "open" and (.author_association | IN("OWNER", "MEMBER", "COLLABORATOR")), .title] | @tsv' |
+  subs "$1" '[.number, .state == "open" and (.author_association | IN("OWNER", "MEMBER", "COLLABORATOR")), .title] | @tsv' |
     while IFS=$'\t' read -r n ok title; do
       [ "$ok" = false ] || printf '%s\t%s\n' "$n" "$title"
       descendants "$n"
@@ -67,7 +70,7 @@ close() {
 complete() {
   local parent subs
   shut "$1" completed
-  parent=$(gh api "$r/issues/$1" --jq '(.parent_issue_url // "" | split("/") | last) // ""')
+  parent=$(gh api "$r/issues/$1" --jq ".parent_issue_url // \"\" | select(startswith(\"$self/issues/\")) | ltrimstr(\"$self/issues/\")")
   [ -n "$parent" ] || return 0
   subs=$(open_subs "$parent")
   [ -n "$subs" ] || complete "$parent"
@@ -78,6 +81,8 @@ approved() {
 }
 
 case $1 in
-  candidates | descendants | list | show | add | edit | close | complete | approved) "$@" ;;
+  candidates | descendants | close | complete) self=$(gh api "$r" --jq .url) ;;
+  list | show | add | edit | approved) ;;
   *) exit 2 ;;
 esac
+"$@"
