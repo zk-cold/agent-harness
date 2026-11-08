@@ -6,10 +6,15 @@ p=${CLAUDE_PROJECT_DIR-}
     any(m; IN($s[0] | m))' "$p/.claude/settings.json" >/dev/null 2>&1 || exit 0
 d=${TMPDIR:-/tmp}/critic-handbacks-$UID
 mkdir -m 700 "$d" 2>/dev/null
-own() { [ ! -L "$d" ] && [ -O "$d" ]; }
+own() { [ ! -L "$d" ] && [ -O "$d" ] && chmod 700 "$d"; }
+die() { echo "$*" >&2; exit 1; }
 r=
 case $1 in
-  report) [[ $2 =~ ^[^/]+$ ]] && own && exec cat "$d/$2.report"; exit 1 ;;
+  report) f=$d/$2.report
+    [[ $2 =~ ^[^/]+$ ]] || die "$2: invalid agent ID"
+    own || die "$d: not a directory you own"
+    [ -f "$f" ] || die "$2: no unread report"
+    cat "$f" && rm "$f"; exit ;;
   PreToolUse)
     m=$(jq -ner 'input | select(has("agent_type") and (.agent_type | endswith("critic"))) | .tool_input.message // ""') ||
       { [ $? = 4 ] && exit 0; exit 2; } ;;
@@ -21,4 +26,4 @@ case $1 in
     { own && [[ $id =~ ^[^/]+$ ]] && r=$d/$id.report && m=$(<"$d/$id") && rm "$d/$id"; } 2>/dev/null || m=$(jq -r '.last_assistant_message // empty' <<<"$i") ;;
 esac
 printf %s "${m-}" | "$(dirname "$0")/verdict" || exit 2
-[ -z "$r" ] || printf %s "$m" >"$r"
+[ -z "$r" ] || { printf %s "$m" >"$r"; find "$d" -name '*.report' -mmin +1440 -delete; }
