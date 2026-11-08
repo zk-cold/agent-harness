@@ -6,7 +6,7 @@ Where left unsubstituted, this repo's root.
 # Invariants
 
 ## Roadmap
-This repo's roadmap, with backend `gh`, is its open GitHub issues, excluding pull requests and issues likely to fail `.agent/scripts/governance-growth`.
+This repo's roadmap, with backend `gh`, is its open GitHub issues, excluding those likely to fail `.agent/scripts/governance-growth`.
 
 ## Merging
 Merge only branches `.agent/scripts/governance-growth <branch> <its item>` accepts.
