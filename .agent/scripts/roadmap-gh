@@ -25,6 +25,16 @@ candidates() {
   done
 }
 
+descendants() {
+  local n ok title
+  gh api --paginate "$r/issues/$1/sub_issues?per_page=100" \
+    --jq '.[] | [.number, .state == "open" and (.author_association | IN("OWNER", "MEMBER", "COLLABORATOR")), .title] | @tsv' |
+    while IFS=$'\t' read -r n ok title; do
+      [ "$ok" = false ] || printf '%s\t%s\n' "$n" "$title"
+      descendants "$n"
+    done
+}
+
 show() {
   gh api "$r/issues/$1" --jq "$trusted"' | .title + "\n\n" + (.body // "") + "\n"'
   gh api --paginate "$r/issues/$1/comments?per_page=100" --jq ".[] | $trusted"' | .body + "\n"'
@@ -68,6 +78,6 @@ approved() {
 }
 
 case $1 in
-  candidates | list | show | add | edit | close | complete | approved) "$@" ;;
+  candidates | descendants | list | show | add | edit | close | complete | approved) "$@" ;;
   *) exit 2 ;;
 esac

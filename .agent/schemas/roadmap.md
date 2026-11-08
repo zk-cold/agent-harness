@@ -9,6 +9,7 @@ Running `.agent/scripts/roadmap <backend> <target repo path>`, with the roadmap'
 - `show <item>`: showing an item, printing only its content written by the target repo's owner, members or collaborators.
 - `list`: listing the open items authored by the target repo's owner, members or collaborators.
 - `candidates`: listing candidates, the items `list` lists that have no open sub-items.
+- `descendants <item>`: listing the items `list` lists that descend from `<item>`.
 
 # Invariants
 
