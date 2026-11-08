@@ -22,6 +22,6 @@ Label or close no roadmap items.
 
 ## Report
 Each report starts with these labeled parts, in order, omitting an empty one:
-1. `Verdict`: `READY` if you were told that all three approvals stand and have not changed the work since, otherwise `NOT READY`.
+1. `Verdict`: `READY` if you were told that all three approvals stand and have not changed the work since, other than by merging the root branch into your branch without conflict after which the tests and check pass, otherwise `NOT READY`.
 2. `Unhandled Findings`: each entry of the reviews' `Findings` last sent to you that you have not handled.
 3. `Worktree`: your worktree's path.
