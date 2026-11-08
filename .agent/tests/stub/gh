@@ -16,16 +16,18 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$method" ] || { [ "$fields" = '{}' ] && method=GET || method=POST; }
 IFS=/ read -r _ _ _ _ n kind <<<"$path"
+[ "$path" != 'repos/{owner}/{repo}' ] || kind=repo
 state=$(git rev-parse --git-common-dir)/issues.json
 result=$(jq -c --arg op "$method ${kind:-${n:+issue}}" --argjson n "${n:-0}" --argjson f "$fields" '
   . as $all
-  | def view: . as $i | del(.parent, .comments) + {
+  | def view: . as $i | {repository_url: "self"} + del(.parent, .comments) + {
       id: (1000 + .number),
       sub_issues_summary: {total: [$all[] | select(.parent == $i.number)] | length},
-      parent_issue_url: (if .parent then "issues/\(.parent)" else null end)};
+      parent_issue_url: (if .parent then "\([$all[] | select(.number == $i.parent)][0].repository_url // "self")/issues/\(.parent)" else null end)};
     def one($m): [.[] | select(.number == $m)] | if length == 1 then .[0] else error end;
     def put($m; $g): map(if .number == $m then . + $g else . end);
-    if $op == "GET " then {state: ., out: [.[] | select(.state == "open") | view]}
+    if $op == "GET repo" then {state: ., out: {url: "self"}}
+    elif $op == "GET " then {state: ., out: [.[] | select(.state == "open" and .repository_url == null) | view]}
     elif $op == "POST " then
       ((map(.number) | max) + 1) as $m
       | . + [$f + {number: $m, state: "open", author_association: "OWNER", comments: []}]

@@ -49,6 +49,21 @@ test_descendants() {
   same "$(road descendants 1)" $'8\teight\n10\tt'
 }
 
+test_other_repo_subs() {
+  seed
+  jq '. + [
+      {number: 10, title: "ten", state: "open", author_association: "OWNER", parent: 9, repository_url: "other"},
+      {number: 11, title: "eleven", state: "open", author_association: "OWNER", parent: 10},
+      {number: 12, title: "twelve", state: "open", author_association: "OWNER", parent: 6, repository_url: "other"}
+    ]' "$issues" >"$issues.new" && mv "$issues.new" "$issues"
+  same "$(road candidates)" $'8\teight\n9\tnine\n11\televen'
+  same "$(road descendants 6)" $'9\tnine'
+  road complete 9
+  same "$(states | cut -f 1-3 | sed -n '6p;9,12p')" $'6\tclosed\tcompleted\n9\tclosed\tcompleted\n10\topen\t\n11\topen\t\n12\topen\t'
+  road complete 11
+  same "$(states | cut -f 1-3 | sed -n 10,11p)" $'10\topen\t\n11\tclosed\tcompleted'
+}
+
 test_show() {
   seed
   same "$(road show 1)" $'one\n\nb1\n\nc1'
