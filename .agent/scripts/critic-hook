@@ -12,9 +12,9 @@ case $1 in
       { [ $? = 4 ] && exit 0; exit 2; } ;;
   PostToolUse)
     mkdir -m 700 "$d" 2>/dev/null; own && jq -j 'select((.agent_type // "" | endswith("critic")) and .tool_response.success == true) |
-      "\(.agent_id)\n\(.tool_input.message)"' | { read -r id && cat >"$d/$id"; }
+      "\(.agent_id)\n\(.tool_input.message)"' | { read -r id && [[ $id != */* ]] && cat >"$d/$id"; }
     exit 0 ;;
-  SubagentStop) i=$(cat) f=$d/$(jq -r .agent_id <<<"$i")
-    { own && m=$(<"$f") && rm "$f"; } 2>/dev/null || m=$(jq -r '.last_assistant_message // empty' <<<"$i") ;;
+  SubagentStop) i=$(cat) id=$(jq -r .agent_id <<<"$i") f=$d/$id
+    { own && [[ $id != */* ]] && m=$(<"$f") && rm "$f"; } 2>/dev/null || m=$(jq -r '.last_assistant_message // empty' <<<"$i") ;;
 esac
 printf %s "${m-}" | "$(dirname "$0")/verdict" || exit 2
