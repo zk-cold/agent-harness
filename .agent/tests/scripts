@@ -223,7 +223,7 @@ test_critic_hook() {
   hook() {
     local cmd
     cmd=$(jq -r --arg e "$1" '.hooks[$e][0].hooks[0].command' "$here/../../.claude/settings.json")
-    env CLAUDE_PROJECT_DIR="$here/../.." TMPDIR="$tmp" "${@:3}" sh -c "$cmd" <<<"$(jq -nr "$2")" 2>&1; echo $?
+    env CLAUDE_PROJECT_DIR="$here/../.." GIT_DIR="$tmp/git" "${@:3}" sh -c "$cmd" <<<"$(jq -nr "$2")" 2>&1; echo $?
   }
   same "$(hook SubagentStop '{last_assistant_message: "Verdict: APPROVE"}')" $'APPROVE\n0'
   same "$(hook SubagentStop '{last_assistant_message: "Approved."}')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
@@ -235,13 +235,14 @@ test_critic_hook() {
   for input in '"{"' '""' '{agent_type: 1}' '{agent_type: null}' '[]'; do
     same "$(hook PreToolUse "$input" | tail -n 1)" 2
   done
-  local root=$here/../.. p=$tmp/project e d=$tmp/critic-handbacks-$UID
+  local root=$here/../.. p=$tmp/project e d=$tmp/git/critic-handbacks w=$tmp/hb
   local reject=$'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
   post() {
     hook PostToolUse "{agent_type: \"$1\", agent_id: \"${4-a}\", tool_input: {message: \"$2\"}, tool_response: {success: $3}}"
   }
   stop() { hook SubagentStop "{agent_id: \"$1\"}"; }
-  report() { env TMPDIR="$tmp" "$scripts/critic-hook" report "$1" 2>&1 || echo "$?"; }
+  report() { env GIT_DIR="$tmp/git" "$scripts/critic-hook" report "$1" 2>&1 || echo "$?"; }
+  git init -q --bare "$tmp/git"
   same "$(post full-review-critic 'Verdict: APPROVE' false)" 0
   same "$(post impl 'Verdict: APPROVE' true)" 0
   same "$(stop a)" "$reject"
@@ -280,9 +281,6 @@ test_critic_hook() {
     same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
   done
   same "$(find "$d" -maxdepth 0 -perm 700)" "$d"
-  chmod 755 "$d"
-  same "$(report a)" $'a: no unread report\n1'
-  same "$(find "$d" -maxdepth 0 -perm 700)" "$d"
   echo 'Verdict: APPROVE' >"$tmp/x"
   same "$(stop ../x)" "$reject"
   [ ! -e "$tmp/x.report" ]
@@ -291,19 +289,13 @@ test_critic_hook() {
   rm "$tmp/x.report"
   same "$(post full-review-critic 'Verdict: APPROVE' true ../x)" 0
   [ ! -e "$tmp/x" ]
-  refused() {
-    echo 'Verdict: APPROVE' >"$d/a"
-    same "$(stop a)" "$reject"
-    mv "$d/a" "$d/a.report"
-    same "$(report a)" "$d: not a directory you own"$'\n1'
-    rm "$d/a.report"
-    same "$(post full-review-critic 'Verdict: APPROVE' true)" 0
-    same "$(ls "$d")" ''
-  }
-  mv "$d" "$tmp/handbacks"
-  ln -s handbacks "$d"
-  refused
-  [ "$UID" != 0 ] || { rm "$d"; mv "$tmp/handbacks" "$d"; chown 1 "$d"; refused; }
+  same "$(cd "$tmp" && env GIT_DIR="$tmp/none" "$scripts/critic-hook" report a 2>&1; echo $?)" "$tmp: not in a git repo"$'\n1'
+  git init -q "$w"
+  git -C "$w" -c user.name=t -c user.email=t@t commit -q --allow-empty -m a
+  git -C "$w" worktree add -q "$w-wt"
+  jq -n '{agent_id: "w", last_assistant_message: "Verdict: APPROVE"}' |
+    env -u GIT_DIR CLAUDE_PROJECT_DIR="$w" "$scripts/critic-hook" SubagentStop >/dev/null
+  same "$(cd "$w-wt" && env -u GIT_DIR -u CLAUDE_PROJECT_DIR "$scripts/critic-hook" report w)" 'Verdict: APPROVE'
 }
 
 test_plugin_loads() {

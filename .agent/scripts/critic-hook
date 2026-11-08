@@ -4,15 +4,14 @@ p=${CLAUDE_PROJECT_DIR-}
   ! jq -e --arg e "$1" --slurpfile s "$CLAUDE_PLUGIN_ROOT/.claude/settings.json" '
     def m: .hooks[$e][]? | select(any(.hooks[]?.command; contains(".agent/scripts/critic-hook"))) | .matcher;
     any(m; IN($s[0] | m))' "$p/.claude/settings.json" >/dev/null 2>&1 || exit 0
-d=${TMPDIR:-/tmp}/critic-handbacks-$UID
-mkdir -m 700 "$d" 2>/dev/null
-own() { [ ! -L "$d" ] && [ -O "$d" ] && chmod 700 "$d"; }
+d=$(git -C "$p" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)/critic-handbacks || d=
+own() { [ -n "$d" ] && { mkdir -m 700 "$d" 2>/dev/null; [ -d "$d" ]; }; }
 die() { echo "$*" >&2; exit 1; }
 r=
 case $1 in
   report) f=$d/$2.report
     [[ $2 =~ ^[^/]+$ ]] || die "$2: invalid agent ID"
-    own || die "$d: not a directory you own"
+    own || die "$PWD: not in a git repo"
     [ -f "$f" ] || die "$2: no unread report"
     cat "$f" && rm "$f"; exit ;;
   PreToolUse)
