@@ -1,5 +1,8 @@
 # Definitions
 
+## Roadmap
+The roadmap the target repo's governance designates.
+
 ## Roadmap Operations
 Running `.agent/scripts/roadmap <backend> <target repo path>`, with the roadmap's backend, followed by one of:
 - `add <title> <body> [<parent>]`: adding a roadmap item, as a sub-item of `<parent>` if given, and printing its ID.
@@ -12,6 +15,9 @@ Running `.agent/scripts/roadmap <backend> <target repo path>`, with the roadmap'
 - `descendants <item>`: listing the items `list` lists that descend from `<item>`.
 
 # Invariants
+
+## Roadmap Designation
+Target repo governance must designate a roadmap and its backend.
 
 ## Roadmap Backends
 Each `.agent/scripts/roadmap-<backend>` must implement `## Roadmap Operations`.

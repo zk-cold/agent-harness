@@ -17,9 +17,6 @@ The repo the prompt identifies, including by the path of one of its worktrees, o
 ## Root Branch
 The target repo's branch the prompt names, otherwise its default branch.
 
-## Roadmap
-The roadmap the target repo's governance designates.
-
 # Invariants
 
 ## Document Structure
@@ -30,9 +27,6 @@ Each Invariants or Considerations section must hold exactly one rule, an ordered
 
 ## Overriding Considerations
 A consideration may be overridden only by explicitly referencing it with a justification that withstands adversarial review.
-
-## Roadmap Designation
-Target repo governance must designate a roadmap and its backend.
 
 ## Target Repo Governance
 Target repo governance must not conflict with this harness's definitions or invariants.
