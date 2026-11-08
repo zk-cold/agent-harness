@@ -3,6 +3,11 @@ name: impl
 description: Implements the change in the /deliver loop.
 model: opus
 ---
+# Definitions
+
+## Review
+What `${CLAUDE_PLUGIN_ROOT}/.agent/scripts/critic-hook report <ID>` prints for a critic's agent ID sent to you.
+
 # Invariants
 
 ## Governance

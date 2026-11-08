@@ -241,6 +241,7 @@ test_critic_hook() {
     hook PostToolUse "{agent_type: \"$1\", agent_id: \"${4-a}\", tool_input: {message: \"$2\"}, tool_response: {success: $3}}"
   }
   stop() { hook SubagentStop "{agent_id: \"$1\"}"; }
+  report() { env TMPDIR="$tmp" "$scripts/critic-hook" report "$1"; }
   same "$(post full-review-critic 'Verdict: APPROVE' false)" 0
   same "$(post impl 'Verdict: APPROVE' true)" 0
   same "$(stop a)" "$reject"
@@ -249,7 +250,12 @@ test_critic_hook() {
   same "$(post full-review-critic 'Verdict: APPROVE' true)" 0
   same "$(stop b)" "$reject"
   same "$(stop a)" $'APPROVE\n0'
+  same "$(report a)" 'Verdict: APPROVE'
   same "$(stop a)" "$reject"
+  same "$(report a)" 'Verdict: APPROVE'
+  report b 2>/dev/null && return 1
+  same "$(hook SubagentStop '{agent_id: "c", last_assistant_message: "Verdict: REJECT\nRejection Grounds: r"}')" $'REJECT\n0'
+  same "$(report c)" $'Verdict: REJECT\nRejection Grounds: r'
   local -A in=([SubagentStop]='{last_assistant_message: "Approved."}'
     [PreToolUse]='{agent_type: "full-review-critic", tool_input: {message: "Approved."}}')
   rm -rf "$p"
@@ -275,16 +281,22 @@ test_critic_hook() {
   same "$(find "$d" -maxdepth 0 -perm 700)" "$d"
   echo 'Verdict: APPROVE' >"$tmp/x"
   same "$(stop ../x)" "$reject"
-  rm "$tmp/x"
+  [ ! -e "$tmp/x.report" ]
+  mv "$tmp/x" "$tmp/x.report"
+  report ../x 2>/dev/null && return 1
+  rm "$tmp/x.report"
   same "$(post full-review-critic 'Verdict: APPROVE' true ../x)" 0
   [ ! -e "$tmp/x" ]
   refused() {
     echo 'Verdict: APPROVE' >"$d/a"
     same "$(stop a)" "$reject"
-    rm "$d/a"
+    mv "$d/a" "$d/a.report"
+    report a 2>/dev/null && return 1
+    rm "$d/a.report"
     same "$(post full-review-critic 'Verdict: APPROVE' true)" 0
     same "$(ls "$d")" ''
   }
+  rm "$d"/*.report
   mv "$d" "$tmp/handbacks"
   ln -s handbacks "$d"
   refused
