@@ -13,8 +13,8 @@ case $1 in
     [[ $2 =~ ^[^/]+$ ]] || die "$2: invalid agent ID"
     [ -n "$d" ] || die "${p:-$PWD}: not in a git repo"
     own || die "$d: cannot create directory"
-    [ -f "$f" ] || die "$2: no unread report"
-    cat "$f" && rm "$f"; exit ;;
+    [ -f "$f" ] || die "$2: no report"
+    cat "$f"; exit ;;
   PreToolUse)
     m=$(jq -ner 'input | select(has("agent_type") and (.agent_type | endswith("critic"))) | .tool_input.message // ""') ||
       { [ $? = 4 ] && exit 0; exit 2; } ;;
