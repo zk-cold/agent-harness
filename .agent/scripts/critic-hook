@@ -11,7 +11,8 @@ r=
 case $1 in
   report) f=$d/$2.report
     [[ $2 =~ ^[^/]+$ ]] || die "$2: invalid agent ID"
-    own || die "$PWD: not in a git repo"
+    [ -n "$d" ] || die "${p:-$PWD}: not in a git repo"
+    own || die "$d: cannot create directory"
     [ -f "$f" ] || die "$2: no unread report"
     cat "$f" && rm "$f"; exit ;;
   PreToolUse)
@@ -25,4 +26,4 @@ case $1 in
     { own && [[ $id =~ ^[^/]+$ ]] && r=$d/$id.report && m=$(<"$d/$id") && rm "$d/$id"; } 2>/dev/null || m=$(jq -r '.last_assistant_message // empty' <<<"$i") ;;
 esac
 printf %s "${m-}" | "$(dirname "$0")/verdict" || exit 2
-[ -z "$r" ] || { printf %s "$m" >"$r"; find "$d" -name '*.report' -mmin +1440 -delete; }
+[ -z "$r" ] || { printf %s "$m" >"$r" && find "$d" -ignore_readdir_race -type f -mmin +1440 -delete; }

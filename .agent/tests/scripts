@@ -252,13 +252,19 @@ test_critic_hook() {
   same "$(stop b)" "$reject"
   same "$(stop a)" $'APPROVE\n0'
   same "$(stop a)" "$reject"
-  touch -t 202001010000 "$d/old.report"
-  same "$(hook SubagentStop '{agent_id: "c", last_assistant_message: "Verdict: REJECT\nRejection Grounds: r"}')" $'REJECT\n0'
-  [ ! -e "$d/old.report" ]
+  (cd "$d" && seq 2000 | sed 's/^/old/; /[02468]$/s/$/.report/' | xargs touch -t 202001010000)
+  for i in 1 2 3 4 5 6 7 8; do
+    hook SubagentStop "{agent_id: \"c$i\", last_assistant_message: \"Verdict: REJECT\\nRejection Grounds: r\"}" >"$tmp/race$i" &
+  done
+  wait
+  for i in 1 2 3 4 5 6 7 8; do same "$(<"$tmp/race$i")" $'REJECT\n0'; done
+  [ -z "$(find "$d" -name 'old*')" ]
+  mkdir "$d/e.report"
+  same "$(hook SubagentStop '{agent_id: "e", last_assistant_message: "Verdict: APPROVE"}' | sed -n '1p;$p')" $'APPROVE\n1'
   same "$(report a)" 'Verdict: APPROVE'
   same "$(report a)" $'a: no unread report\n1'
   same "$(report b)" $'b: no unread report\n1'
-  same "$(report c)" $'Verdict: REJECT\nRejection Grounds: r'
+  same "$(report c1)" $'Verdict: REJECT\nRejection Grounds: r'
   local -A in=([SubagentStop]='{last_assistant_message: "Approved."}'
     [PreToolUse]='{agent_type: "full-review-critic", tool_input: {message: "Approved."}}')
   rm -rf "$p"
@@ -289,7 +295,11 @@ test_critic_hook() {
   rm "$tmp/x.report"
   same "$(post full-review-critic 'Verdict: APPROVE' true ../x)" 0
   [ ! -e "$tmp/x" ]
-  same "$(cd "$tmp" && env GIT_DIR="$tmp/none" "$scripts/critic-hook" report a 2>&1; echo $?)" "$tmp: not in a git repo"$'\n1'
+  same "$(cd "$tmp" && env -u CLAUDE_PROJECT_DIR GIT_DIR="$tmp/none" "$scripts/critic-hook" report a 2>&1; echo $?)" "$tmp: not in a git repo"$'\n1'
+  same "$(cd "$tmp/road" && env -u GIT_DIR CLAUDE_PROJECT_DIR="$p" "$scripts/critic-hook" report a 2>&1; echo $?)" "$p: not in a git repo"$'\n1'
+  git init -q --bare "$tmp/nodir"
+  touch "$tmp/nodir/critic-handbacks"
+  same "$(env GIT_DIR="$tmp/nodir" "$scripts/critic-hook" report a 2>&1; echo $?)" "$tmp/nodir/critic-handbacks: cannot create directory"$'\n1'
   git init -q "$w"
   git -C "$w" -c user.name=t -c user.email=t@t commit -q --allow-empty -m a
   git -C "$w" worktree add -q "$w-wt"
