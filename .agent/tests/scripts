@@ -262,8 +262,8 @@ test_critic_hook() {
   mkdir "$d/e.report"
   same "$(hook SubagentStop '{agent_id: "e", last_assistant_message: "Verdict: APPROVE"}' | sed -n '1p;$p')" $'APPROVE\n1'
   same "$(report a)" 'Verdict: APPROVE'
-  same "$(report a)" $'a: no unread report\n1'
-  same "$(report b)" $'b: no unread report\n1'
+  same "$(report a)" 'Verdict: APPROVE'
+  same "$(report b)" $'b: no report\n1'
   same "$(report c1)" $'Verdict: REJECT\nRejection Grounds: r'
   local -A in=([SubagentStop]='{last_assistant_message: "Approved."}'
     [PreToolUse]='{agent_type: "full-review-critic", tool_input: {message: "Approved."}}')
