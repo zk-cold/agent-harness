@@ -83,7 +83,12 @@ PATH=$tmp/bin:$PATH hours=4 usd=200 scenario /lead Skill --include-hook-events
 jq -nR --rawfile c "$tmp/closed" --slurpfile s "$tmp/seeded.json" '
   [inputs | fromjson? // {}] as $e
   | [$s[0][5:][] | [.number, .body]] as $d
-  | [($c | splits("\n") | select(. != "") | split(" ") | map(tonumber) | [.[0] - 0.5, "end", .[1]]),
+  | [range($e | length) as $i | $e[$i]
+      | select(.type == "assistant" and .parent_tool_use_id == null and any(.message.content[]?; .type == "tool_use"))
+      | [$i, .message.id]] as $u
+  | [($c | splits("\n") | select(. != "") | split(" ") | map(tonumber) as [$l, $n]
+      | ([$u[] | select(.[0] < $l)] | last[1]) as $m
+      | [(first($u[] | select(.[1] == $m) | .[0]) // $l) - 0.5, "end", $n]),
      (range($e | length) as $i | $e[$i]
       | if .type == "assistant" and .parent_tool_use_id == null then
           .message.content[]? | select(.type == "tool_use") | . as $t
