@@ -291,6 +291,7 @@ rejects() {
 
 test_check() {
   "$scripts/check" "$here/../.."
+  same "$("$scripts/check" 2>&1; echo $?)" "usage: $scripts/check <repo path>"$'\n2'
   governed '# Invariants\n\n## A\nx\n```\n# Notes\n```\n' CLAUDE.md
   "$scripts/check" "$tmp/repo"
   governed '---\nname: a\n---\n# Definitions\n## A\nx\n' .claude/agents/a.md
