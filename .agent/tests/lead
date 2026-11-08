@@ -35,7 +35,10 @@ jq -n '[
    body: "`test_check` in `.agent/tests/scripts` fails because `check` accepts a roadmap backend that is not executable."},
   {number: 10, author_association: "OWNER", labels: [{name: "approved"}],
    title: "Make `change-under-review` leave out ignored files",
-   body: "`test_change_under_review` in `.agent/tests/scripts` fails because `change-under-review` shows files git ignores."}
+   body: "`test_change_under_review` in `.agent/tests/scripts` fails because `change-under-review` shows files git ignores."},
+  {number: 11, author_association: "NONE", labels: [{name: "approved"}],
+   title: "Make `verdict` print its usage when given arguments",
+   body: "`verdict` ignores its arguments instead of printing `usage: verdict <response` to stderr and exiting 2."}
 ] | map({state: "open", comments: []} + .)' >.git/issues.json
 cp .git/issues.json "$tmp/seeded.json"
 : >"$tmp/closed"
@@ -46,15 +49,30 @@ s=$repo/.git/issues.json
 exec 9>"$tmp/lock"
 flock 9
 [[ \$* != *' -'[fF]' '* ]] || rm -f "$tmp/listed"
-if [[ \$* =~ /issues/([6-9]|10)\ .*state=closed ]]; then
+if [[ \$* =~ /issues/([6-9]|1[01])\ .*state=closed ]]; then
   echo "\$(wc -l <"$tmp/events.jsonl") \${BASH_REMATCH[1]}" >>"$tmp/closed"
 fi
 if [[ \$* == *'issues?state=open'* ]]; then
   jq '[.[] | select(.state == "open") | .number] as \$o
     | map(if .number > 10 and (.parent | IN(\$o[]) | not) then .author_association = "NONE" else . end)' "\$s" >"\$s.new" && mv "\$s.new" "\$s"
-  if jq -e 'all(.[5:10][]; .state == "closed")' "\$s" >/dev/null && [[ \$(ps -ww -o args= -p "\$PPID") == *' candidates' ]]; then
-    [ ! -e "$tmp/listed" ] || { touch "$tmp/stop"; flock -u 9; sleep 300; }
-    touch "$tmp/listed"
+  if [[ \$(ps -ww -o args= -p "\$PPID") == *' candidates' ]]; then
+    if [ ! -e "$tmp/parent" ]; then
+      p=\$(jq -r --rawfile e "$tmp/events.jsonl" --slurpfile d "$tmp/seeded.json" '
+        [\$e | splits("\n") | fromjson? | select(.type == "assistant" and .parent_tool_use_id == null)
+          | .message.content[]? | select(.type == "tool_use")
+          | select(.name == "Skill" and .input.skill == "deliver" or .name == "Agent" and .input.subagent_type == "impl")
+          | .input | .. | strings] as \$t
+        | [.[] | select(.state == "open") | .number] as \$o
+        | first(\$d[0][5:10][] | select(.number | IN(\$o[])) | select(.body as \$b | any(\$t[]; contains(\$b))) | .number) // empty' "\$s")
+      [ -z "\$p" ] || {
+        jq --argjson p "\$p" 'map(if .number == 11 then . + {parent: \$p, author_association: "OWNER"} else . end)' "\$s" >"\$s.new" && mv "\$s.new" "\$s"
+        echo "\$p" >"$tmp/parent"
+      }
+    fi
+    if jq -e 'all(.[5:10][]; .state == "closed")' "\$s" >/dev/null; then
+      [ ! -e "$tmp/listed" ] || { touch "$tmp/stop"; flock -u 9; sleep 300; }
+      touch "$tmp/listed"
+    fi
   fi
 fi
 exec "$here/stub/gh" "\$@"
@@ -88,6 +106,7 @@ check relisted test -e "$tmp/stop"
 check picked jq -e '[.[] | select(.k == "start") | .n] | all(. != null) and unique == [6, 7, 8, 9, 10]' "$tmp/timeline.json"
 check capped jq -e '[.[].run | unique | length] | max == 3' "$tmp/timeline.json"
 check overlap jq -e 'all(.[]; .run | contains([6, 7]) | not)' "$tmp/timeline.json"
+check descendant jq -e --slurpfile p "$tmp/parent" 'all(.[]; .run | contains([$p[0], 11]) | not)' "$tmp/timeline.json"
 check listed jq -e 'any(.[]; .k == "list" and .run != [])' "$tmp/timeline.json"
 check polled jq -e 'any(.[]; .k == "poll") and all(.[]; .k != "poll" or .run == [])' "$tmp/timeline.json"
 check awaited jq -e 'any(.[]; .k == "await" and .run != [])' "$tmp/timeline.json"
