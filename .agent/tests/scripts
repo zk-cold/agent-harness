@@ -256,6 +256,19 @@ test_critic_hook() {
     same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
     rm "$p/.claude/settings.local.json"
   done
+  local d=$tmp/critic-handbacks-$UID
+  same "$(find "$d" -maxdepth 0 -perm 700)" "$d"
+  refused() {
+    echo 'Verdict: APPROVE' >"$d/a"
+    same "$(stop a)" "$reject"
+    rm "$d/a"
+    same "$(post full-review-critic 'Verdict: APPROVE' true)" 0
+    same "$(ls "$d")" ''
+  }
+  mv "$d" "$tmp/handbacks"
+  ln -s handbacks "$d"
+  refused
+  [ "$UID" != 0 ] || { rm "$d"; mv "$tmp/handbacks" "$d"; chown 1 "$d"; refused; }
 }
 
 test_plugin_loads() {
