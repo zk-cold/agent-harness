@@ -38,6 +38,17 @@ test_candidates() {
   same "$(road candidates)" $'6\tsix\n8\teight'
 }
 
+test_descendants() {
+  seed
+  same "$(road descendants 1)" $'2\ttwo\n8\teight'
+  same "$(road descendants 6)" $'9\tnine'
+  same "$(road descendants 8)" ''
+  jq '.[1].author_association = "NONE"' "$issues" >"$issues.new" && mv "$issues.new" "$issues"
+  same "$(road descendants 1)" $'8\teight'
+  road add t b 3 >/dev/null
+  same "$(road descendants 1)" $'8\teight\n10\tt'
+}
+
 test_show() {
   seed
   same "$(road show 1)" $'one\n\nb1\n\nc1'
@@ -303,7 +314,7 @@ test_check() {
   governed '---\nname: a\n# Invariants\n' .claude/agents/a.md
   rejects .claude/agents/a.md:3
   governed 'case $1 in\n  list | show | add | edit | close | complete) ;;\nesac\n' .agent/scripts/roadmap-x
-  rejects $'.agent/scripts/roadmap-x: not executable\n.agent/scripts/roadmap-x: candidates'
+  rejects $'.agent/scripts/roadmap-x: not executable\n.agent/scripts/roadmap-x: candidates\n.agent/scripts/roadmap-x: descendants'
   local h=$tmp/harness/.agent
   local f t v
   for s in governance-schema:Categories:cats 'roadmap:Roadmap Operations:ops' 'governance-schema:Governed Documents:docs'; do
