@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -uo pipefail
+[ $# = 1 ] || { echo "usage: $0 <repo path>" >&2; exit 2; }
 . "$(dirname "$0")/schema" || exit
 roadmap=$(dirname "$schema")/roadmap.md
 cats=$(listed Categories | paste -sd '|')
