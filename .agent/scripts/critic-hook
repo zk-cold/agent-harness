@@ -5,16 +5,20 @@ p=${CLAUDE_PROJECT_DIR-}
     def m: .hooks[$e][]? | select(any(.hooks[]?.command; contains(".agent/scripts/critic-hook"))) | .matcher;
     any(m; IN($s[0] | m))' "$p/.claude/settings.json" >/dev/null 2>&1 || exit 0
 d=${TMPDIR:-/tmp}/critic-handbacks-$UID
+mkdir -m 700 "$d" 2>/dev/null
 own() { [ ! -L "$d" ] && [ -O "$d" ]; }
+r=
 case $1 in
+  report) [[ $2 =~ ^[^/]+$ ]] && own && exec cat "$d/$2.report"; exit 1 ;;
   PreToolUse)
     m=$(jq -ner 'input | select(has("agent_type") and (.agent_type | endswith("critic"))) | .tool_input.message // ""') ||
       { [ $? = 4 ] && exit 0; exit 2; } ;;
   PostToolUse)
-    mkdir -m 700 "$d" 2>/dev/null; own && jq -j 'select((.agent_type // "" | endswith("critic")) and .tool_response.success == true) |
+    own && jq -j 'select((.agent_type // "" | endswith("critic")) and .tool_response.success == true) |
       "\(.agent_id)\n\(.tool_input.message)"' | { read -r id && [[ $id != */* ]] && cat >"$d/$id"; }
     exit 0 ;;
-  SubagentStop) i=$(cat) id=$(jq -r .agent_id <<<"$i") f=$d/$id
-    { own && [[ $id != */* ]] && m=$(<"$f") && rm "$f"; } 2>/dev/null || m=$(jq -r '.last_assistant_message // empty' <<<"$i") ;;
+  SubagentStop) i=$(cat) id=$(jq -r '.agent_id // ""' <<<"$i")
+    { own && [[ $id =~ ^[^/]+$ ]] && r=$d/$id.report && m=$(<"$d/$id") && rm "$d/$id"; } 2>/dev/null || m=$(jq -r '.last_assistant_message // empty' <<<"$i") ;;
 esac
 printf %s "${m-}" | "$(dirname "$0")/verdict" || exit 2
+[ -z "$r" ] || printf %s "$m" >"$r"
