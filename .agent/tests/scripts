@@ -235,13 +235,13 @@ test_critic_hook() {
   for input in '"{"' '""' '{agent_type: 1}' '{agent_type: null}' '[]'; do
     same "$(hook PreToolUse "$input" | tail -n 1)" 2
   done
-  local root=$here/../.. p=$tmp/project e
+  local root=$here/../.. p=$tmp/project e d=$tmp/critic-handbacks-$UID
   local reject=$'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
   post() {
     hook PostToolUse "{agent_type: \"$1\", agent_id: \"${4-a}\", tool_input: {message: \"$2\"}, tool_response: {success: $3}}"
   }
   stop() { hook SubagentStop "{agent_id: \"$1\"}"; }
-  report() { env TMPDIR="$tmp" "$scripts/critic-hook" report "$1"; }
+  report() { env TMPDIR="$tmp" "$scripts/critic-hook" report "$1" 2>&1 || echo "$?"; }
   same "$(post full-review-critic 'Verdict: APPROVE' false)" 0
   same "$(post impl 'Verdict: APPROVE' true)" 0
   same "$(stop a)" "$reject"
@@ -250,11 +250,13 @@ test_critic_hook() {
   same "$(post full-review-critic 'Verdict: APPROVE' true)" 0
   same "$(stop b)" "$reject"
   same "$(stop a)" $'APPROVE\n0'
-  same "$(report a)" 'Verdict: APPROVE'
   same "$(stop a)" "$reject"
-  same "$(report a)" 'Verdict: APPROVE'
-  report b 2>/dev/null && return 1
+  touch -t 202001010000 "$d/old.report"
   same "$(hook SubagentStop '{agent_id: "c", last_assistant_message: "Verdict: REJECT\nRejection Grounds: r"}')" $'REJECT\n0'
+  [ ! -e "$d/old.report" ]
+  same "$(report a)" 'Verdict: APPROVE'
+  same "$(report a)" $'a: no unread report\n1'
+  same "$(report b)" $'b: no unread report\n1'
   same "$(report c)" $'Verdict: REJECT\nRejection Grounds: r'
   local -A in=([SubagentStop]='{last_assistant_message: "Approved."}'
     [PreToolUse]='{agent_type: "full-review-critic", tool_input: {message: "Approved."}}')
@@ -277,13 +279,15 @@ test_critic_hook() {
     jq --arg e "$e" '.hooks[$e][0].matcher = "x"' "$root/.claude/settings.json" >"$p/.claude/settings.json"
     same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
   done
-  local d=$tmp/critic-handbacks-$UID
+  same "$(find "$d" -maxdepth 0 -perm 700)" "$d"
+  chmod 755 "$d"
+  same "$(report a)" $'a: no unread report\n1'
   same "$(find "$d" -maxdepth 0 -perm 700)" "$d"
   echo 'Verdict: APPROVE' >"$tmp/x"
   same "$(stop ../x)" "$reject"
   [ ! -e "$tmp/x.report" ]
   mv "$tmp/x" "$tmp/x.report"
-  report ../x 2>/dev/null && return 1
+  same "$(report ../x)" $'../x: invalid agent ID\n1'
   rm "$tmp/x.report"
   same "$(post full-review-critic 'Verdict: APPROVE' true ../x)" 0
   [ ! -e "$tmp/x" ]
@@ -291,12 +295,11 @@ test_critic_hook() {
     echo 'Verdict: APPROVE' >"$d/a"
     same "$(stop a)" "$reject"
     mv "$d/a" "$d/a.report"
-    report a 2>/dev/null && return 1
+    same "$(report a)" "$d: not a directory you own"$'\n1'
     rm "$d/a.report"
     same "$(post full-review-critic 'Verdict: APPROVE' true)" 0
     same "$(ls "$d")" ''
   }
-  rm "$d"/*.report
   mv "$d" "$tmp/handbacks"
   ln -s handbacks "$d"
   refused
