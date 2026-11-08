@@ -212,7 +212,7 @@ test_critic_hook() {
   local root=$here/../.. p=$tmp/project e
   local reject=$'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
   post() {
-    hook PostToolUse "{agent_type: \"$1\", agent_id: \"a\", tool_input: {message: \"$2\"}, tool_response: {success: $3}}"
+    hook PostToolUse "{agent_type: \"$1\", agent_id: \"${4-a}\", tool_input: {message: \"$2\"}, tool_response: {success: $3}}"
   }
   stop() { hook SubagentStop "{agent_id: \"$1\"}"; }
   same "$(post full-review-critic 'Verdict: APPROVE' false)" 0
@@ -247,6 +247,11 @@ test_critic_hook() {
   done
   local d=$tmp/critic-handbacks-$UID
   same "$(find "$d" -maxdepth 0 -perm 700)" "$d"
+  echo 'Verdict: APPROVE' >"$tmp/x"
+  same "$(stop ../x)" "$reject"
+  rm "$tmp/x"
+  same "$(post full-review-critic 'Verdict: APPROVE' true ../x)" 0
+  [ ! -e "$tmp/x" ]
   refused() {
     echo 'Verdict: APPROVE' >"$d/a"
     same "$(stop a)" "$reject"
