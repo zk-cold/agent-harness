@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[ $# -ge 4 ] && [[ $1 =~ ^(run|approved)$ ]] ||
+  { echo "usage: $0 run <worktree> <root branch> <critic> | approved <worktree> <root branch> <review ID>..." >&2; exit 2; }
+s=$(cd "$(dirname "$0")" && pwd)
+h=${s%/.agent/scripts}
+w=$(cd "$2" && pwd) b=$3
+d=$(git -C "$w" rev-parse --path-format=absolute --git-common-dir)/critic-reviews
+x=$(mktemp -d)
+trap 'rm -rf "$x"' EXIT
+fingerprint() {
+  (cd "$w" && export GIT_INDEX_FILE=$x/index && git read-tree HEAD && git add -A &&
+    git diff --cached --no-renames --no-ext-diff --no-textconv --no-color "$(git merge-base HEAD "$b")" |
+    awk '/^index /{i = $0; next} /^Binary files /{print i} !/^@@/' | git hash-object --stdin)
+}
+change=$(fingerprint)
+if [ "$1" = run ]; then
+  [[ $4 =~ ^[a-z-]+-critic$ && -f $h/.claude/agents/$4.md ]] || { echo "$4: no such critic" >&2; exit 2; }
+  v=$(jq -rn --arg v "$s/verdict" '$v | @sh')
+  stop="i=\$(cat); printf %s \"\$i\" | jq -e .stop_hook_active >/dev/null || printf %s \"\$i\" | jq -r '.last_assistant_message // \"\"' | $v >/dev/null || exit 2"
+  stop=$(jq -cn --arg c "$stop" '{hooks: {Stop: [{hooks: [{type: "command", command: $c}]}]}}')
+  out=$(cd "$(git -C "$w" worktree list --porcelain | sed -n '1s/^worktree //p')" &&
+    claude -p "$w $3" --plugin-dir "$h" --agent "$(jq -r .name "$h/.claude-plugin/plugin.json"):$4" --settings "$stop" \
+      --add-dir "$w" --permission-mode auto --allowedTools Read Grep Glob --output-format json)
+  id=$(jq -r .session_id <<<"$out")
+  m=$(jq -r '.result // ""' <<<"$out")
+  printf %s "$m" | "$s/verdict" >/dev/null
+  [ "$(fingerprint)" = "$change" ] || { echo "$w: changed during the review" >&2; exit 1; }
+  mkdir -p "$d"
+  printf '%s\n%s\n%s\n' "$4" "$change" "$m" >"$d/$id"
+  printf 'Review ID: %s\n%s\n' "$id" "$m"
+  exit
+fi
+fail=0
+for f in "$h"/.claude/agents/*-critic.md; do
+  c=$(basename "$f" .md) ok=
+  for id in "${@:4}"; do
+    [[ $id =~ ^[^/]+$ ]] && { read -r rc && read -r rf && [ "$rc $rf" = "$c $change" ] &&
+      [ "$("$s/verdict")" = APPROVE ]; } 2>/dev/null <"$d/$id" && ok=1
+  done
+  [ -n "$ok" ] || { echo "$c: no approval of the change as it stands" >&2; fail=1; }
+done
+exit "$fail"
