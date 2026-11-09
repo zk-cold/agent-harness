@@ -219,93 +219,69 @@ Verdict: approve|line 1: first line must be Verdict: APPROVE or Verdict: REJECT
 EOF
 }
 
-test_critic_hook() {
-  hook() {
-    local cmd
-    cmd=$(jq -r --arg e "$1" '.hooks[$e][0].hooks[0].command' "$here/../../.claude/settings.json")
-    env CLAUDE_PROJECT_DIR="$here/../.." GIT_DIR="$tmp/git" "${@:3}" sh -c "$cmd" <<<"$(jq -nr "$2")" 2>&1; echo $?
-  }
-  same "$(hook SubagentStop '{last_assistant_message: "Verdict: APPROVE"}')" $'APPROVE\n0'
-  same "$(hook SubagentStop '{last_assistant_message: "Approved."}')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
-  same "$(hook PreToolUse '{agent_type: "full-review-critic", tool_input: {message: "Verdict: APPROVE"}}')" $'APPROVE\n0'
-  same "$(hook PreToolUse '{agent_type: "full-review-critic", tool_input: {message: "Approved."}}')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
-  same "$(hook PreToolUse '{agent_type: "full-review-critic", tool_input: {}}')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
-  same "$(hook PreToolUse '{agent_type: "impl", tool_input: {message: "Approved."}}')" 0
-  same "$(hook PreToolUse '{tool_input: {message: "Approved."}}')" 0
-  for input in '"{"' '""' '{agent_type: 1}' '{agent_type: null}' '[]'; do
-    same "$(hook PreToolUse "$input" | tail -n 1)" 2
-  done
-  local root=$here/../.. p=$tmp/project e d=$tmp/git/critic-handbacks w=$tmp/hb
-  local reject=$'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
-  post() {
-    hook PostToolUse "{agent_type: \"$1\", agent_id: \"${4-a}\", tool_input: {message: \"$2\"}, tool_response: {success: $3}}"
-  }
-  stop() { hook SubagentStop "{agent_id: \"$1\"}"; }
-  report() { env GIT_DIR="$tmp/git" "$scripts/critic-hook" report "$1" 2>&1 || echo "$?"; }
-  git init -q --bare "$tmp/git"
-  same "$(post full-review-critic 'Verdict: APPROVE' false)" 0
-  same "$(post impl 'Verdict: APPROVE' true)" 0
-  same "$(stop a)" "$reject"
-  same "$(post full-review-critic 'Approved.' true)" 0
-  same "$(stop a)" "$reject"
-  same "$(post full-review-critic 'Verdict: APPROVE' true)" 0
-  same "$(stop b)" "$reject"
-  same "$(stop a)" $'APPROVE\n0'
-  same "$(stop a)" "$reject"
-  (cd "$d" && seq 2000 | sed 's/^/old/; /[02468]$/s/$/.report/' | xargs touch -t 202001010000)
-  for i in 1 2 3 4 5 6 7 8; do
-    hook SubagentStop "{agent_id: \"c$i\", last_assistant_message: \"Verdict: REJECT\\nRejection Grounds: r\"}" >"$tmp/race$i" &
-  done
-  wait
-  for i in 1 2 3 4 5 6 7 8; do same "$(<"$tmp/race$i")" $'REJECT\n0'; done
-  [ -z "$(find "$d" -name 'old*')" ]
-  mkdir "$d/e.report"
-  same "$(hook SubagentStop '{agent_id: "e", last_assistant_message: "Verdict: APPROVE"}' | sed -n '1p;$p')" $'APPROVE\n1'
-  same "$(report a)" 'Verdict: APPROVE'
-  same "$(report a)" 'Verdict: APPROVE'
-  same "$(report b)" $'b: no report\n1'
-  same "$(report c1)" $'Verdict: REJECT\nRejection Grounds: r'
-  local -A in=([SubagentStop]='{last_assistant_message: "Approved."}'
-    [PreToolUse]='{agent_type: "full-review-critic", tool_input: {message: "Approved."}}')
-  rm -rf "$p"
-  mkdir -p "$p/.claude"
-  cp "$root/.claude/settings.json" "$p/.claude/"
-  for e in "${!in[@]}"; do
-    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$tmp")" "$reject"
-    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
-    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root")" 0
-  done
-  cp -r "$root/.agent" "$p/"
-  for e in "${!in[@]}"; do
-    jq '.version = 2' "$root/.claude/settings.json" >"$p/.claude/settings.json"
-    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" 0
-    jq 'del(.hooks)' "$root/.claude/settings.json" >"$p/.claude/settings.json"
-    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
-    jq --arg e "$e" 'del(.hooks[$e])' "$root/.claude/settings.json" >"$p/.claude/settings.json"
-    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
-    jq --arg e "$e" '.hooks[$e][0].matcher = "x"' "$root/.claude/settings.json" >"$p/.claude/settings.json"
-    same "$(hook "$e" "${in[$e]}" CLAUDE_PLUGIN_ROOT="$root" CLAUDE_PROJECT_DIR="$p")" "$reject"
-  done
-  same "$(find "$d" -maxdepth 0 -perm 700)" "$d"
-  echo 'Verdict: APPROVE' >"$tmp/x"
-  same "$(stop ../x)" "$reject"
-  [ ! -e "$tmp/x.report" ]
-  mv "$tmp/x" "$tmp/x.report"
-  same "$(report ../x)" $'../x: invalid agent ID\n1'
-  rm "$tmp/x.report"
-  same "$(post full-review-critic 'Verdict: APPROVE' true ../x)" 0
-  [ ! -e "$tmp/x" ]
-  same "$(cd "$tmp" && env -u CLAUDE_PROJECT_DIR GIT_DIR="$tmp/none" "$scripts/critic-hook" report a 2>&1; echo $?)" "$tmp: not in a git repo"$'\n1'
-  same "$(cd "$tmp/road" && env -u GIT_DIR CLAUDE_PROJECT_DIR="$p" "$scripts/critic-hook" report a 2>&1; echo $?)" "$p: not in a git repo"$'\n1'
-  git init -q --bare "$tmp/nodir"
-  touch "$tmp/nodir/critic-handbacks"
-  same "$(env GIT_DIR="$tmp/nodir" "$scripts/critic-hook" report a 2>&1; echo $?)" "$tmp/nodir/critic-handbacks: cannot create directory"$'\n1'
-  git init -q "$w"
-  git -C "$w" -c user.name=t -c user.email=t@t commit -q --allow-empty -m a
-  git -C "$w" worktree add -q "$w-wt"
-  jq -n '{agent_id: "w", last_assistant_message: "Verdict: APPROVE"}' |
-    env -u GIT_DIR CLAUDE_PROJECT_DIR="$w" "$scripts/critic-hook" SubagentStop >/dev/null
-  same "$(cd "$w-wt" && env -u GIT_DIR -u CLAUDE_PROJECT_DIR "$scripts/critic-hook" report w)" 'Verdict: APPROVE'
+test_review() {
+  local r=$tmp/rev w=$tmp/rev-wt a=$tmp/rev-args c
+  at() { git -C "$1" -c user.name=t -c user.email=t@t "${@:2}"; }
+  review() { PATH=$tmp/rev-bin:$PATH "$scripts/review" "$@" 2>&1; echo $?; }
+  run() { RESULT=$1 ID=$2 review run "$w" main "$3"; }
+  approved() { review approved "$w" main "$@"; }
+  mkdir -p "$tmp/rev-bin"
+  printf '#!/bin/sh\nprintf "%%s\\0" "$PWD" "$@" >"%s"\n${CHANGE:+touch "$CHANGE"}\njq -n --arg r "$RESULT" --arg i "$ID" %s\n' \
+    "$a" "'{session_id: \$i, result: \$r}'" >"$tmp/rev-bin/claude"
+  chmod +x "$tmp/rev-bin/claude"
+  git init -q -b main "$r"
+  seq 20 >"$r/a"
+  echo old >"$r/old"
+  at "$r" add . && at "$r" commit -qm a
+  at "$r" worktree add -q -b work "$w"
+  at "$r" config color.ui always
+  sed -i '10a x' "$w/a"
+  printf 'a\0' >"$w/bin"
+  mv "$w/old" "$w/0new"
+  same "$(cd "$tmp" && RESULT='Verdict: APPROVE' ID=e review run rev-wt main earn-its-place-critic)" $'Review ID: e\nVerdict: APPROVE\n0'
+  mapfile -d '' -t c <"$a"
+  same "${c[0]} ${c[2]}" "$(cd "$r" && pwd -P) $w main"
+  [[ " ${c[*]} " == *' --agent agent-harness:earn-its-place-critic '* ]]
+  [[ " ${c[*]} " == *" --add-dir $w --permission-mode auto "* && " ${c[*]} " != *' Bash '* ]]
+  c=$(printf '%s\n' "${c[@]}" | grep '^{' | jq -r '.hooks.Stop[0].hooks[0].command')
+  same "$(jq -n '{last_assistant_message: "Approved."}' | sh -c "$c" 2>&1; echo $?)" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
+  same "$(jq -n '{last_assistant_message: "Approved.", stop_hook_active: true}' | sh -c "$c" 2>&1; echo $?)" 0
+  same "$(jq -n '{last_assistant_message: "Verdict: APPROVE"}' | sh -c "$c" 2>&1; echo $?)" 0
+  same "$(run 'Approved.' x full-review-critic)" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n1'
+  same "$(CHANGE=$w/during run 'Verdict: APPROVE' x earn-its-place-critic)" "$w: changed during the review"$'\n1'
+  rm "$w/during"
+  same "$(run 'Verdict: APPROVE' x impl | tail -n 1)" 2
+  same "$(run 'Verdict: APPROVE' x ../x-critic | tail -n 1)" 2
+  same "$(review approved "$w" main | tail -n 1)" 2
+  run $'Verdict: REJECT\nRejection Grounds: r' f full-review-critic >/dev/null
+  run 'Verdict: APPROVE' l alignment-critic >/dev/null
+  same "$(approved e l f)" $'full-review-critic: no approval of the change as it stands\n1'
+  run 'Verdict: APPROVE' g full-review-critic >/dev/null
+  same "$(approved e l g x ../e)" 0
+  same "$(approved e g)" $'alignment-critic: no approval of the change as it stands\n1'
+  sed -i '2a y' "$r/a"
+  at "$r" commit -qam b
+  at "$w" add -A
+  at "$w" commit -qm c
+  at "$w" merge -q --no-edit main >/dev/null
+  same "$(approved e l g)" 0
+  stale() { same "$(approved e l g | tail -n 1)" 1; }
+  sed -i '12d; 15a x' "$w/a"
+  stale
+  at "$w" checkout -q a
+  chmod +x "$w/a"
+  stale
+  chmod -x "$w/a"
+  at "$w" mv a moved
+  stale
+  at "$w" mv moved a
+  printf 'b\0' >"$w/bin"
+  stale
+  printf 'a\0' >"$w/bin"
+  touch "$w/new"
+  stale
+  rm "$w/new"
+  same "$(approved e l g)" 0
 }
 
 test_plugin_loads() {
@@ -317,7 +293,6 @@ test_plugin_loads() {
   same "$(sed -n 2p <<<"$out")" '  Source: agent-harness@inline'
   same "$(loaded Agents)" "$(names agents)"
   same "$(loaded Skills)" "$(names commands)"
-  same "$(loaded Hooks)" "$(jq -r '.hooks | keys[]' "$root/.claude/settings.json" | sort)"
 }
 
 governed() {

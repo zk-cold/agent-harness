@@ -9,24 +9,16 @@ scenario "/deliver $(.agent/scripts/roadmap gh . show 1)"
 
 critics=(earn-its-place-critic alignment-critic full-review-critic)
 verdicts() {
-  jq -rs '
-    . as $e | length as $end
-    | ([range($end) as $i | $e[$i] | select(.subtype == "task_notification" and .tool_use_id)
-        | {key: .tool_use_id, value: [$i, .handback_report.text // .summary]}] | from_entries) as $n
-    | ([range($end) as $i | $e[$i].message.content[]? | select(.type == "tool_result")
-        | {key: .tool_use_id, value: [$i, .content]}] | from_entries) as $r
-    | range($end) as $i | $e[$i].message.content[]?
-    | select(.type == "tool_use" and (.input.subagent_type // "" | endswith("-critic")))
-    | (if .input.run_in_background then $n[.id] else $n[.id] // $r[.id] end // [$end, ""]) as [$f, $t]
-    | [.input.subagent_type, ($t | if type == "array" then map(.text? // empty) | join("\n") else . // "" end
-        | [splits("\n") | capture("^\\s*Verdict: (?<v>APPROVE|REJECT)\\s*$").v] | first // "FAIL"), $i, $f] | @tsv' "$tmp/events.jsonl"
+  local f
+  for f in $(ls -tr .git/critic-reviews); do
+    printf '%s\t%s\n' "$(head -n 1 ".git/critic-reviews/$f")" "$(tail -n +3 ".git/critic-reviews/$f" | .agent/scripts/verdict)"
+  done
 }
 approved() { verdicts | awk -v c="$1" '$1 == c {v = $2} END {exit v != "APPROVE"}'; }
 ordered() {
   verdicts | awk -v cs="${critics[*]}" '
-    BEGIN {k = split(cs, c); n = 1; f = -1}
-    $1 != c[n] || $3 < f {exit 1}
-    {f = $4}
+    BEGIN {k = split(cs, c); n = 1}
+    $1 != c[n] {exit 1}
     $2 == "REJECT" {n = 1}
     $2 == "APPROVE" {n = n % k + 1}'
 }
@@ -36,5 +28,6 @@ for c in "${critics[@]}"; do
   check "$c" approved "$c"
 done
 check ordered ordered
+check unseen jq -se 'all(.[] | select(.parent_tool_use_id == null) | tostring; test("Verdict: (APPROVE|REJECT)") | not)' "$tmp/events.jsonl"
 delivered 1
 exit "$fail"
