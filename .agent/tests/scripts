@@ -222,12 +222,20 @@ EOF
 test_review() {
   local r=$tmp/rev w=$tmp/rev-wt a=$tmp/rev-args c
   at() { git -C "$1" -c user.name=t -c user.email=t@t "${@:2}"; }
-  review() { PATH=$tmp/rev-bin:$PATH "$scripts/review" "$@" 2>&1; echo $?; }
+  review() { ARGS=$a PATH=$tmp/rev-bin:$PATH "$scripts/review" "$@" 2>&1; echo $?; }
   run() { RESULT=$1 ID=$2 review run "$w" main "$3"; }
   approved() { review approved "$w" main "$@"; }
   mkdir -p "$tmp/rev-bin"
-  printf '#!/bin/sh\nprintf "%%s\\0" "$PWD" "$@" >"%s"\n${CHANGE:+touch "$CHANGE"}\njq -n --arg r "$RESULT" --arg i "$ID" %s\n' \
-    "$a" "'{session_id: \$i, result: \$r}'" >"$tmp/rev-bin/claude"
+  cat >"$tmp/rev-bin/claude" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\0' "$PWD" "$@" >"$ARGS"
+${CHANGE:+touch "$CHANGE"}
+while [ $# -gt 0 ]; do case $1 in --agent) agent=$2 ;; --settings) settings=$2 ;; esac; shift; done
+jq -n --arg a "${AGENT-$agent}" --arg m "${MODE-auto}" --arg r "$RESULT" '{agent_type: $a, permission_mode: $m, last_assistant_message: $r}' |
+  sh -c "$(jq -r '.hooks.Stop[0].hooks[0].command' <<<"$settings")" >/dev/null 2>&1
+printf '%s\n' "${OUT-$(jq -n --arg r "$RESULT" --arg i "$ID" '{session_id: $i, result: $r}')}"
+exit "${STATUS-0}"
+EOF
   chmod +x "$tmp/rev-bin/claude"
   git init -q -b main "$r"
   seq 20 >"$r/a"
@@ -243,13 +251,19 @@ test_review() {
   same "${c[0]} ${c[2]}" "$(cd "$r" && pwd -P) $w main"
   [[ " ${c[*]} " == *' --agent agent-harness:earn-its-place-critic '* ]]
   [[ " ${c[*]} " == *" --add-dir $w --permission-mode auto "* && " ${c[*]} " != *' Bash '* ]]
-  c=$(printf '%s\n' "${c[@]}" | grep '^{' | jq -r '.hooks.Stop[0].hooks[0].command')
+  [[ " ${c[*]} " == *' --disallowedTools Edit Write NotebookEdit --max-turns 100 --max-budget-usd 10 '* ]]
+  c=$(printf '%s\n' "${c[@]}" | grep '^{' | jq -r '.hooks.Stop[0].hooks[0].command' | sed "s|>'[^']*';|>/dev/null;|")
   same "$(jq -n '{last_assistant_message: "Approved."}' | sh -c "$c" 2>&1; echo $?)" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
   same "$(jq -n '{last_assistant_message: "Approved.", stop_hook_active: true}' | sh -c "$c" 2>&1; echo $?)" 0
   same "$(jq -n '{last_assistant_message: "Verdict: APPROVE"}' | sh -c "$c" 2>&1; echo $?)" 0
   same "$(run 'Approved.' x full-review-critic)" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n1'
   same "$(CHANGE=$w/during run 'Verdict: APPROVE' x earn-its-place-critic)" "$w: changed during the review"$'\n1'
   rm "$w/during"
+  same "$(MODE=default run 'Verdict: APPROVE' x earn-its-place-critic)" $'earn-its-place-critic: auto mode unavailable, so the critic could not run Bash\n1'
+  same "$(AGENT= run 'Verdict: APPROVE' x earn-its-place-critic)" $'earn-its-place-critic: --agent agent-harness:earn-its-place-critic did not load\n1'
+  same "$(OUT='{"errors": ["Reached maximum number of turns (100)"]}' STATUS=1 run '' x alignment-critic)" \
+    $'alignment-critic: claude exited 1: Reached maximum number of turns (100)\n1'
+  same "$(OUT='{"result": "limit hit"}' STATUS=1 run '' x alignment-critic)" $'alignment-critic: claude exited 1: limit hit\n1'
   same "$(run 'Verdict: APPROVE' x impl | tail -n 1)" 2
   same "$(run 'Verdict: APPROVE' x ../x-critic | tail -n 1)" 2
   same "$(review approved "$w" main | tail -n 1)" 2

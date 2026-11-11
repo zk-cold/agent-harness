@@ -16,12 +16,20 @@ fingerprint() {
 change=$(fingerprint)
 if [ "$1" = run ]; then
   [[ $4 =~ ^[a-z-]+-critic$ && -f $h/.claude/agents/$4.md ]] || { echo "$4: no such critic" >&2; exit 2; }
-  v=$(jq -rn --arg v "$s/verdict" '$v | @sh')
-  stop="i=\$(cat); printf %s \"\$i\" | jq -e .stop_hook_active >/dev/null || printf %s \"\$i\" | jq -r '.last_assistant_message // \"\"' | $v >/dev/null || exit 2"
+  a=$(jq -r .name "$h/.claude-plugin/plugin.json"):$4
+  v=$(jq -rn --arg v "$s/verdict" '$v | @sh') f=$(jq -rn --arg f "$x/stop" '$f | @sh')
+  stop="i=\$(cat); printf %s \"\$i\" >$f; printf %s \"\$i\" | jq -e .stop_hook_active >/dev/null || printf %s \"\$i\" | jq -r '.last_assistant_message // \"\"' | $v >/dev/null || exit 2"
   stop=$(jq -cn --arg c "$stop" '{hooks: {Stop: [{hooks: [{type: "command", command: $c}]}]}}')
   out=$(cd "$(git -C "$w" worktree list --porcelain | sed -n '1s/^worktree //p')" &&
-    claude -p "$w $3" --plugin-dir "$h" --agent "$(jq -r .name "$h/.claude-plugin/plugin.json"):$4" --settings "$stop" \
-      --add-dir "$w" --permission-mode auto --allowedTools Read Grep Glob --output-format json)
+    claude -p "$w $3" --plugin-dir "$h" --agent "$a" --settings "$stop" --add-dir "$w" --permission-mode auto \
+      --allowedTools Read Grep Glob --disallowedTools Edit Write NotebookEdit --max-turns 100 --max-budget-usd 10 \
+      --output-format json) || {
+    r=$?
+    echo "$4: claude exited $r: $(jq -r '[.result // empty, .errors[]?] | join("; ")' <<<"$out" 2>/dev/null || printf %s "$out")" >&2
+    exit 1
+  }
+  [ "$(jq -r .agent_type "$x/stop" 2>/dev/null)" = "$a" ] || { echo "$4: --agent $a did not load" >&2; exit 1; }
+  [ "$(jq -r .permission_mode "$x/stop")" = auto ] || { echo "$4: auto mode unavailable, so the critic could not run Bash" >&2; exit 1; }
   id=$(jq -r .session_id <<<"$out")
   m=$(jq -r '.result // ""' <<<"$out")
   printf %s "$m" | "$s/verdict" >/dev/null
