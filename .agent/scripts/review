@@ -31,13 +31,13 @@ case $1 in
     critic "$a" || exit 0
     id=$(jq -r .agent_id <<<"$i")
     [[ $id =~ ^[^/]+$ ]] || { echo "$id: invalid agent ID" >&2; exit 1; }
-    t=$(jq -r '(.transcript_path | rtrimstr(".jsonl")) + "/subagents/agent-\(.agent_id).jsonl"' <<<"$i")
+    t=$(jq -r '.agent_transcript_path // ((.transcript_path | rtrimstr(".jsonl")) + "/subagents/agent-\(.agent_id).jsonl")' <<<"$i")
     p=$(jq -rs 'map(select(.type == "user"))[0].message.content | strings' "$t") || exit 1
     re=$'^([^\n ]+) ([^\n ]+)\nFingerprint: ([0-9a-f]+)$'
     [[ $p =~ $re ]] || { echo "$id: prompt not set by $0 spawn" >&2; exit 1; }
     f=${BASH_REMATCH[3]}
     fingerprint "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
-    [ "$1" = handback ] || [ ! -e "$d/$id" ] || exit 0
+    [ ! -e "$d/$id" ] || exit 0
     k=.last_assistant_message
     [ "$1" = record ] || k=.tool_input.message
     m=$(jq -r "$k // \"\"" <<<"$i")

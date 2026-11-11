@@ -2,6 +2,7 @@
 name: full-review-critic
 description: Reviews a change in full.
 model: opus
+disallowedTools: Edit, Write, NotebookEdit
 ---
 # Invariants
 

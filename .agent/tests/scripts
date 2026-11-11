@@ -227,11 +227,12 @@ test_review() {
   prompt() { spawn "$1" "$w main" | jq -r 'objects | .hookSpecificOutput.updatedInput.prompt'; }
   send() {
     local t=$tmp/rev-session/subagents/agent-$3.jsonl
+    [ "$1" = handback ] || t=$tmp/rev-agent-$3.jsonl
     mkdir -p "${t%/*}"
     jq -nc --arg p "${P-$(prompt "$2")}" '{type: "user", message: {role: "user", content: $p}}' >"$t"
-    jq -n --arg e "$1" --arg a "$2" --arg i "$3" --arg m "$4" --arg s "$tmp/rev-session.jsonl" \
+    jq -n --arg e "$1" --arg a "$2" --arg i "$3" --arg m "$4" --arg s "$tmp/rev-session.jsonl" --arg t "$t" \
       "{agent_type: \$a, agent_id: \$i, transcript_path: \$s} + if \$e == \"record\" then
-      {last_assistant_message: \$m, stop_hook_active: false} else {tool_input: {message: \$m}} end | ${X-.}" |
+      {agent_transcript_path: \$t, last_assistant_message: \$m, stop_hook_active: false} else {tool_input: {message: \$m}} end | ${X-.}" |
       hook "$1"
   }
   record() { send record "$@"; }
@@ -273,7 +274,9 @@ test_review() {
   same "$(X='.transcript_path = "/none.jsonl"' handback alignment-critic l 'Approved.' | tail -n 1)" 1
   same "$(P="$tmp/none main"$'\nFingerprint: 0' handback alignment-critic l 'Approved.' | tail -n 1)" 1
   [ ! -e "$r/.git/critic-reviews/l" ]
-  same "$(record alignment-critic l $'Verdict: REJECT\nRejection Grounds: r')" 0
+  same "$(record alignment-critic k $'Verdict: REJECT\nRejection Grounds: r')" 0
+  same "$(handback alignment-critic k 'Verdict: APPROVE')" 0
+  same "$(tail -n 1 "$r/.git/critic-reviews/k")" 'Rejection Grounds: r'
   same "$(handback alignment-critic l 'Verdict: APPROVE')" 0
   same "$(record alignment-critic l 'Done.')" 0
   same "$(sed -n '1p;3,$p' "$r/.git/critic-reviews/l")" $'alignment-critic\nVerdict: APPROVE'
