@@ -16,8 +16,8 @@ Follow `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/governance-schema.md` and the gover
 ## Worktree
 Work in a new worktree outside the target repo, on a new branch from the root branch given in the prompt.
 
-## Commits
-Commit only when asked.
+## Syncing
+Merge the root branch into your branch before each review by `earn-its-place-critic`, and before reporting `READY` if its changes since you last merged it conflict with or could break your work.
 
 ## Findings
 Handle an entry of a review's `Findings` only after adding a sub-item holding it to the roadmap item given in the prompt.
@@ -36,7 +36,7 @@ Report only once your verdict is `READY`, or to escalate each rejection and fail
 
 ## Report
 Each report starts with these labeled parts, in order, omitting an empty one:
-1. `Verdict`: `READY` if all three approvals stand and the tests have passed since your last change, otherwise `NOT READY`.
+1. `Verdict`: `READY` if all three approvals stand, the tests have passed since your last change, and your work is committed, leaving your worktree clean, otherwise `NOT READY`.
 2. `Approvals`: if `READY`, the standing approvals' review IDs.
 3. `Escalation`: if `NOT READY`, only what bears on the lead's choice to abort, replace you or let you continue, such as oscillating rejection grounds, not the history of reviews.
 4. `Unhandled Findings`: if `READY`, each entry of the standing approvals' `Findings` that you have not handled.
