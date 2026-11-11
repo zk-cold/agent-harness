@@ -220,11 +220,12 @@ EOF
 }
 
 test_review() {
-  local r=$tmp/rev w=$tmp/rev-wt a=$tmp/rev-args c
+  local r=$tmp/rev w=$tmp/rev-wt a=$tmp/rev-args c o i
   at() { git -C "$1" -c user.name=t -c user.email=t@t "${@:2}"; }
   review() { ARGS=$a PATH=$tmp/rev-bin:$PATH "$scripts/review" "$@" 2>&1; echo $?; }
   run() { RESULT=$1 ID=$2 review run "$w" main "$3"; }
   approved() { review approved "$w" main "$@"; }
+  objs() { find "$r/.git/objects" -type f | sort; }
   mkdir -p "$tmp/rev-bin"
   cat >"$tmp/rev-bin/claude" <<'EOF'
 #!/usr/bin/env bash
@@ -246,6 +247,7 @@ EOF
   sed -i '10a x' "$w/a"
   printf 'a\0' >"$w/bin"
   mv "$w/old" "$w/0new"
+  o=$(objs)
   same "$(cd "$tmp" && RESULT='Verdict: APPROVE' ID=e review run rev-wt main earn-its-place-critic)" $'Review ID: e\nVerdict: APPROVE\n0'
   mapfile -d '' -t c <"$a"
   same "${c[0]} ${c[2]}" "$(cd "$r" && pwd -P) $w main"
@@ -272,6 +274,11 @@ EOF
   same "$(approved e l f)" $'full-review-critic: no approval of the change as it stands\n1'
   run 'Verdict: APPROVE' g full-review-critic >/dev/null
   same "$(approved e l g x ../e)" 0
+  at "$r" config core.abbrev 4
+  printf '54438\0' >"$w/bin"
+  same "$(approved e l g | tail -n 1)" 1
+  printf 'a\0' >"$w/bin"
+  same "$(objs)" "$o"
   same "$(approved e g)" $'alignment-critic: no approval of the change as it stands\n1'
   sed -i '2a y' "$r/a"
   at "$r" commit -qam b
@@ -296,6 +303,18 @@ EOF
   stale
   rm "$w/new"
   same "$(approved e l g)" 0
+  for i in $(seq 100); do touch -d @0 "$r/.git/critic-reviews/old$i"; done
+  run 'Verdict: APPROVE' n alignment-critic >/dev/null
+  same "$(ls "$r/.git/critic-reviews" | wc -l)" 100
+  same "$(approved e n g)" 0
+  git clone -q --bare "$r" "$tmp/rev-bare"
+  git -C "$tmp/rev-bare" worktree add -q -b bwork "$tmp/rev-bwt" main
+  same "$(RESULT='Verdict: APPROVE' ID=b review run "$tmp/rev-bwt" main earn-its-place-critic)" \
+    "$tmp/rev-bwt: no main worktree, and main is not checked out"$'\n1'
+  git -C "$tmp/rev-bare" worktree add -q "$tmp/rev-bmain" main
+  RESULT='Verdict: APPROVE' ID=b review run "$tmp/rev-bwt" main earn-its-place-critic >/dev/null
+  mapfile -d '' -t c <"$a"
+  same "${c[0]}" "$(cd "$tmp/rev-bmain" && pwd -P)"
 }
 
 test_plugin_loads() {

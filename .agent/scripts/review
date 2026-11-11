@@ -8,9 +8,10 @@ w=$(cd "$2" && pwd) b=$3
 d=$(git -C "$w" rev-parse --path-format=absolute --git-common-dir)/critic-reviews
 x=$(mktemp -d)
 trap 'rm -rf "$x"' EXIT
+mkdir "$x/objects"
 fingerprint() {
-  (cd "$w" && export GIT_INDEX_FILE=$x/index && git read-tree HEAD && git add -A &&
-    git diff --cached --no-renames --no-ext-diff --no-textconv --no-color "$(git merge-base HEAD "$b")" |
+  (cd "$w" && export GIT_INDEX_FILE=$x/index && git read-tree HEAD && GIT_OBJECT_DIRECTORY=$x/objects git add -A -N &&
+    git diff --full-index --no-renames --no-ext-diff --no-textconv --no-color "$(git merge-base HEAD "$b")" |
     awk '/^index /{i = $0; next} /^Binary files /{print i} !/^@@/' | git hash-object --stdin)
 }
 change=$(fingerprint)
@@ -20,7 +21,10 @@ if [ "$1" = run ]; then
   v=$(jq -rn --arg v "$s/verdict" '$v | @sh') f=$(jq -rn --arg f "$x/stop" '$f | @sh')
   stop="i=\$(cat); printf %s \"\$i\" >$f; printf %s \"\$i\" | jq -e .stop_hook_active >/dev/null || printf %s \"\$i\" | jq -r '.last_assistant_message // \"\"' | $v >/dev/null || exit 2"
   stop=$(jq -cn --arg c "$stop" '{hooks: {Stop: [{hooks: [{type: "command", command: $c}]}]}}')
-  out=$(cd "$(git -C "$w" worktree list --porcelain | sed -n '1s/^worktree //p')" &&
+  top=$(git -C "$w" worktree list --porcelain |
+    awk -v b="branch refs/heads/$b" '/^worktree /{p = substr($0, 10)} NR == 2 && /^HEAD / || $0 == b {print p; exit}')
+  [ -n "$top" ] || { echo "$w: no main worktree, and $b is not checked out" >&2; exit 1; }
+  out=$(cd "$top" &&
     claude -p "$w $3" --plugin-dir "$h" --agent "$a" --settings "$stop" --add-dir "$w" --permission-mode auto \
       --allowedTools Read Grep Glob --disallowedTools Edit Write NotebookEdit --max-turns 100 --max-budget-usd 10 \
       --output-format json) || {
@@ -36,6 +40,7 @@ if [ "$1" = run ]; then
   [ "$(fingerprint)" = "$change" ] || { echo "$w: changed during the review" >&2; exit 1; }
   mkdir -p "$d"
   printf '%s\n%s\n%s\n' "$4" "$change" "$m" >"$d/$id"
+  ls -t "$d" | tail -n +101 | (cd "$d" && xargs -rd '\n' rm -f --)
   printf 'Review ID: %s\n%s\n' "$id" "$m"
   exit
 fi
