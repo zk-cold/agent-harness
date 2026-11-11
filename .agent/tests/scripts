@@ -220,24 +220,25 @@ EOF
 }
 
 test_review() {
-  local r=$tmp/rev w=$tmp/rev-wt a=$tmp/rev-args c o i
+  local r=$tmp/rev w=$tmp/rev-wt o p
   at() { git -C "$1" -c user.name=t -c user.email=t@t "${@:2}"; }
-  review() { ARGS=$a PATH=$tmp/rev-bin:$PATH "$scripts/review" "$@" 2>&1; echo $?; }
-  run() { RESULT=$1 ID=$2 review run "$w" main "$3"; }
-  approved() { review approved "$w" main "$@"; }
+  hook() { "$scripts/review" "$@" 2>&1; echo $?; }
+  spawn() { jq -n --arg t "$1" --arg p "$2" '{tool_input: {subagent_type: $t, prompt: $p, description: "d"}}' | hook "${3-spawn}"; }
+  prompt() { spawn "$1" "$w main" | jq -r 'objects | .hookSpecificOutput.updatedInput.prompt'; }
+  send() {
+    local t=$tmp/rev-session/subagents/agent-$3.jsonl
+    [ "$1" = handback ] || t=$tmp/rev-agent-$3.jsonl
+    mkdir -p "${t%/*}"
+    jq -nc --arg p "${P-$(prompt "$2")}" '{type: "user", message: {role: "user", content: $p}}' >"$t"
+    jq -n --arg e "$1" --arg a "$2" --arg i "$3" --arg m "$4" --arg s "$tmp/rev-session.jsonl" --arg t "$t" \
+      "{agent_type: \$a, agent_id: \$i, transcript_path: \$s} + if \$e == \"record\" then
+      {agent_transcript_path: \$t, last_assistant_message: \$m, stop_hook_active: false} else {tool_input: {message: \$m}} end | ${X-.}" |
+      hook "$1"
+  }
+  record() { send record "$@"; }
+  handback() { send handback "$@"; }
+  approved() { hook approved "$w" main "$@"; }
   objs() { find "$r/.git/objects" -type f | sort; }
-  mkdir -p "$tmp/rev-bin"
-  cat >"$tmp/rev-bin/claude" <<'EOF'
-#!/usr/bin/env bash
-printf '%s\0' "$PWD" "$@" >"$ARGS"
-${CHANGE:+touch "$CHANGE"}
-while [ $# -gt 0 ]; do case $1 in --agent) agent=$2 ;; --settings) settings=$2 ;; esac; shift; done
-jq -n --arg a "${AGENT-$agent}" --arg m "${MODE-auto}" --arg r "$RESULT" '{agent_type: $a, permission_mode: $m, last_assistant_message: $r}' |
-  sh -c "$(jq -r '.hooks.Stop[0].hooks[0].command' <<<"$settings")" >/dev/null 2>&1
-printf '%s\n' "${OUT-$(jq -n --arg r "$RESULT" --arg i "$ID" '{session_id: $i, result: $r}')}"
-exit "${STATUS-0}"
-EOF
-  chmod +x "$tmp/rev-bin/claude"
   git init -q -b main "$r"
   seq 20 >"$r/a"
   echo old >"$r/old"
@@ -248,31 +249,42 @@ EOF
   printf 'a\0' >"$w/bin"
   mv "$w/old" "$w/0new"
   o=$(objs)
-  same "$(cd "$tmp" && RESULT='Verdict: APPROVE' ID=e review run rev-wt main earn-its-place-critic)" $'Review ID: e\nVerdict: APPROVE\n0'
-  mapfile -d '' -t c <"$a"
-  same "${c[0]} ${c[2]}" "$(cd "$r" && pwd -P) $w main"
-  [[ " ${c[*]} " == *' --agent agent-harness:earn-its-place-critic '* ]]
-  [[ " ${c[*]} " == *" --add-dir $w --permission-mode auto "* && " ${c[*]} " != *' Bash '* ]]
-  [[ " ${c[*]} " == *' --disallowedTools Edit Write NotebookEdit --max-turns 100 --max-budget-usd 10 '* ]]
-  c=$(printf '%s\n' "${c[@]}" | grep '^{' | jq -r '.hooks.Stop[0].hooks[0].command' | sed "s|>'[^']*';|>/dev/null;|")
-  same "$(jq -n '{last_assistant_message: "Approved."}' | sh -c "$c" 2>&1; echo $?)" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
-  same "$(jq -n '{last_assistant_message: "Approved.", stop_hook_active: true}' | sh -c "$c" 2>&1; echo $?)" 0
-  same "$(jq -n '{last_assistant_message: "Verdict: APPROVE"}' | sh -c "$c" 2>&1; echo $?)" 0
-  same "$(run 'Approved.' x full-review-critic)" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n1'
-  same "$(CHANGE=$w/during run 'Verdict: APPROVE' x earn-its-place-critic)" "$w: changed during the review"$'\n1'
+  same "$(cd "$tmp" && spawn agent-harness:earn-its-place-critic $'rev-wt main extra\nmore' |
+    sed '1s/[0-9a-f]\{40\}"/F"/')" "$(jq -nc --arg p "$w main"$'\nFingerprint: F' '{hookSpecificOutput: {hookEventName: "PreToolUse",
+      updatedInput: {subagent_type: "agent-harness:earn-its-place-critic", prompt: $p, description: "d"}}}')"$'\n0'
+  for t in impl ../x-critic x-critic other:full-review-critic ''; do same "$(spawn "$t" junk)" 0; done
+  local bad="A critic's prompt must hold only your worktree's path and the root branch."$'\n2'
+  same "$(spawn full-review-critic "$w")" "$bad"
+  same "$(spawn full-review-critic "$tmp/none main" | tail -n 2)" "$bad"
+  same "$(spawn full-review-critic "$w none" | tail -n 2)" "$bad"
+  same "$(record earn-its-place-critic e 'Verdict: APPROVE')" 0
+  same "$(record full-review-critic x 'Approved.')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
+  same "$(X='.stop_hook_active = true' record full-review-critic x 'Approved.')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n1'
+  same "$(P="$w main" record full-review-critic x 'Verdict: APPROVE')" "x: prompt not set by $scripts/review spawn"$'\n1'
+  p=$(prompt full-review-critic)
+  touch "$w/during"
+  same "$(P=$p record full-review-critic x 'Verdict: APPROVE')" "$w: changed during the review"$'\n1'
   rm "$w/during"
-  same "$(MODE=default run 'Verdict: APPROVE' x earn-its-place-critic)" $'earn-its-place-critic: auto mode unavailable, so the critic could not run Bash\n1'
-  same "$(AGENT= run 'Verdict: APPROVE' x earn-its-place-critic)" $'earn-its-place-critic: --agent agent-harness:earn-its-place-critic did not load\n1'
-  same "$(OUT='{"errors": ["Reached maximum number of turns (100)"]}' STATUS=1 run '' x alignment-critic)" \
-    $'alignment-critic: claude exited 1: Reached maximum number of turns (100)\n1'
-  same "$(OUT='{"result": "limit hit"}' STATUS=1 run '' x alignment-critic)" $'alignment-critic: claude exited 1: limit hit\n1'
-  same "$(run 'Verdict: APPROVE' x impl | tail -n 1)" 2
-  same "$(run 'Verdict: APPROVE' x ../x-critic | tail -n 1)" 2
-  same "$(review approved "$w" main | tail -n 1)" 2
-  run $'Verdict: REJECT\nRejection Grounds: r' f full-review-critic >/dev/null
-  run 'Verdict: APPROVE' l alignment-critic >/dev/null
+  same "$(record full-review-critic ../x 'Verdict: APPROVE')" $'../x: invalid agent ID\n1'
+  for t in impl other:full-review-critic; do same "$(P=$p record "$t" x 'Verdict: APPROVE')" 0; done
+  [ ! -e "$r/.git/critic-reviews/x" ]
+  same "$(X='.stop_hook_active = true' handback agent-harness:alignment-critic l 'Approved.')" \
+    $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
+  same "$(handback other:alignment-critic l 'Verdict: APPROVE')" 0
+  same "$(X='.transcript_path = "/none.jsonl"' handback alignment-critic l 'Approved.' | tail -n 1)" 1
+  same "$(P="$tmp/none main"$'\nFingerprint: 0' handback alignment-critic l 'Approved.' | tail -n 1)" 1
+  [ ! -e "$r/.git/critic-reviews/l" ]
+  same "$(record alignment-critic k $'Verdict: REJECT\nRejection Grounds: r')" 0
+  same "$(handback alignment-critic k 'Verdict: APPROVE')" 0
+  same "$(tail -n 1 "$r/.git/critic-reviews/k")" 'Rejection Grounds: r'
+  same "$(handback alignment-critic l 'Verdict: APPROVE')" 0
+  same "$(record alignment-critic l 'Done.')" 0
+  same "$(sed -n '1p;3,$p' "$r/.git/critic-reviews/l")" $'alignment-critic\nVerdict: APPROVE'
+  same "$(spawn x x run | tail -n 1)" 2
+  same "$(approved | tail -n 1)" 2
+  record full-review-critic f $'Verdict: REJECT\nRejection Grounds: r' >/dev/null
   same "$(approved e l f)" $'full-review-critic: no approval of the change as it stands\n1'
-  run 'Verdict: APPROVE' g full-review-critic >/dev/null
+  record agent-harness:full-review-critic g 'Verdict: APPROVE' >/dev/null
   same "$(approved e l g x ../e)" 0
   at "$r" config core.abbrev 4
   printf '54438\0' >"$w/bin"
@@ -304,17 +316,9 @@ EOF
   rm "$w/new"
   same "$(approved e l g)" 0
   for i in $(seq 100); do touch -d @0 "$r/.git/critic-reviews/old$i"; done
-  run 'Verdict: APPROVE' n alignment-critic >/dev/null
+  record alignment-critic n 'Verdict: APPROVE' >/dev/null
   same "$(ls "$r/.git/critic-reviews" | wc -l)" 100
   same "$(approved e n g)" 0
-  git clone -q --bare "$r" "$tmp/rev-bare"
-  git -C "$tmp/rev-bare" worktree add -q -b bwork "$tmp/rev-bwt" main
-  same "$(RESULT='Verdict: APPROVE' ID=b review run "$tmp/rev-bwt" main earn-its-place-critic)" \
-    "$tmp/rev-bwt: no main worktree, and main is not checked out"$'\n1'
-  git -C "$tmp/rev-bare" worktree add -q "$tmp/rev-bmain" main
-  RESULT='Verdict: APPROVE' ID=b review run "$tmp/rev-bwt" main earn-its-place-critic >/dev/null
-  mapfile -d '' -t c <"$a"
-  same "${c[0]}" "$(cd "$tmp/rev-bmain" && pwd -P)"
 }
 
 test_plugin_loads() {
@@ -333,6 +337,7 @@ test_plugin_loads() {
   same "$(sed -n 2p <<<"$out")" '  Source: agent-harness@inline'
   same "$(loaded Agents)" "$(names agents)"
   same "$(loaded Skills)" "$(names commands)"
+  same "$(loaded Hooks)" "$(jq -r '.hooks | keys[]' "$root/.claude/settings.json" | sort)"
 }
 
 governed() {

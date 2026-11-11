@@ -6,7 +6,7 @@ model: opus
 # Definitions
 
 ## Review
-What `${CLAUDE_PLUGIN_ROOT}/.agent/scripts/review run <your worktree> <root branch> <critic>` prints, its verdict being what its response's first line states; a failed review is one where the command fails.
+The report of a critic you spawn with the prompt `<your worktree> <root branch>`, its verdict being what its first line states and its review ID being the critic's agent ID; a failed review is one without a verdict.
 
 # Invariants
 
@@ -26,7 +26,7 @@ Handle an entry of a review's `Findings` only after adding a sub-item holding it
 Label or close no roadmap items.
 
 ## Review Loop
-Have your work reviewed by `earn-its-place-critic`, then `alignment-critic`, then `full-review-critic`, one at a time, each in the background, repeating each failed review, and after addressing a rejection start over, first running the tests once any `earn-its-place-critic` has ever approved your work.
+Have your work reviewed by `earn-its-place-critic`, then `alignment-critic`, then `full-review-critic`, one at a time, repeating each failed review, and after addressing a rejection start over, first running the tests once any `earn-its-place-critic` has ever approved your work.
 
 ## Standing Approvals
 Treat approvals as standing only while `${CLAUDE_PLUGIN_ROOT}/.agent/scripts/review approved <your worktree> <root branch> <their review IDs>` accepts them.

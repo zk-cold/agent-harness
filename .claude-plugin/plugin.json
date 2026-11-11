@@ -1,1 +1,1 @@
-{"name": "agent-harness"}
+{"name": "agent-harness", "hooks": "./.claude/settings.json"}

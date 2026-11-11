@@ -1,49 +1,54 @@
 #!/usr/bin/env bash
 set -euo pipefail
-[ $# -ge 4 ] && [[ $1 =~ ^(run|approved)$ ]] ||
-  { echo "usage: $0 run <worktree> <root branch> <critic> | approved <worktree> <root branch> <review ID>..." >&2; exit 2; }
+[[ $# -ge 4 && $1 = approved || $# = 1 && $1 =~ ^(spawn|handback|record)$ ]] ||
+  { echo "usage: $0 approved <worktree> <root branch> <review ID>... | spawn | handback | record" >&2; exit 2; }
 s=$(cd "$(dirname "$0")" && pwd)
 h=${s%/.agent/scripts}
-w=$(cd "$2" && pwd) b=$3
-d=$(git -C "$w" rev-parse --path-format=absolute --git-common-dir)/critic-reviews
 x=$(mktemp -d)
 trap 'rm -rf "$x"' EXIT
 mkdir "$x/objects"
 fingerprint() {
-  (cd "$w" && export GIT_INDEX_FILE=$x/index && git read-tree HEAD && GIT_OBJECT_DIRECTORY=$x/objects git add -A -N &&
-    git diff --full-index --no-renames --no-ext-diff --no-textconv --no-color "$(git merge-base HEAD "$b")" |
-    awk '/^index /{i = $0; next} /^Binary files /{print i} !/^@@/' | git hash-object --stdin)
+  w=$(cd "$1" && pwd) && b=$2 && d=$(git -C "$w" rev-parse --path-format=absolute --git-common-dir)/critic-reviews &&
+    change=$(cd "$w" && export GIT_INDEX_FILE=$x/index && git read-tree HEAD && GIT_OBJECT_DIRECTORY=$x/objects git add -A -N &&
+      git diff --full-index --no-renames --no-ext-diff --no-textconv --no-color "$(git merge-base HEAD "$b")" |
+      awk '/^index /{i = $0; next} /^Binary files /{print i} !/^@@/' | git hash-object --stdin)
 }
-change=$(fingerprint)
-if [ "$1" = run ]; then
-  [[ $4 =~ ^[a-z-]+-critic$ && -f $h/.claude/agents/$4.md ]] || { echo "$4: no such critic" >&2; exit 2; }
-  a=$(jq -r .name "$h/.claude-plugin/plugin.json"):$4
-  v=$(jq -rn --arg v "$s/verdict" '$v | @sh') f=$(jq -rn --arg f "$x/stop" '$f | @sh')
-  stop="i=\$(cat); printf %s \"\$i\" >$f; printf %s \"\$i\" | jq -e .stop_hook_active >/dev/null || printf %s \"\$i\" | jq -r '.last_assistant_message // \"\"' | $v >/dev/null || exit 2"
-  stop=$(jq -cn --arg c "$stop" '{hooks: {Stop: [{hooks: [{type: "command", command: $c}]}]}}')
-  top=$(git -C "$w" worktree list --porcelain |
-    awk -v b="branch refs/heads/$b" '/^worktree /{p = substr($0, 10)} NR == 2 && /^HEAD / || $0 == b {print p; exit}')
-  [ -n "$top" ] || { echo "$w: no main worktree, and $b is not checked out" >&2; exit 1; }
-  out=$(cd "$top" &&
-    claude -p "$w $3" --plugin-dir "$h" --agent "$a" --settings "$stop" --add-dir "$w" --permission-mode auto \
-      --allowedTools Read Grep Glob --disallowedTools Edit Write NotebookEdit --max-turns 100 --max-budget-usd 10 \
-      --output-format json) || {
-    r=$?
-    echo "$4: claude exited $r: $(jq -r '[.result // empty, .errors[]?] | join("; ")' <<<"$out" 2>/dev/null || printf %s "$out")" >&2
-    exit 1
-  }
-  [ "$(jq -r .agent_type "$x/stop" 2>/dev/null)" = "$a" ] || { echo "$4: --agent $a did not load" >&2; exit 1; }
-  [ "$(jq -r .permission_mode "$x/stop")" = auto ] || { echo "$4: auto mode unavailable, so the critic could not run Bash" >&2; exit 1; }
-  id=$(jq -r .session_id <<<"$out")
-  m=$(jq -r '.result // ""' <<<"$out")
-  printf %s "$m" | "$s/verdict" >/dev/null
-  [ "$(fingerprint)" = "$change" ] || { echo "$w: changed during the review" >&2; exit 1; }
-  mkdir -p "$d"
-  printf '%s\n%s\n%s\n' "$4" "$change" "$m" >"$d/$id"
-  ls -t "$d" | tail -n +101 | (cd "$d" && xargs -rd '\n' rm -f --)
-  printf 'Review ID: %s\n%s\n' "$id" "$m"
-  exit
-fi
+critic() {
+  local c=${1##*:}
+  [[ $c =~ ^[a-z-]+-critic$ && -f $h/.claude/agents/$c.md && $1 =~ ^($(jq -r .name "$h/.claude-plugin/plugin.json"):)?$c$ ]]
+}
+case $1 in
+  spawn)
+    i=$(cat)
+    critic "$(jq -r '.tool_input.subagent_type // ""' <<<"$i")" || exit 0
+    read -r w b _ <<<"$(jq -r '.tool_input.prompt // ""' <<<"$i")"
+    [ -n "$b" ] && fingerprint "$w" "$b" || { echo "A critic's prompt must hold only your worktree's path and the root branch." >&2; exit 2; }
+    jq -c --arg p "$w $b"$'\nFingerprint: '"$change" '{hookSpecificOutput: {hookEventName: "PreToolUse", updatedInput: (.tool_input | .prompt = $p)}}' <<<"$i"
+    exit ;;
+  handback | record)
+    i=$(cat)
+    a=$(jq -r '.agent_type // ""' <<<"$i")
+    critic "$a" || exit 0
+    id=$(jq -r .agent_id <<<"$i")
+    [[ $id =~ ^[^/]+$ ]] || { echo "$id: invalid agent ID" >&2; exit 1; }
+    t=$(jq -r '.agent_transcript_path // ((.transcript_path | rtrimstr(".jsonl")) + "/subagents/agent-\(.agent_id).jsonl")' <<<"$i")
+    p=$(jq -rs 'map(select(.type == "user"))[0].message.content | strings' "$t") || exit 1
+    re=$'^([^\n ]+) ([^\n ]+)\nFingerprint: ([0-9a-f]+)$'
+    [[ $p =~ $re ]] || { echo "$id: prompt not set by $0 spawn" >&2; exit 1; }
+    f=${BASH_REMATCH[3]}
+    fingerprint "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+    [ ! -e "$d/$id" ] || exit 0
+    k=.last_assistant_message
+    [ "$1" = record ] || k=.tool_input.message
+    m=$(jq -r "$k // \"\"" <<<"$i")
+    printf %s "$m" | "$s/verdict" >/dev/null || { [ "$1" = record ] && jq -e .stop_hook_active <<<"$i" >/dev/null && exit 1; exit 2; }
+    [ "$change" = "$f" ] || { echo "$w: changed during the review" >&2; exit 1; }
+    mkdir -p "$d"
+    printf '%s\n%s\n%s\n' "${a##*:}" "$change" "$m" >"$d/$id"
+    ls -t "$d" | tail -n +101 | (cd "$d" && xargs -rd '\n' rm -f --)
+    exit ;;
+esac
+fingerprint "$2" "$3"
 fail=0
 for f in "$h"/.claude/agents/*-critic.md; do
   c=$(basename "$f" .md) ok=

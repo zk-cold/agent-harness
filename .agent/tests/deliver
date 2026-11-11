@@ -5,18 +5,9 @@ set -euo pipefail
 jq -n '[{number: 1, state: "open", author_association: "OWNER", comments: [], labels: [{name: "approved"}],
   title: "Make `roadmap-gh close` close items as not planned",
   body: "`.agent/tests/scripts` fails because `close` closes items as completed."}]' >.git/issues.json
-mkdir "$tmp/bin"
-cat >"$tmp/bin/claude" <<EOF
-#!/usr/bin/env bash
-[[ " \$* " == *' --agent '* ]] || exec "$(command -v claude)" "\$@"
-echo start >>"$tmp/reviews"
-"$(command -v claude)" "\$@"
-s=\$?
-echo end >>"$tmp/reviews"
-exit \$s
-EOF
-chmod +x "$tmp/bin/claude"
-PATH=$tmp/bin:$PATH scenario "/deliver $(.agent/scripts/roadmap gh . show 1)"
+log=$(jq -cn --arg f "$tmp/reviews" '{hooks: ({SubagentStart: "start", SubagentStop: "end"} |
+  map_values([{matcher: "critic$", hooks: [{type: "command", command: "jq -r \("\"\(.) \\(.agent_id)\"" | @sh) >>\($f | @sh)"}]}]))}')
+scenario "/deliver $(.agent/scripts/roadmap gh . show 1)" --settings "$log"
 
 critics=(earn-its-place-critic alignment-critic full-review-critic)
 verdicts() {
@@ -39,7 +30,7 @@ for c in "${critics[@]}"; do
   check "$c" approved "$c"
 done
 check ordered ordered
-check one-at-a-time awk '$0 != (NR % 2 ? "start" : "end") {bad = 1; exit} END {exit bad || NR % 2}' "$tmp/reviews"
-check unseen jq -se 'all(.[] | select(.parent_tool_use_id == null) | tostring; test("Verdict: (APPROVE|REJECT)") | not)' "$tmp/events.jsonl"
+check one-at-a-time awk '$0 != (NR % 2 ? "start " : "end ") $2 || NR % 2 == 0 && $2 != id {bad = 1; exit} {id = $2} END {exit bad || NR % 2}' <(uniq "$tmp/reviews")
+check unseen jq -se 'all(.[] | select(.parent_tool_use_id == null and (.type == "user" or .type == "assistant")) | tostring; test("Verdict: (APPROVE|REJECT)") | not)' "$tmp/events.jsonl"
 delivered 1
 exit "$fail"
