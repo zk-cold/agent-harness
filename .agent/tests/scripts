@@ -299,9 +299,16 @@ EOF
 }
 
 test_plugin_loads() {
-  local root=$here/../.. out c
+  local root=$here/../.. m=$tmp/market out c
   for c in agents commands; do claude plugin validate --strict "$(readlink -f "$root/$c")" >/dev/null; done
-  out=$(CLAUDE_CONFIG_DIR=$tmp/config claude --plugin-dir "$root" plugin details agent-harness)
+  mkdir -p "$m/.claude-plugin" "$m/p/.claude-plugin" "$m/p/agents"
+  jq -n '{name: "m", owner: {name: "t"}, plugins: [{name: "agent-harness", source: "./p"}]}' >"$m/.claude-plugin/marketplace.json"
+  echo '{"name": "agent-harness"}' >"$m/p/.claude-plugin/plugin.json"
+  printf -- '---\nname: x-critic\ndescription: x\n---\nx\n' >"$m/p/agents/x-critic.md"
+  export CLAUDE_CONFIG_DIR=$tmp/config
+  claude plugin marketplace add "$m" >/dev/null
+  claude plugin install agent-harness@m >/dev/null
+  out=$(claude --plugin-dir "$root" plugin details agent-harness)
   loaded() { sed -n "s/^  $1 ([0-9]*)  //p" <<<"$out" | sed 's/  (.*//; s/, /\n/g' | sort; }
   names() { ls "$root/.claude/$1" | sed -n 's/\.md$//p' | sort; }
   same "$(sed -n 2p <<<"$out")" '  Source: agent-harness@inline'
