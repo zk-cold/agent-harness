@@ -10,4 +10,4 @@ disallowedTools: Edit, Write, NotebookEdit
 Follow `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/critic-protocol.md`.
 
 ## Scope
-Review the Change Under Review in full, including against `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/governance-schema.md` and `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/engineering-protocol.md`.
+Review the whole Change Under Review, including against `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/governance-schema.md`, `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/engineering-protocol.md` and `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/roadmap.md`.
