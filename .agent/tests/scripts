@@ -231,7 +231,10 @@ test_review() {
     local t=$s/subagents/agent-$3.jsonl
     [ "$1" = handback ] || t=${s}2/subagents/agent-$3.jsonl
     mkdir -p "${t%/*}"
-    jq -n --arg a "$2" '{agentType: $a}' >"${t%.jsonl}.meta.json"
+    jq -n '{agentType: "impl", spawnDepth: 1}' >"${t%/*}/agent-i.meta.json"
+    jq -nc --arg a "$2" --arg i "$3" '{type: "assistant", message: {content: [{type: "tool_use", id: "u\($i)", input: {subagent_type: $a}}]}}' \
+      >>"${t%/*}/agent-i.jsonl"
+    jq -n --arg a "$2" --arg i "$3" '{agentType: $a, parentAgentId: "i", spawnDepth: 2, toolUseId: "u\($i)"}' >"${t%.jsonl}.meta.json"
     jq -nc --arg e "$1" --arg p "${P-$(prompt "$2")}" --arg m "$4" '{type: "user", message: {role: "user", content: $p}},
       {type: "assistant", message: {role: "assistant", content: [if $e == "record" then {type: "text", text: $m}
         else {type: "tool_use", name: "SubagentHandback", input: {message: $m}} end]}}' >"$t"
@@ -294,17 +297,25 @@ test_review() {
   cp "$r/.git/critic-reviews/g" "$r/.git/critic-reviews/h"
   same "$(approved e l h)" $'full-review-critic: no approval of the change as it stands\n1'
   tamper() {
-    local t=$CLAUDE_CONFIG_DIR/projects/p/s2/subagents/agent-g.$1
+    local t=$CLAUDE_CONFIG_DIR/projects/p/s2/subagents/agent-$1
     cp "$t" "$t.bak"
     jq -c "$2" "$t.bak" >"$t"
     same "$(approved e l g | tail -n 1)" 1
     mv "$t.bak" "$t"
   }
-  tamper meta.json '.agentType = "alignment-critic"'
-  tamper meta.json '.agentType = "other:full-review-critic"'
-  tamper jsonl 'if .type == "user" then .message.content |= sub(" main"; " work") else . end'
-  tamper jsonl 'if .type == "assistant" then .message.content[0].text = "Verdict: REJECT\nRejection Grounds: r" else . end'
+  tamper g.meta.json '.agentType = "alignment-critic"'
+  tamper g.meta.json '.agentType = "other:full-review-critic"'
+  tamper g.meta.json '.parentAgentId = "g"'
+  tamper g.meta.json 'del(.parentAgentId)'
+  tamper g.meta.json '.spawnDepth = 3'
+  tamper g.meta.json '.toolUseId = "uz"'
+  tamper i.meta.json '.spawnDepth = 2'
+  tamper i.jsonl '.message.content[0].input.subagent_type |= sub("full"; "x")'
+  tamper g.jsonl 'if .type == "user" then .message.content |= sub("[0-9a-f]$"; "x") else . end'
+  tamper g.jsonl 'if .type == "assistant" then .message.content[0].text = "Verdict: REJECT\nRejection Grounds: r" else . end'
   same "$(approved e l g)" 0
+  ln -s "$w" "$tmp/rev-link"
+  same "$(hook approved "$tmp/rev-link" refs/heads/main e l g)" 0
   at "$r" config core.abbrev 4
   printf '54438\0' >"$w/bin"
   same "$(approved e l g | tail -n 1)" 1
