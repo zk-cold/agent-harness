@@ -4,7 +4,7 @@ description: Delivers a request through the impl and critic loop.
 # Invariants
 
 ## Target Repo Governance
-Follow the target repo's `AGENTS.md`.
+Follow the target repo's `AGENTS.md` and `.agent/schemas/*.md`.
 
 ## Terms
 Use the definitions in `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/governance-schema.md` and `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/roadmap.md`.
