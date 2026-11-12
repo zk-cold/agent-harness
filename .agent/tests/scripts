@@ -257,10 +257,15 @@ test_review() {
   printf 'a\0' >"$w/bin"
   mv "$w/old" "$w/0new"
   o=$(objs)
+  local h='${CLAUDE_PLUGIN_ROOT}: '$(cd "$scripts/../.." && pwd)
   same "$(cd "$tmp" && spawn agent-harness:earn-its-place-critic $'rev-wt main extra\nmore' |
-    sed '1s/[0-9a-f]\{40\}"/F"/')" "$(jq -nc --arg p "Worktree: $w"$'\nRoot Branch: main\nFingerprint: F' '{hookSpecificOutput: {hookEventName: "PreToolUse",
+    sed '1s/[0-9a-f]\{40\}"/F"/')" "$(jq -nc --arg p "$h"$'\nWorktree: '"$w"$'\nRoot Branch: main\nFingerprint: F' '{hookSpecificOutput: {hookEventName: "PreToolUse",
       updatedInput: {subagent_type: "agent-harness:earn-its-place-critic", prompt: $p, description: "d"}}}')"$'\n0'
-  for t in impl ../x-critic x-critic other:full-review-critic ''; do same "$(spawn "$t" junk)" 0; done
+  for t in impl agent-harness:impl; do
+    same "$(spawn "$t" $'x\ny')" "$(jq -nc --arg t "$t" --arg p "$h"$'\nx\ny' '{hookSpecificOutput: {hookEventName: "PreToolUse",
+      updatedInput: {subagent_type: $t, prompt: $p, description: "d"}}}')"$'\n0'
+  done
+  for t in other:impl ../x-critic x-critic other:full-review-critic ''; do same "$(spawn "$t" junk)" 0; done
   local bad="A critic's prompt must hold only your worktree's path and the root branch."$'\n2'
   same "$(spawn full-review-critic "$w")" "$bad"
   same "$(spawn full-review-critic "$tmp/none main" | tail -n 2)" "$bad"
@@ -270,6 +275,7 @@ test_review() {
   same "$(X='.stop_hook_active = true' record full-review-critic x 'Approved.')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n1'
   same "$(P="$w main" record full-review-critic x 'Verdict: APPROVE')" "x: prompt not set by $scripts/review spawn"$'\n1'
   p=$(prompt full-review-critic)
+  same "$(P=${p#*$'\n'} record full-review-critic x 'Verdict: APPROVE')" "x: prompt not set by $scripts/review spawn"$'\n1'
   touch "$w/during"
   same "$(P=$p record full-review-critic x 'Verdict: APPROVE')" "$w: changed during the review"$'\n1'
   rm "$w/during"
