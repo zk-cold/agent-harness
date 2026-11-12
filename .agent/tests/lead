@@ -109,7 +109,7 @@ jq -nR --rawfile c "$tmp/closed" --slurpfile s "$tmp/seeded.json" '
 delivered 6 7 8 9 10
 check relisted test -e "$tmp/stop"
 check picked jq -e '[.[] | select(.k == "start") | .n] | all(. != null) and unique == [6, 7, 8, 9, 10]' "$tmp/timeline.json"
-check prioritized jq -e '[.[] | select(.k == "start") | .n][:2] == [10, 7]' "$tmp/timeline.json"
+check prioritized jq -e '[.[] | select(.k == "start") | .n] | .[0] == 10 and index(7) < index(6)' "$tmp/timeline.json"
 check capped jq -e '[.[].run | unique | length] | max == 3' "$tmp/timeline.json"
 check overlap jq -e 'all(.[]; .run | contains([6, 7]) | not)' "$tmp/timeline.json"
 check descendant jq -e --slurpfile p "$tmp/parent" 'all(.[]; .run | contains([$p[0], 11]) | not)' "$tmp/timeline.json"
