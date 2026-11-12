@@ -26,7 +26,7 @@ jq -n --arg due "$(date -d '+3 days' +%F)" '[
    body: "`.agent/tests/scripts` fails because `close` closes items as completed."},
   {number: 7, author_association: "OWNER", labels: [{name: "approved"}],
    title: "Make roadmap-gh close open sub-items as not planned",
-   body: "`test_complete` in `.agent/tests/scripts` fails because `shut`, which `close` and `complete` call, closes the open sub-items of an item with the reason it closes the item with."},
+   body: "`test_complete` in `.agent/tests/scripts` fails because `shut`, which `close` and `complete` call, closes the open sub-items of an item with the reason it closes the item with. Delivering this after #6 would void its work on `shut`."},
   {number: 8, author_association: "OWNER", labels: [{name: "approved"}],
    title: "Make `poll` cap its wait at 480s",
    body: "`test_poll` in `.agent/tests/scripts` fails because `poll` lets its wait grow to 960s."},
@@ -109,7 +109,7 @@ jq -nR --rawfile c "$tmp/closed" --slurpfile s "$tmp/seeded.json" '
 delivered 6 7 8 9 10
 check relisted test -e "$tmp/stop"
 check picked jq -e '[.[] | select(.k == "start") | .n] | all(. != null) and unique == [6, 7, 8, 9, 10]' "$tmp/timeline.json"
-check urgent-first jq -e 'first(.[] | select(.k == "start") | .n) == 10' "$tmp/timeline.json"
+check prioritized jq -e '[.[] | select(.k == "start") | .n][:2] == [10, 7]' "$tmp/timeline.json"
 check capped jq -e '[.[].run | unique | length] | max == 3' "$tmp/timeline.json"
 check overlap jq -e 'all(.[]; .run | contains([6, 7]) | not)' "$tmp/timeline.json"
 check descendant jq -e --slurpfile p "$tmp/parent" 'all(.[]; .run | contains([$p[0], 11]) | not)' "$tmp/timeline.json"
