@@ -21,10 +21,15 @@ prompt() {
   jq -rs 'map(select(.type == "user"))[0].message.content | strings' "$1"
 }
 transcribed() {
-  local t a
+  local t m a p
   for t in "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/projects/*/*/subagents/agent-"$2".jsonl; do
-    a=$(jq -r .agentType "${t%.jsonl}.meta.json") && critic "$a" && [ "${a##*:}" = "$1" ] &&
-      [ "$(prompt "$t")" = "$w $3"$'\nFingerprint: '"$change" ] &&
+    m=${t%.jsonl}.meta.json
+    a=$(jq -r .agentType "$m") && critic "$a" && [ "${a##*:}" = "$1" ] &&
+      [[ $(prompt "$t") = *$'\nFingerprint: '"$change" ]] &&
+      p=${t%/*}/agent-$(jq -r .parentAgentId "$m") &&
+      jq -se --slurpfile m "$m" --slurpfile p "$p.meta.json" --arg c "$1" '$m[0].spawnDepth == $p[0].spawnDepth + 1 and
+        any(.[] | select(.type == "assistant") | .message.content[]?; .type == "tool_use" and .id == $m[0].toolUseId and
+          (.input.subagent_type | split(":")[-1]) == $c)' "$p.jsonl" >/dev/null &&
       [ "$(jq -rs '[.[] | select(.type == "assistant") | .message.content[]?] |
         (map(select(.name == "SubagentHandback"))[-1].input.message // map(select(.type == "text"))[-1].text // "")' "$t" |
         "$s/verdict")" = APPROVE ] && return
@@ -68,7 +73,7 @@ for f in "$h"/.claude/agents/*-critic.md; do
   c=$(basename "$f" .md) ok=
   for id in "${@:4}"; do
     [[ $id =~ ^[^/]+$ ]] && { read -r rc && read -r rf && [ "$rc $rf" = "$c $change" ] &&
-      [ "$("$s/verdict")" = APPROVE ]; } 2>/dev/null <"$d/$id" && transcribed "$c" "$id" "$3" && ok=1
+      [ "$("$s/verdict")" = APPROVE ]; } 2>/dev/null <"$d/$id" && transcribed "$c" "$id" && ok=1
   done
   [ -n "$ok" ] || { echo "$c: no approval of the change as it stands" >&2; fail=1; }
 done
