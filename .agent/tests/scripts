@@ -221,16 +221,21 @@ EOF
 
 test_review() {
   local r=$tmp/rev w=$tmp/rev-wt o p
+  export CLAUDE_CONFIG_DIR=$tmp/rev-config
   at() { git -C "$1" -c user.name=t -c user.email=t@t "${@:2}"; }
   hook() { "$scripts/review" "$@" 2>&1; echo $?; }
   spawn() { jq -n --arg t "$1" --arg p "$2" '{tool_input: {subagent_type: $t, prompt: $p, description: "d"}}' | hook "${3-spawn}"; }
   prompt() { spawn "$1" "$w main" | jq -r 'objects | .hookSpecificOutput.updatedInput.prompt'; }
   send() {
-    local t=$tmp/rev-session/subagents/agent-$3.jsonl
-    [ "$1" = handback ] || t=$tmp/rev-agent-$3.jsonl
+    local s=$CLAUDE_CONFIG_DIR/projects/p/s
+    local t=$s/subagents/agent-$3.jsonl
+    [ "$1" = handback ] || t=${s}2/subagents/agent-$3.jsonl
     mkdir -p "${t%/*}"
-    jq -nc --arg p "${P-$(prompt "$2")}" '{type: "user", message: {role: "user", content: $p}}' >"$t"
-    jq -n --arg e "$1" --arg a "$2" --arg i "$3" --arg m "$4" --arg s "$tmp/rev-session.jsonl" --arg t "$t" \
+    jq -n --arg a "$2" '{agentType: $a}' >"${t%.jsonl}.meta.json"
+    jq -nc --arg e "$1" --arg p "${P-$(prompt "$2")}" --arg m "$4" '{type: "user", message: {role: "user", content: $p}},
+      {type: "assistant", message: {role: "assistant", content: [if $e == "record" then {type: "text", text: $m}
+        else {type: "tool_use", name: "SubagentHandback", input: {message: $m}} end]}}' >"$t"
+    jq -n --arg e "$1" --arg a "$2" --arg i "$3" --arg m "$4" --arg s "$s.jsonl" --arg t "$t" \
       "{agent_type: \$a, agent_id: \$i, transcript_path: \$s} + if \$e == \"record\" then
       {agent_transcript_path: \$t, last_assistant_message: \$m, stop_hook_active: false} else {tool_input: {message: \$m}} end | ${X-.}" |
       hook "$1"
@@ -286,6 +291,20 @@ test_review() {
   same "$(approved e l f)" $'full-review-critic: no approval of the change as it stands\n1'
   record agent-harness:full-review-critic g 'Verdict: APPROVE' >/dev/null
   same "$(approved e l g x ../e)" 0
+  cp "$r/.git/critic-reviews/g" "$r/.git/critic-reviews/h"
+  same "$(approved e l h)" $'full-review-critic: no approval of the change as it stands\n1'
+  tamper() {
+    local t=$CLAUDE_CONFIG_DIR/projects/p/s2/subagents/agent-g.$1
+    cp "$t" "$t.bak"
+    jq -c "$2" "$t.bak" >"$t"
+    same "$(approved e l g | tail -n 1)" 1
+    mv "$t.bak" "$t"
+  }
+  tamper meta.json '.agentType = "alignment-critic"'
+  tamper meta.json '.agentType = "other:full-review-critic"'
+  tamper jsonl 'if .type == "user" then .message.content |= sub(" main"; " work") else . end'
+  tamper jsonl 'if .type == "assistant" then .message.content[0].text = "Verdict: REJECT\nRejection Grounds: r" else . end'
+  same "$(approved e l g)" 0
   at "$r" config core.abbrev 4
   printf '54438\0' >"$w/bin"
   same "$(approved e l g | tail -n 1)" 1

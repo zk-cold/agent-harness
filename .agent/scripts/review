@@ -17,6 +17,20 @@ critic() {
   local c=${1##*:}
   [[ $c =~ ^[a-z-]+-critic$ && -f $h/.claude/agents/$c.md && $1 =~ ^($(jq -r .name "$h/.claude-plugin/plugin.json"):)?$c$ ]]
 }
+prompt() {
+  jq -rs 'map(select(.type == "user"))[0].message.content | strings' "$1"
+}
+transcribed() {
+  local t a
+  for t in "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/projects/*/*/subagents/agent-"$2".jsonl; do
+    a=$(jq -r .agentType "${t%.jsonl}.meta.json") && critic "$a" && [ "${a##*:}" = "$1" ] &&
+      [ "$(prompt "$t")" = "$w $3"$'\nFingerprint: '"$change" ] &&
+      [ "$(jq -rs '[.[] | select(.type == "assistant") | .message.content[]?] |
+        (map(select(.name == "SubagentHandback"))[-1].input.message // map(select(.type == "text"))[-1].text // "")' "$t" |
+        "$s/verdict")" = APPROVE ] && return
+  done 2>/dev/null
+  return 1
+}
 case $1 in
   spawn)
     i=$(cat)
@@ -32,7 +46,7 @@ case $1 in
     id=$(jq -r .agent_id <<<"$i")
     [[ $id =~ ^[^/]+$ ]] || { echo "$id: invalid agent ID" >&2; exit 1; }
     t=$(jq -r '.agent_transcript_path // ((.transcript_path | rtrimstr(".jsonl")) + "/subagents/agent-\(.agent_id).jsonl")' <<<"$i")
-    p=$(jq -rs 'map(select(.type == "user"))[0].message.content | strings' "$t") || exit 1
+    p=$(prompt "$t") || exit 1
     re=$'^([^\n ]+) ([^\n ]+)\nFingerprint: ([0-9a-f]+)$'
     [[ $p =~ $re ]] || { echo "$id: prompt not set by $0 spawn" >&2; exit 1; }
     f=${BASH_REMATCH[3]}
@@ -54,7 +68,7 @@ for f in "$h"/.claude/agents/*-critic.md; do
   c=$(basename "$f" .md) ok=
   for id in "${@:4}"; do
     [[ $id =~ ^[^/]+$ ]] && { read -r rc && read -r rf && [ "$rc $rf" = "$c $change" ] &&
-      [ "$("$s/verdict")" = APPROVE ]; } 2>/dev/null <"$d/$id" && ok=1
+      [ "$("$s/verdict")" = APPROVE ]; } 2>/dev/null <"$d/$id" && transcribed "$c" "$id" "$3" && ok=1
   done
   [ -n "$ok" ] || { echo "$c: no approval of the change as it stands" >&2; fail=1; }
 done
