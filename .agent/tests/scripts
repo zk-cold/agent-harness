@@ -168,7 +168,7 @@ test_governance_growth() {
   at() { git -C "$1" -c user.name=t -c user.email=t@t "${@:2}"; }
   git init -q -b main "$r"
   jq -n '[{number: 1, labels: [{name: "approved"}]}, {number: 2, labels: []}]' >"$r/.git/issues.json"
-  echo 'a b c' >"$r/CLAUDE.md"
+  echo 'a b c' >"$r/AGENTS.md"
   at "$r" add . && at "$r" commit -qm a
   at "$r" worktree add -q -b work "$w"
   mkdir -p "$w/.claude/agents" "$r/sub"
@@ -185,9 +185,9 @@ test_governance_growth() {
     "$tmp/harness/.agent/scripts/../schemas/governance-schema.md: no docs"$'\n1'
   growth "$r" 2 >/dev/null && return 1
   growth "$r" 1 >/dev/null
-  echo a >"$w/CLAUDE.md"
+  echo a >"$w/AGENTS.md"
   at "$w" commit -qam c
-  echo 'f g' >>"$r/CLAUDE.md"
+  echo 'f g' >>"$r/AGENTS.md"
   at "$r" commit -qam d
   same "$(growth "$r" 2)" 0
   growth "$r" 2 >/dev/null
@@ -374,14 +374,14 @@ rejects() {
 test_check() {
   "$scripts/check" "$here/../.."
   same "$("$scripts/check" 2>&1; echo $?)" "usage: $scripts/check <repo path>"$'\n2'
-  governed '# Invariants\n\n## A\nx\n```\n# Notes\n```\n' CLAUDE.md
+  governed '# Invariants\n\n## A\nx\n```\n# Notes\n```\n' AGENTS.md
   "$scripts/check" "$tmp/repo"
   governed '---\nname: a\n---\n# Definitions\n## A\nx\n' .claude/agents/a.md
   "$scripts/check" "$tmp/repo"
-  governed 'x\n# Invariants\n' CLAUDE.md
-  rejects CLAUDE.md:1
-  governed '# Invariants\n# Notes\n' CLAUDE.md
-  rejects CLAUDE.md:2
+  governed 'x\n# Invariants\n' AGENTS.md
+  rejects AGENTS.md:1
+  governed '# Invariants\n# Notes\n' AGENTS.md
+  rejects AGENTS.md:2
   governed '---\nname: a\n# Invariants\n' .claude/agents/a.md
   rejects .claude/agents/a.md:3
   governed 'case $1 in\n  list | show | add | edit | close | complete) ;;\nesac\n' .agent/scripts/roadmap-x

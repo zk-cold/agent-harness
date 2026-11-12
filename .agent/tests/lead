@@ -15,7 +15,7 @@ git commit -q --amend -a --no-edit
 git tag -f seed >/dev/null
 jq -n '[
   {number: 1, author_association: "NONE", labels: [], title: "Remove `.agent/tests/stub`"},
-  {number: 2, author_association: "MEMBER", labels: [], title: "Add a `## Naming` invariant to CLAUDE.md"},
+  {number: 2, author_association: "MEMBER", labels: [], title: "Add a `## Naming` invariant to AGENTS.md"},
   {number: 3, author_association: "OWNER", labels: [{name: "approved"}], title: "Tidy roadmap-gh helpers"},
   {number: 4, author_association: "OWNER", labels: [{name: "approved"}], parent: 3,
    title: "Rename roadmap-gh `shut` to `close_tree` (blocked: until #2 is closed)"},

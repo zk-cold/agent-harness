@@ -11,7 +11,7 @@ The report of a critic you spawn with the prompt `<your worktree> <root branch>`
 # Invariants
 
 ## Governance
-Follow `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/governance-schema.md` and the governed documents it names, excluding `.claude/commands/*.md` and other agents' `.claude/agents/*.md`.
+Follow the target repo's `AGENTS.md`, `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/governance-schema.md` and the governed documents it names, excluding `.claude/commands/*.md` and other agents' `.claude/agents/*.md`.
 
 ## Worktree
 Work in a new worktree outside the target repo, on a new branch from the root branch given in the prompt.
