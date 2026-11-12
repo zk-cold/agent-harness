@@ -13,20 +13,24 @@ fingerprint() {
       git diff --full-index --no-renames --no-ext-diff --no-textconv --no-color "$(git merge-base HEAD "$b")" |
       awk '/^index /{i = $0; next} /^Binary files /{print i} !/^@@/' | git hash-object --stdin)
 }
+ours() {
+  [[ $1 =~ ^($(jq -r .name "$h/.claude-plugin/plugin.json"):)?$2$ ]]
+}
 critic() {
   local c=${1##*:}
-  [[ $c =~ ^[a-z-]+-critic$ && -f $h/.claude/agents/$c.md && $1 =~ ^($(jq -r .name "$h/.claude-plugin/plugin.json"):)?$c$ ]]
+  [[ $c =~ ^[a-z-]+-critic$ && -f $h/.claude/agents/$c.md ]] && ours "$1" "$c"
 }
 prompt() {
   jq -rs 'map(select(.type == "user"))[0].message.content | strings' "$1"
 }
 transcribed() {
-  local t m a p
+  local t m a q p
   for t in "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/projects/*/*/subagents/agent-"$2".jsonl; do
     m=${t%.jsonl}.meta.json
     a=$(jq -r .agentType "$m") && critic "$a" && [ "${a##*:}" = "$1" ] &&
       [[ $(prompt "$t") = *$'\nFingerprint: '"$change" ]] &&
-      p=${t%/*}/agent-$(jq -r .parentAgentId "$m") &&
+      q=$(jq -r .parentAgentId "$m") && [[ $q =~ ^[^/]+$ ]] && p=${t%/*}/agent-$q &&
+      ours "$(jq -r .agentType "$p.meta.json")" impl &&
       jq -se --slurpfile m "$m" --slurpfile p "$p.meta.json" --arg c "$1" '$m[0].spawnDepth == $p[0].spawnDepth + 1 and
         any(.[] | select(.type == "assistant") | .message.content[]?; .type == "tool_use" and .id == $m[0].toolUseId and
           (.input.subagent_type | split(":")[-1]) == $c)' "$p.jsonl" >/dev/null &&

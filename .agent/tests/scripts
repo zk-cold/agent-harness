@@ -307,6 +307,11 @@ test_review() {
   tamper g.meta.json '.agentType = "other:full-review-critic"'
   tamper g.meta.json '.parentAgentId = "g"'
   tamper g.meta.json 'del(.parentAgentId)'
+  mkdir -p "$CLAUDE_CONFIG_DIR"/projects/p/s{2/subagents/agent-x,3/subagents}
+  cp "$CLAUDE_CONFIG_DIR"/projects/p/s2/subagents/agent-i.* "$CLAUDE_CONFIG_DIR/projects/p/s3/subagents"
+  tamper g.meta.json '.parentAgentId = "x/../../../s3/subagents/agent-i"'
+  tamper i.meta.json '.agentType = "general-purpose"'
+  tamper i.meta.json '.agentType = "other:impl"'
   tamper g.meta.json '.spawnDepth = 3'
   tamper g.meta.json '.toolUseId = "uz"'
   tamper i.meta.json '.spawnDepth = 2'
