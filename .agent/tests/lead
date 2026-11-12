@@ -25,8 +25,8 @@ jq -n --arg due "$(date -d '+3 days' +%F)" '[
    title: "Make `roadmap-gh close` close items as not planned (blocked: until #5 is closed)",
    body: "`.agent/tests/scripts` fails because `close` closes items as completed."},
   {number: 7, author_association: "OWNER", labels: [{name: "approved"}],
-   title: "Make roadmap-gh close open sub-items as not planned",
-   body: "`test_complete` in `.agent/tests/scripts` fails because `shut`, which `close` and `complete` call, closes the open sub-items of an item with the reason it closes the item with. Delivering this after #6 would void its work on `shut`."},
+   title: "Make roadmap-gh `shut` choose closing reasons itself",
+   body: "`test_close` and `test_complete` in `.agent/tests/scripts` fail because `shut`, which `close` and `complete` call, closes an item and its open sub-items with whatever reason it is given. Make it close all of them as not planned, except an item `complete` completes. Delivering this would make #6 unnecessary."},
   {number: 8, author_association: "OWNER", labels: [{name: "approved"}],
    title: "Make `poll` cap its wait at 480s",
    body: "`test_poll` in `.agent/tests/scripts` fails because `poll` lets its wait grow to 960s."},
@@ -106,10 +106,10 @@ jq -nR --rawfile c "$tmp/closed" --slurpfile s "$tmp/seeded.json" '
       | .log += [{k: $k, n: $n, run: .run}])
   | .log' "$tmp/events.jsonl" >"$tmp/timeline.json" || :
 
-delivered 6 7 8 9 10
+delivered 7 8 9 10
 check relisted test -e "$tmp/stop"
-check picked jq -e '[.[] | select(.k == "start") | .n] | all(. != null) and unique == [6, 7, 8, 9, 10]' "$tmp/timeline.json"
-check prioritized jq -e '[.[] | select(.k == "start") | .n] | .[0] == 10 and index(7) < index(6)' "$tmp/timeline.json"
+check picked jq -e '[.[] | select(.k == "start") | .n] | all(. != null) and unique - [6] == [7, 8, 9, 10]' "$tmp/timeline.json"
+check prioritized jq -e 'first(.[] | select(.k == "start")).n == 10 and first(.[] | select(.n == 6 or .k == "start" and .n == 7)).n == 7' "$tmp/timeline.json"
 check capped jq -e '[.[].run | unique | length] | max == 3' "$tmp/timeline.json"
 check overlap jq -e 'all(.[]; .run | contains([6, 7]) | not)' "$tmp/timeline.json"
 check descendant jq -e --slurpfile p "$tmp/parent" 'all(.[]; .run | contains([$p[0], 11]) | not)' "$tmp/timeline.json"
