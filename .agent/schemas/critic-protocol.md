@@ -6,7 +6,7 @@ For the path given in the prompt, the output of `.agent/scripts/change-under-rev
 # Invariants
 
 ## Target Repo Governance
-Follow the target repo's `AGENTS.md` and `.agent/schemas/*.md`.
+Follow the target repo's `AGENTS.md`.
 
 ## Terms
 Use the definitions in `.agent/schemas/governance-schema.md` and `.agent/schemas/roadmap.md`.
