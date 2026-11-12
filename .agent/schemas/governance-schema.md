@@ -6,13 +6,16 @@
 ## This Harness
 The directory whose `.agent/schemas/` holds this file, against which `.agent/` paths in its governed documents resolve.
 
+## `${CLAUDE_PLUGIN_ROOT}`
+This harness.
+
 ## Categories
 - Definitions: meanings of terms, containing no rules.
 - Invariants: always-binding rules.
 - Considerations: default-binding rules.
 
 ## Target Repo
-The repo the prompt identifies, including by the path of one of its worktrees, otherwise the git repo of the working directory.
+The repo the prompt identifies, other than as `${CLAUDE_PLUGIN_ROOT}`, including by one of its worktrees, otherwise the working directory's repo.
 
 ## Root Branch
 The target repo's branch the prompt names, otherwise its default branch.
