@@ -108,10 +108,10 @@ jq -nR --rawfile c "$tmp/closed" --slurpfile s "$tmp/seeded.json" '
 
 delivered 7 8 9 10
 check relisted test -e "$tmp/stop"
-check picked jq -e '[.[] | select(.k == "start") | .n] | all(. != null) and unique - [6] == [7, 8, 9, 10]' "$tmp/timeline.json"
-check prioritized jq -e 'first(.[] | select(.k == "start")).n == 10 and first(.[] | select(.n == 6 or .k == "start" and .n == 7)).n == 7' "$tmp/timeline.json"
+check picked jq -e '[.[] | select(.k == "start") | .n] | all(. != null) and unique == [7, 8, 9, 10]' "$tmp/timeline.json"
+check prioritized jq -e 'first(.[] | select(.k == "start")).n == 10' "$tmp/timeline.json"
+check obviated jq -e '.[5] | .state_reason == "not_planned" and (.title + (.body // "") | test("#7\\b"))' .git/issues.json
 check capped jq -e '[.[].run | unique | length] | max == 3' "$tmp/timeline.json"
-check overlap jq -e 'all(.[]; .run | contains([6, 7]) | not)' "$tmp/timeline.json"
 check descendant jq -e --slurpfile p "$tmp/parent" 'all(.[]; .run | contains([$p[0], 11]) | not)' "$tmp/timeline.json"
 check listed jq -e 'any(.[]; .k == "list" and .run != [])' "$tmp/timeline.json"
 check polled jq -e 'any(.[]; .k == "poll") and all(.[]; .k != "poll" or .run == [])' "$tmp/timeline.json"
