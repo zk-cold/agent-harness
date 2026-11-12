@@ -258,7 +258,7 @@ test_review() {
   mv "$w/old" "$w/0new"
   o=$(objs)
   same "$(cd "$tmp" && spawn agent-harness:earn-its-place-critic $'rev-wt main extra\nmore' |
-    sed '1s/[0-9a-f]\{40\}"/F"/')" "$(jq -nc --arg p "$w main"$'\nFingerprint: F' '{hookSpecificOutput: {hookEventName: "PreToolUse",
+    sed '1s/[0-9a-f]\{40\}"/F"/')" "$(jq -nc --arg p "Worktree: $w"$'\nRoot Branch: main\nFingerprint: F' '{hookSpecificOutput: {hookEventName: "PreToolUse",
       updatedInput: {subagent_type: "agent-harness:earn-its-place-critic", prompt: $p, description: "d"}}}')"$'\n0'
   for t in impl ../x-critic x-critic other:full-review-critic ''; do same "$(spawn "$t" junk)" 0; done
   local bad="A critic's prompt must hold only your worktree's path and the root branch."$'\n2'
@@ -280,7 +280,7 @@ test_review() {
     $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
   same "$(handback other:alignment-critic l 'Verdict: APPROVE')" 0
   same "$(X='.transcript_path = "/none.jsonl"' handback alignment-critic l 'Approved.' | tail -n 1)" 1
-  same "$(P="$tmp/none main"$'\nFingerprint: 0' handback alignment-critic l 'Approved.' | tail -n 1)" 1
+  same "$(P="Worktree: $tmp/none"$'\nRoot Branch: main\nFingerprint: 0' handback alignment-critic l 'Approved.' | tail -n 1)" 1
   [ ! -e "$r/.git/critic-reviews/l" ]
   same "$(record alignment-critic k $'Verdict: REJECT\nRejection Grounds: r')" 0
   same "$(handback alignment-critic k 'Verdict: APPROVE')" 0
