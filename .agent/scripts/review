@@ -43,10 +43,17 @@ transcribed() {
 case $1 in
   spawn)
     i=$(cat)
-    critic "$(jq -r '.tool_input.subagent_type // ""' <<<"$i")" || exit 0
-    read -r w b _ <<<"$(jq -r '.tool_input.prompt // ""' <<<"$i")"
-    [ -n "$b" ] && fingerprint "$w" "$b" || { echo "A critic's prompt must hold only your worktree's path and the root branch." >&2; exit 2; }
-    jq -c --arg p "Worktree: $w"$'\nRoot Branch: '"$b"$'\nFingerprint: '"$change" '{hookSpecificOutput: {hookEventName: "PreToolUse", updatedInput: (.tool_input | .prompt = $p)}}' <<<"$i"
+    a=$(jq -r '.tool_input.subagent_type // ""' <<<"$i")
+    r='${CLAUDE_PLUGIN_ROOT}: '$h
+    if critic "$a"; then
+      read -r w b _ <<<"$(jq -r '.tool_input.prompt // ""' <<<"$i")"
+      [ -n "$b" ] && fingerprint "$w" "$b" || { echo "A critic's prompt must hold only your worktree's path and the root branch." >&2; exit 2; }
+      p=$r$'\nWorktree: '"$w"$'\nRoot Branch: '"$b"$'\nFingerprint: '"$change"
+    else
+      ours "$a" impl || exit 0
+      p=$r$'\n'$(jq -r '.tool_input.prompt // ""' <<<"$i")
+    fi
+    jq -c --arg p "$p" '{hookSpecificOutput: {hookEventName: "PreToolUse", updatedInput: (.tool_input | .prompt = $p)}}' <<<"$i"
     exit ;;
   handback | record)
     i=$(cat)
@@ -56,7 +63,7 @@ case $1 in
     [[ $id =~ ^[^/]+$ ]] || { echo "$id: invalid agent ID" >&2; exit 1; }
     t=$(jq -r '.agent_transcript_path // ((.transcript_path | rtrimstr(".jsonl")) + "/subagents/agent-\(.agent_id).jsonl")' <<<"$i")
     p=$(prompt "$t") || exit 1
-    re=$'^Worktree: ([^\n ]+)\nRoot Branch: ([^\n ]+)\nFingerprint: ([0-9a-f]+)$'
+    re=$'^\\$\\{CLAUDE_PLUGIN_ROOT\\}: [^\n]+\nWorktree: ([^\n ]+)\nRoot Branch: ([^\n ]+)\nFingerprint: ([0-9a-f]+)$'
     [[ $p =~ $re ]] || { echo "$id: prompt not set by $0 spawn" >&2; exit 1; }
     f=${BASH_REMATCH[3]}
     fingerprint "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
