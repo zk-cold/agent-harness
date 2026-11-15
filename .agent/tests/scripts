@@ -168,7 +168,7 @@ test_governance_growth() {
   at() { git -C "$1" -c user.name=t -c user.email=t@t "${@:2}"; }
   git init -q -b main "$r"
   jq -n '[{number: 1, labels: [{name: "approved"}]}, {number: 2, labels: []}]' >"$r/.git/issues.json"
-  echo 'a b c' >"$r/CLAUDE.md"
+  echo 'a b c' >"$r/AGENTS.md"
   at "$r" add . && at "$r" commit -qm a
   at "$r" worktree add -q -b work "$w"
   mkdir -p "$w/.claude/agents" "$r/sub"
@@ -185,9 +185,9 @@ test_governance_growth() {
     "$tmp/harness/.agent/scripts/../schemas/governance-schema.md: no docs"$'\n1'
   growth "$r" 2 >/dev/null && return 1
   growth "$r" 1 >/dev/null
-  echo a >"$w/CLAUDE.md"
+  echo a >"$w/AGENTS.md"
   at "$w" commit -qam c
-  echo 'f g' >>"$r/CLAUDE.md"
+  echo 'f g' >>"$r/AGENTS.md"
   at "$r" commit -qam d
   same "$(growth "$r" 2)" 0
   growth "$r" 2 >/dev/null
@@ -221,16 +221,24 @@ EOF
 
 test_review() {
   local r=$tmp/rev w=$tmp/rev-wt o p
+  export CLAUDE_CONFIG_DIR=$tmp/rev-config
   at() { git -C "$1" -c user.name=t -c user.email=t@t "${@:2}"; }
   hook() { "$scripts/review" "$@" 2>&1; echo $?; }
   spawn() { jq -n --arg t "$1" --arg p "$2" '{tool_input: {subagent_type: $t, prompt: $p, description: "d"}}' | hook "${3-spawn}"; }
   prompt() { spawn "$1" "$w main" | jq -r 'objects | .hookSpecificOutput.updatedInput.prompt'; }
   send() {
-    local t=$tmp/rev-session/subagents/agent-$3.jsonl
-    [ "$1" = handback ] || t=$tmp/rev-agent-$3.jsonl
+    local s=$CLAUDE_CONFIG_DIR/projects/p/s
+    local t=$s/subagents/agent-$3.jsonl
+    [ "$1" = handback ] || t=${s}2/subagents/agent-$3.jsonl
     mkdir -p "${t%/*}"
-    jq -nc --arg p "${P-$(prompt "$2")}" '{type: "user", message: {role: "user", content: $p}}' >"$t"
-    jq -n --arg e "$1" --arg a "$2" --arg i "$3" --arg m "$4" --arg s "$tmp/rev-session.jsonl" --arg t "$t" \
+    jq -n '{agentType: "impl", spawnDepth: 1}' >"${t%/*}/agent-i.meta.json"
+    jq -nc --arg a "$2" --arg i "$3" '{type: "assistant", message: {content: [{type: "tool_use", id: "u\($i)", input: {subagent_type: $a}}]}}' \
+      >>"${t%/*}/agent-i.jsonl"
+    jq -n --arg a "$2" --arg i "$3" '{agentType: $a, parentAgentId: "i", spawnDepth: 2, toolUseId: "u\($i)"}' >"${t%.jsonl}.meta.json"
+    jq -nc --arg e "$1" --arg p "${P-$(prompt "$2")}" --arg m "$4" '{type: "user", message: {role: "user", content: $p}},
+      {type: "assistant", message: {role: "assistant", content: [if $e == "record" then {type: "text", text: $m}
+        else {type: "tool_use", name: "SubagentHandback", input: {message: $m}} end]}}' >"$t"
+    jq -n --arg e "$1" --arg a "$2" --arg i "$3" --arg m "$4" --arg s "$s.jsonl" --arg t "$t" \
       "{agent_type: \$a, agent_id: \$i, transcript_path: \$s} + if \$e == \"record\" then
       {agent_transcript_path: \$t, last_assistant_message: \$m, stop_hook_active: false} else {tool_input: {message: \$m}} end | ${X-.}" |
       hook "$1"
@@ -249,10 +257,15 @@ test_review() {
   printf 'a\0' >"$w/bin"
   mv "$w/old" "$w/0new"
   o=$(objs)
+  local h='${CLAUDE_PLUGIN_ROOT}: '$(cd "$scripts/../.." && pwd)
   same "$(cd "$tmp" && spawn agent-harness:earn-its-place-critic $'rev-wt main extra\nmore' |
-    sed '1s/[0-9a-f]\{40\}"/F"/')" "$(jq -nc --arg p "$w main"$'\nFingerprint: F' '{hookSpecificOutput: {hookEventName: "PreToolUse",
+    sed '1s/[0-9a-f]\{40\}"/F"/')" "$(jq -nc --arg p "$h"$'\nWorktree: '"$w"$'\nRoot Branch: main\nFingerprint: F' '{hookSpecificOutput: {hookEventName: "PreToolUse",
       updatedInput: {subagent_type: "agent-harness:earn-its-place-critic", prompt: $p, description: "d"}}}')"$'\n0'
-  for t in impl ../x-critic x-critic other:full-review-critic ''; do same "$(spawn "$t" junk)" 0; done
+  for t in impl agent-harness:impl; do
+    same "$(spawn "$t" $'x\ny')" "$(jq -nc --arg t "$t" --arg p "$h"$'\nx\ny' '{hookSpecificOutput: {hookEventName: "PreToolUse",
+      updatedInput: {subagent_type: $t, prompt: $p, description: "d"}}}')"$'\n0'
+  done
+  for t in other:impl ../x-critic x-critic other:full-review-critic ''; do same "$(spawn "$t" junk)" 0; done
   local bad="A critic's prompt must hold only your worktree's path and the root branch."$'\n2'
   same "$(spawn full-review-critic "$w")" "$bad"
   same "$(spawn full-review-critic "$tmp/none main" | tail -n 2)" "$bad"
@@ -262,6 +275,7 @@ test_review() {
   same "$(X='.stop_hook_active = true' record full-review-critic x 'Approved.')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n1'
   same "$(P="$w main" record full-review-critic x 'Verdict: APPROVE')" "x: prompt not set by $scripts/review spawn"$'\n1'
   p=$(prompt full-review-critic)
+  same "$(P=${p#*$'\n'} record full-review-critic x 'Verdict: APPROVE')" "x: prompt not set by $scripts/review spawn"$'\n1'
   touch "$w/during"
   same "$(P=$p record full-review-critic x 'Verdict: APPROVE')" "$w: changed during the review"$'\n1'
   rm "$w/during"
@@ -272,7 +286,7 @@ test_review() {
     $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
   same "$(handback other:alignment-critic l 'Verdict: APPROVE')" 0
   same "$(X='.transcript_path = "/none.jsonl"' handback alignment-critic l 'Approved.' | tail -n 1)" 1
-  same "$(P="$tmp/none main"$'\nFingerprint: 0' handback alignment-critic l 'Approved.' | tail -n 1)" 1
+  same "$(P="$h"$'\nWorktree: '"$tmp/none"$'\nRoot Branch: main\nFingerprint: 0' handback alignment-critic l 'Approved.' | tail -n 1)" 1
   [ ! -e "$r/.git/critic-reviews/l" ]
   same "$(record alignment-critic k $'Verdict: REJECT\nRejection Grounds: r')" 0
   same "$(handback alignment-critic k 'Verdict: APPROVE')" 0
@@ -286,6 +300,33 @@ test_review() {
   same "$(approved e l f)" $'full-review-critic: no approval of the change as it stands\n1'
   record agent-harness:full-review-critic g 'Verdict: APPROVE' >/dev/null
   same "$(approved e l g x ../e)" 0
+  cp "$r/.git/critic-reviews/g" "$r/.git/critic-reviews/h"
+  same "$(approved e l h)" $'full-review-critic: no approval of the change as it stands\n1'
+  tamper() {
+    local t=$CLAUDE_CONFIG_DIR/projects/p/s2/subagents/agent-$1
+    cp "$t" "$t.bak"
+    jq -c "$2" "$t.bak" >"$t"
+    same "$(approved e l g | tail -n 1)" 1
+    mv "$t.bak" "$t"
+  }
+  tamper g.meta.json '.agentType = "alignment-critic"'
+  tamper g.meta.json '.agentType = "other:full-review-critic"'
+  tamper g.meta.json '.parentAgentId = "g"'
+  tamper g.meta.json 'del(.parentAgentId)'
+  mkdir -p "$CLAUDE_CONFIG_DIR"/projects/p/s{2/subagents/agent-x,3/subagents}
+  cp "$CLAUDE_CONFIG_DIR"/projects/p/s2/subagents/agent-i.* "$CLAUDE_CONFIG_DIR/projects/p/s3/subagents"
+  tamper g.meta.json '.parentAgentId = "x/../../../s3/subagents/agent-i"'
+  tamper i.meta.json '.agentType = "general-purpose"'
+  tamper i.meta.json '.agentType = "other:impl"'
+  tamper g.meta.json '.spawnDepth = 3'
+  tamper g.meta.json '.toolUseId = "uz"'
+  tamper i.meta.json '.spawnDepth = 2'
+  tamper i.jsonl '.message.content[0].input.subagent_type |= sub("full"; "x")'
+  tamper g.jsonl 'if .type == "user" then .message.content |= sub("[0-9a-f]$"; "x") else . end'
+  tamper g.jsonl 'if .type == "assistant" then .message.content[0].text = "Verdict: REJECT\nRejection Grounds: r" else . end'
+  same "$(approved e l g)" 0
+  ln -s "$w" "$tmp/rev-link"
+  same "$(hook approved "$tmp/rev-link" refs/heads/main e l g)" 0
   at "$r" config core.abbrev 4
   printf '54438\0' >"$w/bin"
   same "$(approved e l g | tail -n 1)" 1
@@ -355,14 +396,14 @@ rejects() {
 test_check() {
   "$scripts/check" "$here/../.."
   same "$("$scripts/check" 2>&1; echo $?)" "usage: $scripts/check <repo path>"$'\n2'
-  governed '# Invariants\n\n## A\nx\n```\n# Notes\n```\n' CLAUDE.md
+  governed '# Invariants\n\n## A\nx\n```\n# Notes\n```\n' AGENTS.md
   "$scripts/check" "$tmp/repo"
   governed '---\nname: a\n---\n# Definitions\n## A\nx\n' .claude/agents/a.md
   "$scripts/check" "$tmp/repo"
-  governed 'x\n# Invariants\n' CLAUDE.md
-  rejects CLAUDE.md:1
-  governed '# Invariants\n# Notes\n' CLAUDE.md
-  rejects CLAUDE.md:2
+  governed 'x\n# Invariants\n' AGENTS.md
+  rejects AGENTS.md:1
+  governed '# Invariants\n# Notes\n' AGENTS.md
+  rejects AGENTS.md:2
   governed '---\nname: a\n# Invariants\n' .claude/agents/a.md
   rejects .claude/agents/a.md:3
   governed 'case $1 in\n  list | show | add | edit | close | complete) ;;\nesac\n' .agent/scripts/roadmap-x
