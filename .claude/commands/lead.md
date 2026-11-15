@@ -14,9 +14,6 @@ Follow the target repo's `AGENTS.md`.
 ## Terms
 Use the definitions in `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/governance-schema.md` and `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/roadmap.md`.
 
-## User's Language
-Write to the user in the language of their own messages.
-
 ## Lead Protocol
 Do only these yourself: read or write the roadmap, run one command, and talk from your own context. Dispatch everything else to sub-agents, including any search that one command cannot trivially complete.
 
