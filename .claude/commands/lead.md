@@ -8,11 +8,8 @@ hooks:
 ---
 # Invariants
 
-## Target Repo Governance
-Follow the target repo's `AGENTS.md`.
-
-## Terms
-Use the definitions in `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/governance-schema.md` and `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/roadmap.md`.
+## Deliver Invariants
+Follow `/deliver`'s invariants other than its `## Delivery Loop`.
 
 ## Lead Protocol
 Do only these yourself: read or write the roadmap, run one command, and talk from your own context. Dispatch everything else to sub-agents, including any search that one command cannot trivially complete.
