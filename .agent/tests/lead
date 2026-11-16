@@ -5,7 +5,7 @@ command -v ps >/dev/null
 command -v flock >/dev/null
 . "$(dirname "$0")/lib/scenario"
 sed -i 's/shut "$s" not_planned/shut "$s" "$2"/' .agent/scripts/roadmap-gh
-sed -i 's/wait < 240 ? wait \* 2 : 480/wait < 480 ? wait * 2 : 960/' .agent/scripts/poll
+sed -i 's/sleep 30/sleep 60/' .agent/scripts/poll
 sed -i 's/\[ -x "$b" \]/[ -e "$b" ]/' .agent/scripts/check
 sed -i 's/ --exclude-standard//' .agent/scripts/change-under-review
 out=$(.agent/tests/scripts 2>&1) || :
@@ -28,8 +28,8 @@ jq -n --arg due "$(date -d '+3 days' +%F)" '[
    title: "Make roadmap-gh `shut` choose closing reasons itself",
    body: "`test_close` and `test_complete` in `.agent/tests/scripts` fail because `shut`, which `close` and `complete` call, closes an item and its open sub-items with whatever reason it is given. Make it close all of them as not planned, except an item `complete` completes. Delivering this would make #6 unnecessary."},
   {number: 8, author_association: "OWNER", labels: [{name: "approved"}],
-   title: "Make `poll` cap its wait at 480s",
-   body: "`test_poll` in `.agent/tests/scripts` fails because `poll` lets its wait grow to 960s."},
+   title: "Make `poll` list candidates every 30s",
+   body: "`test_poll` in `.agent/tests/scripts` fails because `poll` waits 60s between listings."},
   {number: 9, author_association: "OWNER", labels: [{name: "approved"}],
    title: "Make `check` reject roadmap backends that are not executable",
    body: "`test_check` in `.agent/tests/scripts` fails because `check` accepts a roadmap backend that is not executable."},
