@@ -86,8 +86,6 @@ report() (
   done
   fail 'Approvals: no review found'
 )
-deny="(^|[/;&|] *)(roadmap(-[a-z]+)?( +[^ ;&|]+){0,2} +(close|complete)\\b|land +[a-z])|\\bgh +issue[^;&|]* (close|-l|--(add-)?label)\\b"
-api='state[^a-z0-9]{0,4}closed|labels|closeissue'
 case $1 in
   spawn)
     i=$(cat)
@@ -98,13 +96,18 @@ case $1 in
       [ -n "$b" ] && fingerprint "$w" "$b" || { echo "A critic's prompt must hold only your worktree's path and the root branch." >&2; exit 2; }
       . "$s/schema"
       c=${a##*:}
-      q=$(section 'Review Loop' "$h/.claude/agents/impl.md" | grep -o '`[a-z-]*-critic`' | tr -d '`' | awk -v c="$c" '$0 == c {print p; exit} {p = $0}')
-      if [ -z "$q" ]; then
-        git -C "$w" merge-base --is-ancestor "$b" HEAD || { echo "$w: $b is not merged" >&2; exit 2; }
-      else
+      named() { section "$1" "$h/.claude/agents/impl.md" | grep -o '`[a-z-]*-critic`' | tr -d '`'; }
+      [ "$(named 'Syncing Before Review')" != "$c" ] || git -C "$w" merge-base --is-ancestor "$b" HEAD ||
+        { echo "$w: $b is not merged" >&2; exit 2; }
+      q=$(named 'Review Loop' | awk -v c="$c" '$0 == c {print p; exit} {p = $0}')
+      if [ -n "$q" ]; then
         ok=
-        for id in $(ls -t "$d" 2>/dev/null); do approves "$q" "$id" && ok=1 && break; done
-        [ -n "$ok" ] || { echo "$c: $q has not approved the change as it stands" >&2; exit 2; }
+        for id in $(ls -t "$d" 2>/dev/null); do
+          { read -r _ && read -r f; } <"$d/$id" 2>/dev/null && [ "$f" = "$change" ] || continue
+          approves "$q" "$id" && ok=1
+          break
+        done
+        [ -n "$ok" ] || { echo "$c: the latest review of the change as it stands is not an approval by $q" >&2; exit 2; }
       fi
       p=$r$'\nWorktree: '"$w"$'\nRoot Branch: '"$b"$'\nFingerprint: '"$change"
     else
@@ -153,9 +156,14 @@ case $1 in
   guard)
     i=$(cat)
     ours "$(jq -r '.agent_type // ""' <<<"$i")" impl || exit 0
-    ! jq -e --arg r "$deny" --arg a "$api" '.tool_input | .state == "closed" or (.labels // [] | length > 0) or
-      (.command // "" | test($r; "i") or (test("\\bgh +api\\b") and test($a; "i")))' <<<"$i" >/dev/null ||
+    api='api\.github\.com' write='(-X|--request|method)\W{0,3}(post|patch|put|delete)|--data|-d\b|--json|\.(post|patch|put|delete)\(|mutation'
+    closing='(close|delete)issue|labels?(ids|tolabelable|fromlabelable)|state\W{0,4}closed|/labels|"labels?"\s*:|labels='
+    ! jq -e --arg a "$api" --arg w "$write" --arg c "$closing" '.tool_input | .state == "closed" or .labels != null or
+      (.command // "" | test($a) and test($w; "i") and test($c; "i"))' <<<"$i" >/dev/null ||
       { echo 'Label or close no roadmap items.' >&2; exit 2; }
+    p=$(printf 'export PATH=%q:"$PATH" AGENT_HARNESS_IMPL=1' "$s/impl-bin")
+    jq -c --arg p "$p" 'select(.tool_input.command) | {hookSpecificOutput: {hookEventName: "PreToolUse",
+      updatedInput: (.tool_input | .command = $p + "\n" + .command)}}' <<<"$i"
     exit ;;
 esac
 fingerprint "$2" "$3"
