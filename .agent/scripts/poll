@@ -9,11 +9,14 @@ fingerprint() {
   printf '%s\n' "$out"
   for n in $(cut -f 1 <<<"$out"); do
     road show "$n" || return
-    road approved "$n" 2>/dev/null && echo approved || echo -
+    if road approved "$n"; then echo approved; else [ $? = 1 ] || return; echo -; fi
   done
 }
+fails=0
 while sleep 30; do
-  out=$(road candidates) && now=$(fingerprint) && [ "$now" != "$seen" ] || continue
+  out=$(road candidates) && now=$(fingerprint) || { ((++fails < 5)) || exit; continue; }
+  fails=0
+  [ "$now" != "$seen" ] || continue
   seen=$now
   printf '%s\n' "$now" >"$state" || :
   [ -z "$out" ] || { printf '%s\n' "$out"; exit; }

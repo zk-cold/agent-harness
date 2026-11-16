@@ -75,7 +75,9 @@ complete() {
 }
 
 approved() {
-  gh api "$r/issues/$1" --jq 'any(.labels[]; .name == "approved")' | grep -qx true
+  local v
+  v=$(gh api "$r/issues/$1" --jq 'any(.labels[]; .name == "approved")') || return 2
+  [ "$v" = true ]
 }
 
 case $1 in
