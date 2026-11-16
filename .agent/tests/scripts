@@ -23,7 +23,7 @@ seed() {
     {number: 7, title: "seven", state: "closed", state_reason: "completed", author_association: "OWNER", parent: 6},
     {number: 8, title: "eight", state: "open", author_association: "OWNER", parent: 2},
     {number: 9, title: "nine", state: "open", author_association: "OWNER", parent: 6}
-  ] | map({comments: []} + .)' >"$issues"
+  ] | map({comments: [], labels: []} + .)' >"$issues"
 }
 
 test_list() {
@@ -114,6 +114,8 @@ test_approved() {
       {number: 2, labels: [{name: "ok"}], parent: 1}
     ]' >"$issues"
   same "$(for n in 1 2; do road approved "$n" && echo "$n"; done)" 1
+  road approved 3 2>/dev/null && return 1
+  [ $? = 2 ]
 }
 
 test_poll() {
@@ -123,7 +125,9 @@ test_poll() {
   mkdir -p "$tmp/bin"
   printf '#!/bin/sh\necho "$1" >>"%s"\nn=$(wc -l <"%s")\n[ "$n" != 3 ] || sh "%s"\n[ "$n" -lt 9 ]\n' \
     "$tmp/slept" "$tmp/slept" "$tmp/on-third" >"$tmp/bin/sleep"
-  chmod +x "$tmp/bin/sleep"
+  printf '#!/bin/sh\ncase "$*" in *approved*) ! grep -qx "$(wc -l <"%s")" "%s" 2>/dev/null || exit 1 ;; esac\nexec "%s" "$@"\n' \
+    "$tmp/slept" "$tmp/down" "$here/stub/gh" >"$tmp/bin/gh"
+  chmod +x "$tmp/bin/sleep" "$tmp/bin/gh"
   seed
   rm -f "$state"
   on :
@@ -144,6 +148,14 @@ test_poll() {
   on "cp $issues.bak $issues"
   same "$(poll)" $'2\ttwo\n9\tnueve'
   same "$(paste -sd ' ' "$tmp/slept")" '30 30 30'
+  printf '%s\n' 1 2 3 5 6 7 8 >"$tmp/down"
+  on :
+  same "$(poll; echo $?)" 0
+  seq 9 >"$tmp/down"
+  on :
+  same "$(poll; echo $?)" 1
+  same "$(wc -l <"$tmp/slept")" 5
+  rm "$tmp/down"
   rm "$state"
   mkdir "$state"
   same "$(poll 2>/dev/null)" $'2\ttwo\n9\tnueve'
@@ -519,7 +531,7 @@ test_check() {
   rejects AGENTS.md:2
   governed '---\nname: a\n# Invariants\n' .claude/agents/a.md
   rejects .claude/agents/a.md:3
-  governed 'case $1 in\n  list | show | add | edit | close | complete) ;;\nesac\n' .agent/scripts/roadmap-x
+  governed 'case $1 in\n  list | show | add | edit | close | complete | approved) ;;\nesac\n' .agent/scripts/roadmap-x
   rejects $'.agent/scripts/roadmap-x: not executable\n.agent/scripts/roadmap-x: candidates\n.agent/scripts/roadmap-x: descendants'
   local h=$tmp/harness/.agent
   local f t v
