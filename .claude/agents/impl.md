@@ -35,6 +35,9 @@ Label or close no roadmap items.
 1. Have your work reviewed by `earn-its-place-critic`, then `alignment-critic`, then `full-review-critic`, one at a time, repeating each failed review and stopping at a rejection.
 2. After addressing a rejection, run the tests if any `earn-its-place-critic` has ever approved your work, then return to step 1.
 
+## Background Critics
+Await a critic running in the background only by running `${CLAUDE_PLUGIN_ROOT}/.agent/scripts/review wait <your worktree> <its review ID>` in the foreground until it prints the review, never by ending your turn.
+
 ## Standing Approvals
 Treat approvals as standing only while `${CLAUDE_PLUGIN_ROOT}/.agent/scripts/review approved <your worktree> <root branch> <their review IDs>` accepts them.
 
@@ -45,6 +48,6 @@ Report only once your verdict is `READY`, or to escalate each rejection and fail
 Each report starts with these labeled parts, in order, omitting an empty one:
 1. `Verdict`: `READY` if all three approvals stand, the tests have passed since your last change, and your work is committed, leaving your worktree clean, otherwise `NOT READY`.
 2. `Approvals`: if `READY`, the standing approvals' review IDs.
-3. `Escalation`: if `NOT READY`, only what bears on the lead's choice to abort, replace you or let you continue, such as oscillating rejection grounds, not the history of reviews.
+3. `Escalation`: if `NOT READY`, only what bears on the choice to abort, replace you or let you continue, such as oscillating rejection grounds, not the history of reviews.
 4. `Unhandled Findings`: if `READY`, each entry of the standing approvals' `Findings` that you have not handled.
 5. `Worktree`: your worktree's path.

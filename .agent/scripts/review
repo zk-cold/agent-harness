@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-[[ $# -ge 4 && $1 = approved || $# = 1 && $1 =~ ^(spawn|handback|record|guard)$ ]] ||
-  { echo "usage: $0 approved <worktree> <root branch> <review ID>... | spawn | handback | record | guard" >&2; exit 2; }
+[[ $# -ge 4 && $1 = approved || $# = 3 && $1 = wait || $# = 1 && $1 =~ ^(spawn|handback|record|guard)$ ]] ||
+  { echo "usage: $0 approved <worktree> <root branch> <review ID>... | wait <worktree> <review ID> | spawn | handback | record | guard" >&2; exit 2; }
 s=$(cd "$(dirname "$0")" && pwd)
 h=${s%/.agent/scripts}
 x=$(mktemp -d)
@@ -120,12 +120,12 @@ case $1 in
     [ "$1" = record ] || k=.tool_input.message
     m=$(jq -r "$k // \"\"" <<<"$i")
     t=$(jq -r '.agent_transcript_path // ((.transcript_path | rtrimstr(".jsonl")) + "/subagents/agent-\(.agent_id).jsonl")' <<<"$i")
-    blocked() { [ "$1" = record ] && jq -e .stop_hook_active <<<"$i" >/dev/null && exit 1; exit 2; }
+    final() { [ "$1" = record ] && jq -e .stop_hook_active <<<"$i" >/dev/null; }
     if ours "$a" impl; then
       n=
       [ "$1" = handback ] || n=$(jq -rs '[.[] | select(.type == "assistant") | .message.content[]? | select(.name? == "SubagentHandback")][-1].input.message // empty' "$t" 2>/dev/null) || :
       [ -z "$n" ] || ! report "$n" 2>/dev/null || exit 0
-      report "$m" || blocked "$1"
+      report "$m" || { final "$1" && exit 1; exit 2; }
       exit
     fi
     critic "$a" || exit 0
@@ -136,11 +136,19 @@ case $1 in
     f=${BASH_REMATCH[3]}
     fingerprint "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
     [ ! -e "$d/$id" ] || exit 0
-    printf %s "$m" | "$s/verdict" >/dev/null || blocked "$1"
-    [ "$change" = "$f" ] || { echo "$w: changed during the review" >&2; exit 1; }
+    rc=0
+    printf %s "$m" | "$s/verdict" >/dev/null || { final "$1" || exit 2; rc=1; }
+    [ "$change" = "$f" ] || { echo "$w: changed during the review" >&2; rc=1; }
+    [ "$rc" = 0 ] || change=-
     mkdir -p "$d"
-    printf '%s\n%s\n%s\n' "${a##*:}" "$change" "$m" >"$d/$id"
+    printf '%s\n%s\n%s\n' "${a##*:}" "$change" "$m" >"$d/.$id" && mv "$d/.$id" "$d/$id"
     ls -t "$d" | tail -n +101 | (cd "$d" && xargs -rd '\n' rm -f --)
+    exit "$rc" ;;
+  wait)
+    [[ $3 =~ ^[^/]+$ ]] || fail "$3: invalid review ID"
+    d=$(git -C "$2" rev-parse --path-format=absolute --git-common-dir)/critic-reviews
+    until [ -e "$d/$3" ]; do sleep 5; done
+    tail -n +3 "$d/$3"
     exit ;;
   guard)
     i=$(cat)
