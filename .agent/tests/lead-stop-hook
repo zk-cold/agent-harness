@@ -3,10 +3,10 @@ set -euo pipefail
 [ "${LEAD_SCENARIO-}" = 1 ] || exit 0
 . "$(dirname "$0")/lib/scenario"
 f=.claude/commands/lead.md
-{ awk 'NR > 1 && /^---$/ {print; exit} 1' "$f"; echo 'Reply with exactly `Done.`; once told to end with the line `Awaiting user.`, do so.'; } >"$tmp/lead.md"
+{ awk 'NR > 1 && /^---$/ {print; exit} 1' "$f"; echo 'Run `sleep 30` in the background, then end your turn replying exactly `Waiting.`; once it finishes, reply with exactly `Done.`; once told to end with the line `Awaiting user.`, do so.'; } >"$tmp/lead.md"
 mv "$tmp/lead.md" "$f"
 scenario /lead --include-hook-events
 
 check stopped jq -se '
-  [.[] | select(.subtype == "hook_response" and .hook_event == "Stop") | .exit_code] | .[0] == 2 and .[-1] == 0' "$tmp/events.jsonl"
+  [.[] | select(.subtype == "hook_response" and .hook_event == "Stop") | .exit_code] == [0, 2, 0]' "$tmp/events.jsonl"
 exit "$fail"
