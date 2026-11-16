@@ -3,13 +3,20 @@ set -euo pipefail
 [ $# -ge 6 ] || { echo "usage: $0 <backend> <target repo path> <item> <worktree> <root branch> <review ID>..." >&2; exit 2; }
 s=$(cd "$(dirname "$0")" && pwd)
 road=("$s/roadmap" "$1" "$2")
-b=$(git -C "$4" symbolic-ref --short HEAD)
-[ -z "$(git -C "$4" status --porcelain)" ] || { echo "$4: not clean" >&2; exit 1; }
-[ "$(git -C "$2" symbolic-ref --short HEAD)" = "$5" ] || { echo "$2: not on $5" >&2; exit 1; }
-"$s/review" approved "${@:4}"
-"$s/check" "$4"
-[ "$(cd "$2" && pwd -P)" != "$(cd "$s/../.." && pwd -P)" ] || (cd "$4" && "$s/governance-growth" "$b" "$3")
-git -C "$2" merge -q --no-ff -m "Merge $b (#$3)" "$b" || { git -C "$2" merge --abort; exit 1; }
+m=$(git -C "$2" rev-parse --path-format=absolute --git-common-dir)/land-$3
+if [ "$(cat "$m" 2>/dev/null)" != "$4" ]; then
+  b=$(git -C "$4" symbolic-ref --short HEAD)
+  for r in "$4" "$2"; do [ -z "$(git -C "$r" status --porcelain)" ] || { echo "$r: not clean" >&2; exit 1; }; done
+  [ "$(git -C "$2" symbolic-ref --short HEAD)" = "$5" ] || { echo "$2: not on $5" >&2; exit 1; }
+  "$s/review" approved "${@:4}"
+  "$s/check" "$4"
+  [ ! -e "$2/.agent/schemas/harness-home.md" ] || (cd "$4" && "$2/.agent/scripts/governance-growth" "$b" "$3")
+  if [ -n "${LAND_MERGE-}" ]; then (cd "$2" && sh -c "$LAND_MERGE" land "$b" "$3"); else git -C "$2" merge -q --no-ff -m "Merge $b (#$3)" "$b"; fi ||
+    { git -C "$2" reset -q --merge; exit 1; }
+  echo "$4" >"$m"
+fi
+trap '[ $? = 0 ] || echo "$4: merged into $5; rerun land to complete $3" >&2' EXIT
 subs=$("${road[@]}" descendants "$3" | cut -f 1 | tac)
 for i in $subs; do "${road[@]}" complete "$i"; done
 "${road[@]}" complete "$3"
+rm "$m"
