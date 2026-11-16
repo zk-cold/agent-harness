@@ -14,6 +14,15 @@
         ]
       },
       {
+        "matcher": "Bash|mcp__.*__issue_write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR}\"/.agent/scripts/review guard"
+          }
+        ]
+      },
+      {
         "matcher": "SubagentHandback",
         "hooks": [
           {
@@ -25,7 +34,7 @@
     ],
     "SubagentStop": [
       {
-        "matcher": "critic$",
+        "matcher": "(critic|impl)$",
         "hooks": [
           {
             "type": "command",

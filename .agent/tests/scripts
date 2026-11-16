@@ -233,7 +233,7 @@ test_review() {
   at() { git -C "$1" -c user.name=t -c user.email=t@t "${@:2}"; }
   hook() { "$scripts/review" "$@" 2>&1; echo $?; }
   spawn() { jq -n --arg t "$1" --arg p "$2" '{tool_input: {subagent_type: $t, prompt: $p, description: "d"}}' | hook "${3-spawn}"; }
-  prompt() { spawn "$1" "$w main" | jq -r 'objects | .hookSpecificOutput.updatedInput.prompt'; }
+  prompt() { spawn earn-its-place-critic "$w main" | jq -r 'objects | .hookSpecificOutput.updatedInput.prompt'; }
   send() {
     local s=$CLAUDE_CONFIG_DIR/projects/p/s
     local t=$s/subagents/agent-$3.jsonl
@@ -243,7 +243,7 @@ test_review() {
     jq -nc --arg a "$2" --arg i "$3" '{type: "assistant", message: {content: [{type: "tool_use", id: "u\($i)", input: {subagent_type: $a}}]}}' \
       >>"${t%/*}/agent-i.jsonl"
     jq -n --arg a "$2" --arg i "$3" '{agentType: $a, parentAgentId: "i", spawnDepth: 2, toolUseId: "u\($i)"}' >"${t%.jsonl}.meta.json"
-    jq -nc --arg e "$1" --arg p "${P-$(prompt "$2")}" --arg m "$4" '{type: "user", message: {role: "user", content: $p}},
+    jq -nc --arg e "$1" --arg p "${P-$(prompt)}" --arg m "$4" '{type: "user", message: {role: "user", content: $p}},
       {type: "assistant", message: {role: "assistant", content: [if $e == "record" then {type: "text", text: $m}
         else {type: "tool_use", name: "SubagentHandback", input: {message: $m}} end]}}' >"$t"
     jq -n --arg e "$1" --arg a "$2" --arg i "$3" --arg m "$4" --arg s "$s.jsonl" --arg t "$t" \
@@ -278,17 +278,21 @@ test_review() {
   same "$(spawn full-review-critic "$w")" "$bad"
   same "$(spawn full-review-critic "$tmp/none main" | tail -n 2)" "$bad"
   same "$(spawn full-review-critic "$w none" | tail -n 2)" "$bad"
+  local unapproved=' has not approved the change as it stands'$'\n2'
+  same "$(spawn alignment-critic "$w main")" "alignment-critic: earn-its-place-critic$unapproved"
   same "$(record earn-its-place-critic e 'Verdict: APPROVE')" 0
+  same "$(spawn alignment-critic "$w main" | tail -n 1)" 0
+  same "$(spawn full-review-critic "$w main")" "full-review-critic: alignment-critic$unapproved"
   same "$(record full-review-critic x 'Approved.')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
   same "$(X='.stop_hook_active = true' record full-review-critic x 'Approved.')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n1'
   same "$(P="$w main" record full-review-critic x 'Verdict: APPROVE')" "x: prompt not set by $scripts/review spawn"$'\n1'
-  p=$(prompt full-review-critic)
+  p=$(prompt)
   same "$(P=${p#*$'\n'} record full-review-critic x 'Verdict: APPROVE')" "x: prompt not set by $scripts/review spawn"$'\n1'
   touch "$w/during"
   same "$(P=$p record full-review-critic x 'Verdict: APPROVE')" "$w: changed during the review"$'\n1'
   rm "$w/during"
   same "$(record full-review-critic ../x 'Verdict: APPROVE')" $'../x: invalid agent ID\n1'
-  for t in impl other:full-review-critic; do same "$(P=$p record "$t" x 'Verdict: APPROVE')" 0; done
+  same "$(P=$p record other:full-review-critic x 'Verdict: APPROVE')" 0
   [ ! -e "$r/.git/critic-reviews/x" ]
   same "$(X='.stop_hook_active = true' handback agent-harness:alignment-critic l 'Approved.')" \
     $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
@@ -299,9 +303,11 @@ test_review() {
   same "$(record alignment-critic k $'Verdict: REJECT\nRejection Grounds: r')" 0
   same "$(handback alignment-critic k 'Verdict: APPROVE')" 0
   same "$(tail -n 1 "$r/.git/critic-reviews/k")" 'Rejection Grounds: r'
+  same "$(spawn full-review-critic "$w main")" "full-review-critic: alignment-critic$unapproved"
   same "$(handback alignment-critic l 'Verdict: APPROVE')" 0
   same "$(record alignment-critic l 'Done.')" 0
   same "$(sed -n '1p;3,$p' "$r/.git/critic-reviews/l")" $'alignment-critic\nVerdict: APPROVE'
+  same "$(spawn agent-harness:full-review-critic "$w main" | tail -n 1)" 0
   same "$(spawn x x run | tail -n 1)" 2
   same "$(approved | tail -n 1)" 2
   record full-review-critic f $'Verdict: REJECT\nRejection Grounds: r' >/dev/null
@@ -333,6 +339,24 @@ test_review() {
   tamper g.jsonl 'if .type == "user" then .message.content |= sub("[0-9a-f]$"; "x") else . end'
   tamper g.jsonl 'if .type == "assistant" then .message.content[0].text = "Verdict: REJECT\nRejection Grounds: r" else . end'
   same "$(approved e l g)" 0
+  local ready=$'Verdict: READY\nApprovals: e, l, g\nUnhandled Findings:\n- f\nWorktree: '"$w"
+  same "$(handback impl j "$ready")" "$w: not clean"$'\n2'
+  same "$(handback impl j $'Verdict: NOT READY\nEscalation: x\nWorktree: w\nmore')" 0
+  same "$(handback agent-harness:impl j $'\nVerdict: NOT READY\n\nEscalation:\n- x\n')" 0
+  same "$(handback impl j $'Note\nVerdict: NOT READY')" $'a report must start with Verdict:\n2'
+  same "$(handback impl j $'Verdict: NOT READY\nWorktree: w\nEscalation: x')" $'Escalation: repeated or out of order\n2'
+  same "$(handback impl j $'Verdict: NOT READY\nVerdict: NOT READY')" $'Verdict: repeated or out of order\n2'
+  same "$(handback impl j $'Verdict: NOT READY\nEscalation:\nWorktree: w')" $'Escalation: empty\n2'
+  same "$(handback impl j 'Verdict: DONE')" $'Verdict: must be READY or NOT READY\n2'
+  same "$(handback impl j $'Verdict: NOT READY\nApprovals: e')" $'Approvals: not allowed when NOT READY\n2'
+  same "$(handback impl j $'Verdict: NOT READY\nUnhandled Findings: f')" $'Unhandled Findings: not allowed when NOT READY\n2'
+  same "$(handback impl j $'Verdict: READY\nApprovals: e\nEscalation: x\nWorktree: w')" $'Escalation: not allowed when READY\n2'
+  same "$(handback impl j $'Verdict: READY\nWorktree: w')" $'Approvals: missing\n2'
+  same "$(handback impl j $'Verdict: READY\nApprovals: e')" $'Worktree: missing\n2'
+  same "$(handback other:impl j 'Done.')" 0
+  same "$(record impl j 'Done.')" $'a report must start with Verdict:\n2'
+  same "$(X='.stop_hook_active = true' record impl j 'Done.')" $'a report must start with Verdict:\n1'
+  same "$(X='.agent_transcript_path |= sub("/s2/"; "/s/")' record impl j 'Done.')" 0
   ln -s "$w" "$tmp/rev-link"
   same "$(hook approved "$tmp/rev-link" refs/heads/main e l g)" 0
   at "$r" config core.abbrev 4
@@ -343,6 +367,7 @@ test_review() {
   same "$(approved e g)" $'alignment-critic: no approval of the change as it stands\n1'
   sed -i '2a y' "$r/a"
   at "$r" commit -qam b
+  same "$(spawn earn-its-place-critic "$w main")" "$w: main is not merged"$'\n2'
   at "$w" add -A
   at "$w" commit -qm c
   at "$w" merge -q --no-edit main >/dev/null
@@ -364,10 +389,38 @@ test_review() {
   stale
   rm "$w/new"
   same "$(approved e l g)" 0
+  same "$(handback impl j "$ready")" 0
+  local bullets=$'\n- e\n- l\n- `g`'
+  same "$(record impl j "${ready/ e, l, g/$bullets}")" 0
+  same "$(handback impl j "${ready/l, /}")" $'alignment-critic: no approval of the change as it stands\n2'
+  same "$(handback impl j "${ready/e, l, g/z}")" $'Approvals: no review found\n2'
   for i in $(seq 100); do touch -d @0 "$r/.git/critic-reviews/old$i"; done
   record alignment-critic n 'Verdict: APPROVE' >/dev/null
   same "$(ls "$r/.git/critic-reviews" | wc -l)" 100
   same "$(approved e n g)" 0
+}
+
+test_guard() {
+  guard() { jq -n --arg a "${2-impl}" --argjson t "$1" '{agent_type: $a, tool_input: $t}' | "$scripts/review" guard 2>&1; echo $?; }
+  run() { guard "$(jq -n --arg c "$1" '{command: $c}')" "${@:2}"; }
+  local c no=$'Label or close no roadmap items.\n2'
+  for c in '.agent/scripts/roadmap gh . close 3' '"$s"/roadmap-gh complete 3' 'x && /h/.agent/scripts/land gh . 1 w main e' \
+    'gh issue close 3' 'gh issue edit 3 --add-label approved' 'gh issue create -t t --label x' \
+    'gh api -X PATCH repos/o/r/issues/3 -f state=closed' "gh api repos/o/r/issues/3 -f 'state=closed'" \
+    'gh api repos/o/r/issues/3 --input - <<<'"'"'{"state": "closed"}'"'" 'gh api repos/o/r/issues/3/labels -f labels[]=x' \
+    'gh api graphql -f query=closeIssue'; do
+    same "$(run "$c")" "$no"
+  done
+  for c in '.agent/scripts/roadmap gh . add "close it" b 3' '.agent/scripts/roadmap gh . show 3' 'cat .agent/scripts/land' \
+    'git commit -m "Make roadmap-gh complete items"' 'grep -n complete .agent/scripts/roadmap-gh' 'gh issue view 3'; do
+    same "$(run "$c")" 0
+  done
+  same "$(run 'gh issue close 3' '')" 0
+  same "$(run 'gh issue close 3' other:impl)" 0
+  same "$(run 'gh issue close 3' agent-harness:impl)" "$no"
+  same "$(guard '{"state": "closed"}')" "$no"
+  same "$(guard '{"labels": ["x"]}')" "$no"
+  same "$(guard '{"state": "open", "labels": []}')" 0
 }
 
 test_plugin_loads() {
