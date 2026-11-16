@@ -46,6 +46,9 @@ approves() {
   [[ $2 =~ ^[^/]+$ ]] && { read -r rc && read -r rf && [ "$rc $rf" = "$1 $change" ] &&
     [ "$("$s/verdict")" = APPROVE ]; } 2>/dev/null <"$d/$2" && transcribed "$1" "$2"
 }
+words() {
+  tr ',` \t' '\n\n\n\n' <<<"$1" | grep -vx -- '-*'
+}
 fail() {
   echo "$1" >&2
   exit 1
@@ -69,13 +72,13 @@ report() (
   for l in Approvals Escalation 'Unhandled Findings' Worktree; do
     case "$v $l" in
       'READY Escalation' | 'NOT READY Approvals' | 'NOT READY Unhandled Findings') [ -z "${part[$l]+1}" ] || fail "$l: not allowed when $v" ;;
-      'READY Approvals' | 'READY Worktree') [ -n "${part[$l]+1}" ] || fail "$l: missing" ;;
+      'READY Approvals' | *' Worktree') [ -n "${part[$l]+1}" ] || fail "$l: missing" ;;
     esac
   done
   [ "$v" = READY ] || exit 0
-  read -r w _ <<<"${part[Worktree]}"
+  w=$(words "${part[Worktree]}" | head -n 1)
   [ -z "$(git -C "$w" status --porcelain)" ] || fail "$w: not clean"
-  read -ra ids <<<"$(tr ',`' '  ' <<<"${part[Approvals]}" | paste -sd ' ')"
+  mapfile -t ids < <(words "${part[Approvals]}")
   for id in "${ids[@]}"; do
     for t in "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/projects/*/*/subagents/agent-"$id".jsonl; do
       [[ $(prompt "$t" 2>/dev/null) =~ $re ]] && exec "$s/review" approved "$w" "${BASH_REMATCH[2]}" "${ids[@]}"
@@ -83,7 +86,8 @@ report() (
   done
   fail 'Approvals: no review found'
 )
-deny="(^|[/;&|] *)(roadmap(-[a-z]+)?( +[^ ;&|]+){0,2} +(close|complete)\\b|land +[a-z])|gh +issue +close\\b|gh +issue[^;&|]*--(add-)?label\\b|gh +api[^;&|]*(state[\"']?[=:] *[\"']?closed|[lL]abels|closeIssue)"
+deny="(^|[/;&|] *)(roadmap(-[a-z]+)?( +[^ ;&|]+){0,2} +(close|complete)\\b|land +[a-z])|\\bgh +issue[^;&|]* (close|-l|--(add-)?label)\\b"
+api='state[^a-z0-9]{0,4}closed|labels|closeissue'
 case $1 in
   spawn)
     i=$(cat)
@@ -118,7 +122,9 @@ case $1 in
     t=$(jq -r '.agent_transcript_path // ((.transcript_path | rtrimstr(".jsonl")) + "/subagents/agent-\(.agent_id).jsonl")' <<<"$i")
     blocked() { [ "$1" = record ] && jq -e .stop_hook_active <<<"$i" >/dev/null && exit 1; exit 2; }
     if ours "$a" impl; then
-      [ "$1" = handback ] || ! jq -se 'any(.[] | select(.type == "assistant") | .message.content[]?; .name? == "SubagentHandback")' "$t" >/dev/null 2>&1 || exit 0
+      n=
+      [ "$1" = handback ] || n=$(jq -rs '[.[] | select(.type == "assistant") | .message.content[]? | select(.name? == "SubagentHandback")][-1].input.message // empty' "$t" 2>/dev/null) || :
+      [ -z "$n" ] || ! report "$n" 2>/dev/null || exit 0
       report "$m" || blocked "$1"
       exit
     fi
@@ -139,7 +145,8 @@ case $1 in
   guard)
     i=$(cat)
     ours "$(jq -r '.agent_type // ""' <<<"$i")" impl || exit 0
-    ! jq -e --arg r "$deny" '.tool_input | .state == "closed" or (.labels // [] | length > 0) or (.command // "" | test($r))' <<<"$i" >/dev/null ||
+    ! jq -e --arg r "$deny" --arg a "$api" '.tool_input | .state == "closed" or (.labels // [] | length > 0) or
+      (.command // "" | test($r; "i") or (test("\\bgh +api\\b") and test($a; "i")))' <<<"$i" >/dev/null ||
       { echo 'Label or close no roadmap items.' >&2; exit 2; }
     exit ;;
 esac

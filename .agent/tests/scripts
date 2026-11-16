@@ -342,7 +342,8 @@ test_review() {
   local ready=$'Verdict: READY\nApprovals: e, l, g\nUnhandled Findings:\n- f\nWorktree: '"$w"
   same "$(handback impl j "$ready")" "$w: not clean"$'\n2'
   same "$(handback impl j $'Verdict: NOT READY\nEscalation: x\nWorktree: w\nmore')" 0
-  same "$(handback agent-harness:impl j $'\nVerdict: NOT READY\n\nEscalation:\n- x\n')" 0
+  same "$(handback agent-harness:impl j $'\nVerdict: NOT READY\n\nEscalation:\n- x\nWorktree:\n- `w`\n')" 0
+  same "$(handback impl j $'Verdict: NOT READY\nEscalation: x')" $'Worktree: missing\n2'
   same "$(handback impl j $'Note\nVerdict: NOT READY')" $'a report must start with Verdict:\n2'
   same "$(handback impl j $'Verdict: NOT READY\nWorktree: w\nEscalation: x')" $'Escalation: repeated or out of order\n2'
   same "$(handback impl j $'Verdict: NOT READY\nVerdict: NOT READY')" $'Verdict: repeated or out of order\n2'
@@ -356,7 +357,7 @@ test_review() {
   same "$(handback other:impl j 'Done.')" 0
   same "$(record impl j 'Done.')" $'a report must start with Verdict:\n2'
   same "$(X='.stop_hook_active = true' record impl j 'Done.')" $'a report must start with Verdict:\n1'
-  same "$(X='.agent_transcript_path |= sub("/s2/"; "/s/")' record impl j 'Done.')" 0
+  same "$(X='.agent_transcript_path |= sub("/s2/"; "/s/")' record impl j 'Done.')" $'a report must start with Verdict:\n2'
   ln -s "$w" "$tmp/rev-link"
   same "$(hook approved "$tmp/rev-link" refs/heads/main e l g)" 0
   at "$r" config core.abbrev 4
@@ -390,8 +391,10 @@ test_review() {
   rm "$w/new"
   same "$(approved e l g)" 0
   same "$(handback impl j "$ready")" 0
-  local bullets=$'\n- e\n- l\n- `g`'
+  same "$(X='.agent_transcript_path |= sub("/s2/"; "/s/")' record impl j 'Done.')" 0
+  local bullets=$'\n- e\n- l\n- `g`' path=$'\n- `'"$w"'`'
   same "$(record impl j "${ready/ e, l, g/$bullets}")" 0
+  same "$(record impl j "${ready/ $w/$path}")" 0
   same "$(handback impl j "${ready/l, /}")" $'alignment-critic: no approval of the change as it stands\n2'
   same "$(handback impl j "${ready/e, l, g/z}")" $'Approvals: no review found\n2'
   for i in $(seq 100); do touch -d @0 "$r/.git/critic-reviews/old$i"; done
@@ -405,7 +408,9 @@ test_guard() {
   run() { guard "$(jq -n --arg c "$1" '{command: $c}')" "${@:2}"; }
   local c no=$'Label or close no roadmap items.\n2'
   for c in '.agent/scripts/roadmap gh . close 3' '"$s"/roadmap-gh complete 3' 'x && /h/.agent/scripts/land gh . 1 w main e' \
-    'gh issue close 3' 'gh issue edit 3 --add-label approved' 'gh issue create -t t --label x' \
+    'gh issue close 3' 'gh issue -R o/r close 3' 'gh issue edit 3 --add-label approved' 'gh issue create -t t --label x' \
+    'gh issue create -t t -b b -l approved' "echo '{\"state\":\"closed\"}' | gh api -X PATCH repos/o/r/issues/3 --input -" \
+    'gh api graphql -f query='"'"'mutation{updateIssue(input:{id:"x",state:CLOSED}){issue{id}}}'"'" \
     'gh api -X PATCH repos/o/r/issues/3 -f state=closed' "gh api repos/o/r/issues/3 -f 'state=closed'" \
     'gh api repos/o/r/issues/3 --input - <<<'"'"'{"state": "closed"}'"'" 'gh api repos/o/r/issues/3/labels -f labels[]=x' \
     'gh api graphql -f query=closeIssue'; do
