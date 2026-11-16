@@ -115,28 +115,34 @@ test_approved() {
 test_poll() {
   local state=$tmp/road/.git/roadmap-poll
   poll() { PATH=$tmp/bin:$PATH "$scripts/poll" gh "$tmp/road"; }
+  on() { printf '%s\n' "$1" >"$tmp/on-third"; rm -f "$tmp/slept"; }
   mkdir -p "$tmp/bin"
-  printf '#!/bin/sh\necho "$1" >>"%s"\n[ "$(wc -l <"%s")" != 3 ] || sh "%s"\n' "$tmp/slept" "$tmp/slept" "$tmp/on-third" >"$tmp/bin/sleep"
+  printf '#!/bin/sh\necho "$1" >>"%s"\nn=$(wc -l <"%s")\n[ "$n" != 3 ] || sh "%s"\n[ "$n" -lt 9 ]\n' \
+    "$tmp/slept" "$tmp/slept" "$tmp/on-third" >"$tmp/bin/sleep"
   chmod +x "$tmp/bin/sleep"
   seed
-  rm -f "$state" "$tmp/slept"
+  rm -f "$state"
+  on :
   same "$(poll)" $'8\teight\n9\tnine'
-  echo "$scripts/roadmap gh $tmp/road edit 9 nueve" >"$tmp/on-third"
+  same "$(cat "$tmp/slept")" 30
+  on "$scripts/roadmap gh $tmp/road edit 9 nueve"
   same "$(poll)" $'8\teight\n9\tnueve'
-  rm "$tmp/slept"
   mv "$issues" "$issues.bak"
-  echo "mv $issues.bak $issues; $scripts/roadmap gh $tmp/road close 8" >"$tmp/on-third"
+  on "mv $issues.bak $issues; $scripts/roadmap gh $tmp/road close 8"
   same "$(poll 2>/dev/null)" $'2\ttwo\n9\tnueve'
-  same "$(cat "$state")" $'2\ttwo\n9\tnueve'
-  rm "$tmp/slept"
+  on "jq '.[8].labels = [{name: \"approved\"}]' $issues >$issues.new && mv $issues.new $issues"
+  same "$(poll)" $'2\ttwo\n9\tnueve'
+  on "jq '.[8].comments = [{body: \"unblocked\", author_association: \"OWNER\"}]' $issues >$issues.new && mv $issues.new $issues"
+  same "$(poll)" $'2\ttwo\n9\tnueve'
+  cp "$issues" "$issues.bak"
   road close 1
   road close 6
-  echo "$scripts/roadmap gh $tmp/road add t b >/dev/null" >"$tmp/on-third"
-  same "$(poll)" $'10\tt'
+  on "cp $issues.bak $issues"
+  same "$(poll)" $'2\ttwo\n9\tnueve'
+  same "$(paste -sd ' ' "$tmp/slept")" '30 30 30'
   rm "$state"
   mkdir "$state"
-  same "$(poll 2>/dev/null)" $'10\tt'
-  same "$(paste -sd ' ' "$tmp/slept")" '30 30 30 30'
+  same "$(poll 2>/dev/null)" $'2\ttwo\n9\tnueve'
 }
 
 test_lead_stop_hook() {
