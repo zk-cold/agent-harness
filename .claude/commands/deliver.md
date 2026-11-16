@@ -24,7 +24,7 @@ If the request slices an item, split it into sub-items covering its request, the
 Without asking the user, decide when to deliver items lacking an in-progress delivery and whether to slice them into sub-items covering their requests or combine them.
 
 ## Combining
-Combine only items sharing an approval state and lacking open sub-items, by editing one to hold their requests and closing the others retitled to cite it.
+When combining items without asking the user, combine only those sharing an approval state and lacking open sub-items, by editing one to hold their requests and closing the others retitled to cite it.
 
 ## Removing Worktrees
 Remove an `impl` agent's worktree and branch once its branch is merged or Abort or Replace is chosen.
