@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-[[ $# -ge 4 && $1 = approved || $# = 1 && $1 =~ ^(spawn|handback|record)$ ]] ||
-  { echo "usage: $0 approved <worktree> <root branch> <review ID>... | spawn | handback | record" >&2; exit 2; }
+[[ $# -ge 4 && $1 = approved || $# = 1 && $1 =~ ^(spawn|handback|record|guard)$ ]] ||
+  { echo "usage: $0 approved <worktree> <root branch> <review ID>... | spawn | handback | record | guard" >&2; exit 2; }
 s=$(cd "$(dirname "$0")" && pwd)
 h=${s%/.agent/scripts}
 x=$(mktemp -d)
@@ -23,6 +23,7 @@ critic() {
 prompt() {
   jq -rs 'map(select(.type == "user"))[0].message.content | strings' "$1"
 }
+re=$'^\\$\\{CLAUDE_PLUGIN_ROOT\\}: [^\n]+\nWorktree: ([^\n ]+)\nRoot Branch: ([^\n ]+)\nFingerprint: ([0-9a-f]+)$'
 transcribed() {
   local t m a q p
   for t in "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/projects/*/*/subagents/agent-"$2".jsonl; do
@@ -40,6 +41,53 @@ transcribed() {
   done 2>/dev/null
   return 1
 }
+approves() {
+  local rc rf
+  [[ $2 =~ ^[^/]+$ ]] && { read -r rc && read -r rf && [ "$rc $rf" = "$1 $change" ] &&
+    [ "$("$s/verdict")" = APPROVE ]; } 2>/dev/null <"$d/$2" && transcribed "$1" "$2"
+}
+words() {
+  tr ',` \t' '\n\n\n\n' <<<"$1" | grep -vx -- '-*'
+}
+fail() {
+  echo "$1" >&2
+  exit 1
+}
+report() (
+  declare -A part
+  l= last=-1 labels='Verdict|Approvals|Escalation|Unhandled Findings|Worktree'
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [[ $line =~ ^($labels):(.*) ]]; then
+      l=${BASH_REMATCH[1]} line=${BASH_REMATCH[2]} k=${labels%%"$l"*}
+      [ "${#k}" -gt "$last" ] || fail "$l: repeated or out of order"
+      last=${#k} part[$l]=
+    elif [ -z "$l" ] && [[ $line =~ [^[:space:]] ]]; then
+      fail 'a report must start with Verdict:'
+    fi
+    [ -z "$l" ] || part[$l]+=$line$'\n'
+  done <<<"$1"
+  for l in "${!part[@]}"; do [[ ${part[$l]} =~ [^[:space:]] ]] || fail "$l: empty"; done
+  [[ ${part[Verdict]-} =~ ^[[:space:]]*(READY|NOT READY)[[:space:]]*$ ]] || fail 'Verdict: must be READY or NOT READY'
+  v=${BASH_REMATCH[1]}
+  for l in Approvals Escalation 'Unhandled Findings' Worktree; do
+    case "$v $l" in
+      'READY Escalation' | 'NOT READY Approvals' | 'NOT READY Unhandled Findings') [ -z "${part[$l]+1}" ] || fail "$l: not allowed when $v" ;;
+      'READY Approvals' | *' Worktree') [ -n "${part[$l]+1}" ] || fail "$l: missing" ;;
+    esac
+  done
+  [ "$v" = READY ] || exit 0
+  w=$(words "${part[Worktree]}" | head -n 1)
+  [ -z "$(git -C "$w" status --porcelain)" ] || fail "$w: not clean"
+  mapfile -t ids < <(words "${part[Approvals]}")
+  for id in "${ids[@]}"; do
+    for t in "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/projects/*/*/subagents/agent-"$id".jsonl; do
+      [[ $(prompt "$t" 2>/dev/null) =~ $re ]] && exec "$s/review" approved "$w" "${BASH_REMATCH[2]}" "${ids[@]}"
+    done
+  done
+  fail 'Approvals: no review found'
+)
+deny="(^|[/;&|] *)(roadmap(-[a-z]+)?( +[^ ;&|]+){0,2} +(close|complete)\\b|land +[a-z])|\\bgh +issue[^;&|]* (close|-l|--(add-)?label)\\b"
+api='state[^a-z0-9]{0,4}closed|labels|closeissue'
 case $1 in
   spawn)
     i=$(cat)
@@ -48,6 +96,16 @@ case $1 in
     if critic "$a"; then
       read -r w b _ <<<"$(jq -r '.tool_input.prompt // ""' <<<"$i")"
       [ -n "$b" ] && fingerprint "$w" "$b" || { echo "A critic's prompt must hold only your worktree's path and the root branch." >&2; exit 2; }
+      . "$s/schema"
+      c=${a##*:}
+      q=$(section 'Review Loop' "$h/.claude/agents/impl.md" | grep -o '`[a-z-]*-critic`' | tr -d '`' | awk -v c="$c" '$0 == c {print p; exit} {p = $0}')
+      if [ -z "$q" ]; then
+        git -C "$w" merge-base --is-ancestor "$b" HEAD || { echo "$w: $b is not merged" >&2; exit 2; }
+      else
+        ok=
+        for id in $(ls -t "$d" 2>/dev/null); do approves "$q" "$id" && ok=1 && break; done
+        [ -n "$ok" ] || { echo "$c: $q has not approved the change as it stands" >&2; exit 2; }
+      fi
       p=$r$'\nWorktree: '"$w"$'\nRoot Branch: '"$b"$'\nFingerprint: '"$change"
     else
       ours "$a" impl || exit 0
@@ -58,24 +116,38 @@ case $1 in
   handback | record)
     i=$(cat)
     a=$(jq -r '.agent_type // ""' <<<"$i")
+    k=.last_assistant_message
+    [ "$1" = record ] || k=.tool_input.message
+    m=$(jq -r "$k // \"\"" <<<"$i")
+    t=$(jq -r '.agent_transcript_path // ((.transcript_path | rtrimstr(".jsonl")) + "/subagents/agent-\(.agent_id).jsonl")' <<<"$i")
+    blocked() { [ "$1" = record ] && jq -e .stop_hook_active <<<"$i" >/dev/null && exit 1; exit 2; }
+    if ours "$a" impl; then
+      n=
+      [ "$1" = handback ] || n=$(jq -rs '[.[] | select(.type == "assistant") | .message.content[]? | select(.name? == "SubagentHandback")][-1].input.message // empty' "$t" 2>/dev/null) || :
+      [ -z "$n" ] || ! report "$n" 2>/dev/null || exit 0
+      report "$m" || blocked "$1"
+      exit
+    fi
     critic "$a" || exit 0
     id=$(jq -r .agent_id <<<"$i")
     [[ $id =~ ^[^/]+$ ]] || { echo "$id: invalid agent ID" >&2; exit 1; }
-    t=$(jq -r '.agent_transcript_path // ((.transcript_path | rtrimstr(".jsonl")) + "/subagents/agent-\(.agent_id).jsonl")' <<<"$i")
     p=$(prompt "$t") || exit 1
-    re=$'^\\$\\{CLAUDE_PLUGIN_ROOT\\}: [^\n]+\nWorktree: ([^\n ]+)\nRoot Branch: ([^\n ]+)\nFingerprint: ([0-9a-f]+)$'
     [[ $p =~ $re ]] || { echo "$id: prompt not set by $0 spawn" >&2; exit 1; }
     f=${BASH_REMATCH[3]}
     fingerprint "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
     [ ! -e "$d/$id" ] || exit 0
-    k=.last_assistant_message
-    [ "$1" = record ] || k=.tool_input.message
-    m=$(jq -r "$k // \"\"" <<<"$i")
-    printf %s "$m" | "$s/verdict" >/dev/null || { [ "$1" = record ] && jq -e .stop_hook_active <<<"$i" >/dev/null && exit 1; exit 2; }
+    printf %s "$m" | "$s/verdict" >/dev/null || blocked "$1"
     [ "$change" = "$f" ] || { echo "$w: changed during the review" >&2; exit 1; }
     mkdir -p "$d"
     printf '%s\n%s\n%s\n' "${a##*:}" "$change" "$m" >"$d/$id"
     ls -t "$d" | tail -n +101 | (cd "$d" && xargs -rd '\n' rm -f --)
+    exit ;;
+  guard)
+    i=$(cat)
+    ours "$(jq -r '.agent_type // ""' <<<"$i")" impl || exit 0
+    ! jq -e --arg r "$deny" --arg a "$api" '.tool_input | .state == "closed" or (.labels // [] | length > 0) or
+      (.command // "" | test($r; "i") or (test("\\bgh +api\\b") and test($a; "i")))' <<<"$i" >/dev/null ||
+      { echo 'Label or close no roadmap items.' >&2; exit 2; }
     exit ;;
 esac
 fingerprint "$2" "$3"
@@ -83,8 +155,7 @@ fail=0
 for f in "$h"/.claude/agents/*-critic.md; do
   c=$(basename "$f" .md) ok=
   for id in "${@:4}"; do
-    [[ $id =~ ^[^/]+$ ]] && { read -r rc && read -r rf && [ "$rc $rf" = "$c $change" ] &&
-      [ "$("$s/verdict")" = APPROVE ]; } 2>/dev/null <"$d/$id" && transcribed "$c" "$id" && ok=1
+    approves "$c" "$id" && ok=1
   done
   [ -n "$ok" ] || { echo "$c: no approval of the change as it stands" >&2; fail=1; }
 done
