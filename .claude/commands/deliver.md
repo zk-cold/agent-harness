@@ -13,13 +13,18 @@ Use the definitions in `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/governance-schema.m
 Write to the user in the language of their own messages.
 
 ## Roadmap Item
-Each delivery corresponds to exactly one roadmap item: once step 1's checks pass and before dispatching any of the user's request, find the item whose request it is, otherwise add one holding it verbatim, then, either way, close any other duplicate lacking an in-progress delivery.
+Each delivery corresponds to exactly one roadmap item, settled once step 1's checks pass and before dispatching any of the user's request:
+1. Find the item whose request it is, otherwise add one holding it verbatim.
+2. Close any other duplicate lacking an in-progress delivery.
 
 ## Sliced Items
 If the request slices an item, split it into sub-items covering its request, the delivery's roadmap item among them.
 
 ## Slicing and Combining
-Without asking the user, decide when to deliver items lacking an in-progress delivery and whether to slice them into sub-items covering their requests or combine those sharing an approval state, lacking open sub-items, editing one to hold their requests, closing the others retitled to cite it.
+Without asking the user, decide when to deliver items lacking an in-progress delivery and whether to slice them into sub-items covering their requests or combine them.
+
+## Combining
+Combine only items sharing an approval state and lacking open sub-items, by editing one to hold their requests and closing the others retitled to cite it.
 
 ## Removing Worktrees
 Remove an `impl` agent's worktree and branch once its branch is merged or Abort or Replace is chosen.

@@ -1,12 +1,15 @@
 # Definitions
 
 ## Change Under Review
-For the path given in the prompt, the output of `.agent/scripts/change-under-review <path> <root branch>` run from outside it.
+For the path given in the prompt, the output of `.agent/scripts/change-under-review <path> <root branch>`.
 
 # Invariants
 
 ## Target Repo Governance
 Follow the target repo's `AGENTS.md`.
+
+## Running Change Under Review
+Run `.agent/scripts/change-under-review` from outside the path given in the prompt.
 
 ## Terms
 Use the definitions in `.agent/schemas/governance-schema.md` and `.agent/schemas/roadmap.md`.

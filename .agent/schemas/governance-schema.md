@@ -4,7 +4,7 @@
 `AGENTS.md`, `.agent/schemas/*.md`, `.claude/commands/*.md`, and `.claude/agents/*.md` in this harness and the target repo.
 
 ## This Harness
-The directory whose `.agent/schemas/` holds this file, against which `.agent/` paths in its governed documents resolve.
+The directory whose `.agent/schemas/` holds this file.
 
 ## `${CLAUDE_PLUGIN_ROOT}`
 This harness.
@@ -22,6 +22,9 @@ The target repo's branch the prompt names, otherwise its default branch.
 
 # Invariants
 
+## Path Resolution
+`.agent/` paths in this harness's governed documents resolve against this harness.
+
 ## Document Structure
 Each section of a governed document must hold only its category's content.
 
@@ -31,7 +34,7 @@ Each Invariants or Considerations section must hold exactly one rule, an ordered
 ## Overriding Considerations
 A consideration may be overridden only by explicitly referencing it with a justification that withstands adversarial review.
 
-## Target Repo Governance
+## No Conflicting Governance
 Target repo governance must not conflict with this harness's definitions or invariants.
 
 ## Binding Version

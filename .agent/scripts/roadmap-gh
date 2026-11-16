@@ -51,12 +51,10 @@ add() {
 }
 
 shut() {
-  local state subs s
-  state=$(gh api "$r/issues/$1" --jq .state)
-  [ "$state" = open ] || return 0
+  local subs s
   subs=$(open_subs "$1")
   for s in $subs; do shut "$s" not_planned; done
-  gh api -X PATCH "$r/issues/$1" -f state=closed -f state_reason="$2" >/dev/null
+  [ "$(gh api "$r/issues/$1" --jq .state)" != open ] || gh api -X PATCH "$r/issues/$1" -f state=closed -f state_reason="$2" >/dev/null
 }
 
 edit() {
