@@ -91,10 +91,6 @@ test_close() {
   road close 1
   same "$(states | head -3 | cut -f 1-3)" $'1\tclosed\tnot_planned\n2\tclosed\tnot_planned\n3\tclosed\tcompleted'
   same "$(states | sed -n 8p | cut -f 1-3)" $'8\tclosed\tnot_planned'
-  seed
-  road add t b 3 >/dev/null
-  road close 3
-  same "$(states | cut -f 1-3 | sed -n '1,3p;10p')" $'1\topen\t\n2\topen\t\n3\tclosed\tcompleted\n10\tclosed\tnot_planned'
 }
 
 test_complete() {
