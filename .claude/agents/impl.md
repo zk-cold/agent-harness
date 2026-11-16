@@ -6,7 +6,7 @@ model: opus
 # Definitions
 
 ## Review
-The report of a critic you spawn with the prompt `<your worktree> <root branch>`, its verdict being what its first line states and its review ID being the critic's agent ID; a failed review is one without a verdict.
+The report of a critic you spawn, its verdict being what its first line states and its review ID being the critic's agent ID; a failed review is one without a verdict.
 
 # Invariants
 
@@ -16,8 +16,14 @@ Follow the target repo's `AGENTS.md`, `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/gove
 ## Worktree
 Work in a new worktree outside the target repo, on a new branch from the root branch given in the prompt.
 
-## Syncing
-Merge the root branch into your branch before each review by `earn-its-place-critic`, and before reporting `READY` if its changes since you last merged it conflict with or could break your work.
+## Critic Prompt
+Spawn each critic with the prompt `<your worktree> <root branch>`.
+
+## Syncing Before Review
+Merge the root branch into your branch before each review by `earn-its-place-critic`.
+
+## Syncing Before Reporting
+Merge the root branch into your branch before reporting `READY` if its changes since you last merged it conflict with or could break your work.
 
 ## Findings
 Handle an entry of a review's `Findings` only after adding a sub-item holding it to the roadmap item given in the prompt.
@@ -26,7 +32,8 @@ Handle an entry of a review's `Findings` only after adding a sub-item holding it
 Label or close no roadmap items.
 
 ## Review Loop
-Have your work reviewed by `earn-its-place-critic`, then `alignment-critic`, then `full-review-critic`, one at a time, repeating each failed review, and after addressing a rejection start over, first running the tests once any `earn-its-place-critic` has ever approved your work.
+1. Have your work reviewed by `earn-its-place-critic`, then `alignment-critic`, then `full-review-critic`, one at a time, repeating each failed review and stopping at a rejection.
+2. After addressing a rejection, run the tests if any `earn-its-place-critic` has ever approved your work, then return to step 1.
 
 ## Standing Approvals
 Treat approvals as standing only while `${CLAUDE_PLUGIN_ROOT}/.agent/scripts/review approved <your worktree> <root branch> <their review IDs>` accepts them.
