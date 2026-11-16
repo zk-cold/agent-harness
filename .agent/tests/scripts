@@ -452,7 +452,7 @@ test_plugin_loads() {
 }
 
 test_land() {
-  local h=$tmp/harness w=$tmp/land-wt o=$tmp/land-other
+  local h=$tmp/harness w=$tmp/land-wt o=$tmp/land-other c=$tmp/land-clone
   export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
   land() { "$h/.agent/scripts/land" gh "${2-$h}" 1 "${3-$w}" "${1-main}" e l 2>&1; echo $?; }
   issues() { jq -n "$1"' | map({state: "open", author_association: "OWNER", comments: [], labels: []} + .)' >"$2/.git/issues.json"; }
@@ -465,6 +465,9 @@ test_land() {
   echo x >"$w/x"
   same "$(land)" "$w: not clean"$'\n1'
   git -C "$w" add . && git -C "$w" commit -qm b
+  echo z >"$h/z"
+  same "$(land)" "$h: not clean"$'\n1'
+  rm "$h/z"
   same "$(land other)" "$h: not on other"$'\n1'
   same "$(REVIEW=1 land)" 1
   same "$(cat "$tmp/land-reviews")" "approved $w main e l"
@@ -480,7 +483,12 @@ test_land() {
   same "$(land | tail -n 1)" 1
   same "$(git -C "$h" status --porcelain)" ''
   git -C "$h" reset -q --hard HEAD~
-  same "$(land)" $'2\n0'
+  mkdir -p "$tmp/land-bin"
+  printf '#!/bin/sh\n[ "$2" != -X ] || exit 1\nexec "%s" "$@"\n' "$here/stub/gh" >"$tmp/land-bin/gh"
+  chmod +x "$tmp/land-bin/gh"
+  same "$(PATH=$tmp/land-bin:$PATH land)" $'2\n'"$w: merged into main; rerun land to complete 1"$'\n1'
+  git -C "$h" worktree remove "$w"
+  same "$(land)" 0
   same "$(git -C "$h" log -1 --format=%s)" 'Merge work (#1)'
   same "$(jq -r '.[] | "\(.number) \(.state) \(.state_reason // "")"' "$h/.git/issues.json")" \
     $'1 closed completed\n2 closed completed\n3 closed completed\n5 closed completed\n6 open '
@@ -492,6 +500,22 @@ test_land() {
   printf '# Invariants\n' >"$o-wt/AGENTS.md"
   git -C "$o-wt" add . && git -C "$o-wt" commit -qm b
   same "$(land main "$o" "$o-wt")" 0
+  git -C "$o-wt" checkout -qb squash
+  echo b >"$o-wt/b"
+  git -C "$o-wt" add . && git -C "$o-wt" commit -qm c
+  same "$(LAND_MERGE='git merge -q --squash "$1" >/dev/null 2>&1 && git commit -qm "Squash $1 ($2)"' land main "$o" "$o-wt")" 0
+  same "$(git -C "$o" log -1 --format=%s)" 'Squash squash (1)'
+  same "$(git -C "$o" rev-list --parents -1 HEAD | wc -w)" 2
+  git clone -q "$h" "$c"
+  issues '[{number: 1}]' "$c"
+  git -C "$c" worktree add -q -b grow "$c-wt"
+  printf '# Invariants\n\n## A\nx\n' >"$c-wt/AGENTS.md"
+  git -C "$c-wt" commit -qam f
+  same "$(land main "$c" "$c-wt")" $'3\n1'
+  jq '.[0].labels = [{name: "approved"}]' "$c/.git/issues.json" >"$tmp/i" && mv "$tmp/i" "$c/.git/issues.json"
+  same "$(LAND_MERGE='git merge -q --squash "$1" >/dev/null 2>&1; false' land main "$c" "$c-wt")" $'3\n1'
+  same "$(git -C "$c" status --porcelain)" ''
+  same "$(land main "$c" "$c-wt")" $'3\n0'
 }
 
 governed() {
