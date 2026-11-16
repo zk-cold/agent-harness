@@ -32,7 +32,7 @@ Handle an entry of a review's `Findings` only after adding a sub-item holding it
 Label or close no roadmap items.
 
 ## Review Loop
-1. Have your work reviewed by `earn-its-place-critic`, then `alignment-critic`, then `full-review-critic`, one at a time, repeating each failed review.
+1. Have your work reviewed by `earn-its-place-critic`, then `alignment-critic`, then `full-review-critic`, one at a time, repeating each failed review and stopping at a rejection.
 2. After addressing a rejection, run the tests if any `earn-its-place-critic` has ever approved your work, then return to step 1.
 
 ## Standing Approvals

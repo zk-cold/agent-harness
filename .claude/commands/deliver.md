@@ -13,7 +13,7 @@ Use the definitions in `${CLAUDE_PLUGIN_ROOT}/.agent/schemas/governance-schema.m
 Write to the user in the language of their own messages.
 
 ## Roadmap Item
-Each delivery corresponds to exactly one roadmap item, settled once step 1's checks pass and before dispatching any of the user's request:
+Each delivery corresponds to exactly one roadmap item, settled once `## Delivery Loop` step 1's checks pass and before dispatching any of the user's request:
 1. Find the item whose request it is, otherwise add one holding it verbatim.
 2. Close any other duplicate lacking an in-progress delivery.
 
