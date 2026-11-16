@@ -4,7 +4,7 @@ state=$(git -C "$2" rev-parse --absolute-git-dir)/roadmap-poll
 seen=$(cat "$state" 2>/dev/null) || seen=
 while sleep 30; do
   out=$("$(dirname "$0")/roadmap" "$1" "$2" candidates) && [ "$out" != "$seen" ] || continue
-  printf '%s\n' "$out"
-  printf '%s\n' "$out" >"$state"
-  exit
+  seen=$out
+  printf '%s\n' "$out" >"$state" || :
+  [ -z "$out" ] || { printf '%s\n' "$out"; exit; }
 done

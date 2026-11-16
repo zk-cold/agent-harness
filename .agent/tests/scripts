@@ -128,14 +128,18 @@ test_poll() {
   echo "mv $issues.bak $issues; $scripts/roadmap gh $tmp/road close 8" >"$tmp/on-third"
   same "$(poll 2>/dev/null)" $'2\ttwo\n9\tnueve'
   same "$(cat "$state")" $'2\ttwo\n9\tnueve'
-  rm "$tmp/slept" "$state"
+  rm "$tmp/slept"
   road close 1
   road close 6
   echo "$scripts/roadmap gh $tmp/road add t b >/dev/null" >"$tmp/on-third"
   same "$(poll)" $'10\tt'
+  rm "$tmp/slept"
+  road close 10
+  echo "$scripts/roadmap gh $tmp/road add u c >/dev/null" >"$tmp/on-third"
+  same "$(poll)" $'11\tu'
   rm "$state"
   mkdir "$state"
-  same "$(poll 2>/dev/null)" $'10\tt'
+  same "$(poll 2>/dev/null)" $'11\tu'
   same "$(paste -sd ' ' "$tmp/slept")" '30 30 30 30'
 }
 
