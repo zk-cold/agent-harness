@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[ $# -ge 6 ] || { echo "usage: $0 <backend> <target repo path> <item> <worktree> <root branch> <review ID>..." >&2; exit 2; }
+s=$(cd "$(dirname "$0")" && pwd)
+road=("$s/roadmap" "$1" "$2")
+b=$(git -C "$4" symbolic-ref --short HEAD)
+[ -z "$(git -C "$4" status --porcelain)" ] || { echo "$4: not clean" >&2; exit 1; }
+[ "$(git -C "$2" symbolic-ref --short HEAD)" = "$5" ] || { echo "$2: not on $5" >&2; exit 1; }
+"$s/review" approved "${@:4}"
+"$s/check" "$4"
+[ "$(cd "$2" && pwd -P)" != "$(cd "$s/../.." && pwd -P)" ] || (cd "$4" && "$s/governance-growth" "$b" "$3")
+git -C "$2" merge -q --no-ff -m "Merge $b (#$3)" "$b" || { git -C "$2" merge --abort; exit 1; }
+subs=$("${road[@]}" descendants "$3" | cut -f 1 | tac)
+for i in $subs; do "${road[@]}" complete "$i"; done
+"${road[@]}" complete "$3"
