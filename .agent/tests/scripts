@@ -116,25 +116,27 @@ test_poll() {
   local state=$tmp/road/.git/roadmap-poll
   poll() { PATH=$tmp/bin:$PATH "$scripts/poll" gh "$tmp/road"; }
   mkdir -p "$tmp/bin"
-  printf '#!/bin/sh\necho "$1" >>"%s"\n' "$tmp/slept" >"$tmp/bin/sleep"
+  printf '#!/bin/sh\necho "$1" >>"%s"\n[ "$(wc -l <"%s")" != 3 ] || sh "%s"\n' "$tmp/slept" "$tmp/slept" "$tmp/on-third" >"$tmp/bin/sleep"
   chmod +x "$tmp/bin/sleep"
   seed
   rm -f "$state" "$tmp/slept"
-  for _ in 1 2 3 4 5 6; do same "$(poll)" $'8\teight\n9\tnine'; done
-  road edit 9 nueve
+  same "$(poll)" $'8\teight\n9\tnine'
+  echo "$scripts/roadmap gh $tmp/road edit 9 nueve" >"$tmp/on-third"
   same "$(poll)" $'8\teight\n9\tnueve'
-  poll >/dev/null
+  rm "$tmp/slept"
   mv "$issues" "$issues.bak"
-  same "$(poll 2>/dev/null; echo $?)" 1
-  poll 2>/dev/null && return 1
-  mv "$issues.bak" "$issues"
-  poll >/dev/null
-  poll >/dev/null
-  for w in junk 0 08; do echo "$w" >"$state"; poll >/dev/null; done
+  echo "mv $issues.bak $issues; $scripts/roadmap gh $tmp/road close 8" >"$tmp/on-third"
+  same "$(poll 2>/dev/null)" $'2\ttwo\n9\tnueve'
+  same "$(cat "$state")" $'2\ttwo\n9\tnueve'
+  rm "$tmp/slept" "$state"
+  road close 1
+  road close 6
+  echo "$scripts/roadmap gh $tmp/road add t b >/dev/null" >"$tmp/on-third"
+  same "$(poll)" $'10\tt'
   rm "$state"
   mkdir "$state"
-  same "$(poll 2>/dev/null)" $'8\teight\n9\tnueve'
-  same "$(paste -sd ' ' "$tmp/slept")" '30 30 60 120 240 480 480 30 60 120 240 480 30 30 30 30'
+  same "$(poll 2>/dev/null)" $'10\tt'
+  same "$(paste -sd ' ' "$tmp/slept")" '30 30 30 30'
 }
 
 test_lead_stop_hook() {
