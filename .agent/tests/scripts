@@ -288,13 +288,16 @@ test_review() {
   same "$(spawn alignment-critic "$w main" | tail -n 1)" 0
   same "$(spawn full-review-critic "$w main")" "full-review-critic: alignment-critic$unapproved"
   same "$(record full-review-critic x 'Approved.')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
-  same "$(X='.stop_hook_active = true' record full-review-critic x 'Approved.')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n1'
+  same "$(X='.stop_hook_active = true' record full-review-critic y 'Approved.')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n1'
+  same "$(hook wait "$w" y)" $'Approved.\n0'
+  same "$(sed -n 2p "$r/.git/critic-reviews/y")" -
   same "$(P="$w main" record full-review-critic x 'Verdict: APPROVE')" "x: prompt not set by $scripts/review spawn"$'\n1'
   p=$(prompt)
   same "$(P=${p#*$'\n'} record full-review-critic x 'Verdict: APPROVE')" "x: prompt not set by $scripts/review spawn"$'\n1'
   touch "$w/during"
-  same "$(P=$p record full-review-critic x 'Verdict: APPROVE')" "$w: changed during the review"$'\n1'
+  same "$(P=$p record full-review-critic v 'Verdict: APPROVE')" "$w: changed during the review"$'\n1'
   rm "$w/during"
+  same "$(sed -n 2p "$r/.git/critic-reviews/v")" -
   same "$(record full-review-critic ../x 'Verdict: APPROVE')" $'../x: invalid agent ID\n1'
   same "$(P=$p record other:full-review-critic x 'Verdict: APPROVE')" 0
   [ ! -e "$r/.git/critic-reviews/x" ]
@@ -304,7 +307,11 @@ test_review() {
   same "$(X='.transcript_path = "/none.jsonl"' handback alignment-critic l 'Approved.' | tail -n 1)" 1
   same "$(P="$h"$'\nWorktree: '"$tmp/none"$'\nRoot Branch: main\nFingerprint: 0' handback alignment-critic l 'Approved.' | tail -n 1)" 1
   [ ! -e "$r/.git/critic-reviews/l" ]
-  same "$(record alignment-critic k $'Verdict: REJECT\nRejection Grounds: r')" 0
+  (sleep 1; record alignment-critic k $'Verdict: REJECT\nRejection Grounds: r' >/dev/null) &
+  same "$(timeout 20 "$scripts/review" wait "$w" k)" $'Verdict: REJECT\nRejection Grounds: r'
+  wait
+  same "$(hook wait "$w" ../k)" $'../k: invalid review ID\n1'
+  same "$(hook wait "$w" | tail -n 1)" 2
   same "$(handback alignment-critic k 'Verdict: APPROVE')" 0
   same "$(tail -n 1 "$r/.git/critic-reviews/k")" 'Rejection Grounds: r'
   same "$(spawn full-review-critic "$w main")" "full-review-critic: alignment-critic$unapproved"
@@ -316,6 +323,7 @@ test_review() {
   same "$(approved | tail -n 1)" 2
   record full-review-critic f $'Verdict: REJECT\nRejection Grounds: r' >/dev/null
   same "$(approved e l f)" $'full-review-critic: no approval of the change as it stands\n1'
+  same "$(approved e l v)" $'full-review-critic: no approval of the change as it stands\n1'
   record agent-harness:full-review-critic g 'Verdict: APPROVE' >/dev/null
   same "$(approved e l g x ../e)" 0
   cp "$r/.git/critic-reviews/g" "$r/.git/critic-reviews/h"
