@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+d=$(cd "$(dirname "$0")" && pwd)
+path=
+IFS=: read -ra dirs <<<"$PATH"
+for p in "${dirs[@]}"; do [ "$p" -ef "$d" ] || path+=${path:+:}$p; done
+in=
+trap 'rm -f "$in"' EXIT
+for a in "$@"; do [[ $a = - || $a = --input=- || $a = *=@- ]] && in=$(mktemp) && cat >"$in" && break; done
+shopt -s nocasematch
+mut='(close|delete)issue|labels?(ids|tolabelable|fromlabelable)|state[^[:alnum:]]{0,4}closed'
+deny() { echo 'Label or close no roadmap items.' >&2; exit 2; }
+content() {
+  [ "$1" != - ] || set -- "$in"
+  cat -- "$1" 2>/dev/null || :
+}
+field() {
+  local k=${1%%=*} v=${1#*=}
+  [[ $v != @* ]] || v=$(content "${v#@}")
+  [[ ! $k =~ ^labels?(\[|$) && ! ($k = state && $v = closed) && ! ($k = query && $v =~ $mut) ]] || bad=1
+}
+input() {
+  [[ ! $(content "$1") =~ $mut|\"labels?\"[[:space:]]*: ]] || bad=1
+}
+case ${1-} in
+  issue)
+    sub= skip= label=
+    for a in "${@:2}"; do
+      [ -z "$skip" ] || { skip=; continue; }
+      [[ ! $a =~ ^(-l|--((add|remove)-)?label(=|$)) ]] || label=1
+      case $a in
+        --*=* | -w | --web | -e | --editor | --remove-milestone | -h | --help) ;;
+        -? | --*) skip=1 ;;
+        -*) ;;
+        *) [ -n "$sub" ] || sub=$a ;;
+      esac
+    done
+    case $sub in
+      close | delete) deny ;;
+      create | edit) [ -z "$label" ] || deny ;;
+    esac ;;
+  api)
+    method= write= endpoint= bad=
+    for ((i = 2; i <= $#; i++)); do
+      a=${!i}
+      case $a in
+        -X | --method) i=$((i + 1)) && method=${!i-} ;;
+        -X*) method=${a#-X} ;;
+        --method=*) method=${a#*=} ;;
+        -f | -F | --field | --raw-field) i=$((i + 1)) && write=1 && field "${!i-}" ;;
+        -f* | -F*) write=1 && field "${a:2}" ;;
+        --field=* | --raw-field=*) write=1 && field "${a#*=}" ;;
+        --input) i=$((i + 1)) && write=1 && input "${!i-}" ;;
+        --input=*) write=1 && input "${a#*=}" ;;
+        -H | --header | -q | --jq | -t | --template | --cache | --hostname | -p | --preview) i=$((i + 1)) ;;
+        -*) ;;
+        *) [ -n "$endpoint" ] || endpoint=$a ;;
+      esac
+    done
+    [[ $method = get || -z $method$write ]] || [[ -z $bad && ! $endpoint =~ /labels([/?]|$) ]] || deny ;;
+esac
+[ -z "$in" ] || { exec <"$in" && rm -f "$in"; }
+PATH=$path exec gh "$@"

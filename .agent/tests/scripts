@@ -235,7 +235,7 @@ test_review() {
   local r=$tmp/rev w=$tmp/rev-wt o p
   export CLAUDE_CONFIG_DIR=$tmp/rev-config
   at() { git -C "$1" -c user.name=t -c user.email=t@t "${@:2}"; }
-  hook() { "$scripts/review" "$@" 2>&1; echo $?; }
+  hook() { "${R-$scripts}/review" "$@" 2>&1; echo $?; }
   spawn() { jq -n --arg t "$1" --arg p "$2" '{tool_input: {subagent_type: $t, prompt: $p, description: "d"}}' | hook "${3-spawn}"; }
   prompt() { spawn earn-its-place-critic "$w main" | jq -r 'objects | .hookSpecificOutput.updatedInput.prompt'; }
   send() {
@@ -282,11 +282,11 @@ test_review() {
   same "$(spawn full-review-critic "$w")" "$bad"
   same "$(spawn full-review-critic "$tmp/none main" | tail -n 2)" "$bad"
   same "$(spawn full-review-critic "$w none" | tail -n 2)" "$bad"
-  local unapproved=' has not approved the change as it stands'$'\n2'
-  same "$(spawn alignment-critic "$w main")" "alignment-critic: earn-its-place-critic$unapproved"
+  unapproved() { echo "$1: the latest review of the change as it stands is not an approval by $2"$'\n2'; }
+  same "$(spawn alignment-critic "$w main")" "$(unapproved alignment-critic earn-its-place-critic)"
   same "$(record earn-its-place-critic e 'Verdict: APPROVE')" 0
   same "$(spawn alignment-critic "$w main" | tail -n 1)" 0
-  same "$(spawn full-review-critic "$w main")" "full-review-critic: alignment-critic$unapproved"
+  same "$(spawn full-review-critic "$w main")" "$(unapproved full-review-critic alignment-critic)"
   same "$(record full-review-critic x 'Approved.')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n2'
   same "$(X='.stop_hook_active = true' record full-review-critic y 'Approved.')" $'line 1: first line must be Verdict: APPROVE or Verdict: REJECT\n1'
   same "$(hook wait "$w" y)" $'Approved.\n0'
@@ -310,11 +310,15 @@ test_review() {
   (sleep 1; record alignment-critic k $'Verdict: REJECT\nRejection Grounds: r' >/dev/null) &
   same "$(timeout 20 "$scripts/review" wait "$w" k)" $'Verdict: REJECT\nRejection Grounds: r'
   wait
+  same "$(spawn alignment-critic "$w main")" "$(unapproved alignment-critic earn-its-place-critic)"
+  record earn-its-place-critic e2 'Verdict: APPROVE' >/dev/null
+  same "$(spawn alignment-critic "$w main" | tail -n 1)" 0
+  record alignment-critic k2 $'Verdict: REJECT\nRejection Grounds: r' >/dev/null
   same "$(hook wait "$w" ../k)" $'../k: invalid review ID\n1'
   same "$(hook wait "$w" | tail -n 1)" 2
   same "$(handback alignment-critic k 'Verdict: APPROVE')" 0
   same "$(tail -n 1 "$r/.git/critic-reviews/k")" 'Rejection Grounds: r'
-  same "$(spawn full-review-critic "$w main")" "full-review-critic: alignment-critic$unapproved"
+  same "$(spawn full-review-critic "$w main")" "$(unapproved full-review-critic alignment-critic)"
   same "$(handback alignment-critic l 'Verdict: APPROVE')" 0
   same "$(record alignment-critic l 'Done.')" 0
   same "$(sed -n '1p;3,$p' "$r/.git/critic-reviews/l")" $'alignment-critic\nVerdict: APPROVE'
@@ -381,6 +385,11 @@ test_review() {
   sed -i '2a y' "$r/a"
   at "$r" commit -qam b
   same "$(spawn earn-its-place-critic "$w main")" "$w: main is not merged"$'\n2'
+  harness ''
+  cp -r "$here/../../.claude" "$here/../../.claude-plugin" "$tmp/harness"
+  sed -i '/^## Syncing Before Review$/,/^## /s/earn-its-place-critic/alignment-critic/' "$tmp/harness/.claude/agents/impl.md"
+  same "$(R=$tmp/harness/.agent/scripts spawn earn-its-place-critic "$w main" | tail -n 1)" 0
+  same "$(R=$tmp/harness/.agent/scripts spawn alignment-critic "$w main")" "$w: main is not merged"$'\n2'
   at "$w" add -A
   at "$w" commit -qm c
   at "$w" merge -q --no-edit main >/dev/null
@@ -416,28 +425,56 @@ test_review() {
 }
 
 test_guard() {
+  local c m e=$tmp/echo-gh sp="$tmp/with space" before no=$'Label or close no roadmap items.\n2'
+  local prefix="export PATH=$(printf %q "$(cd "$scripts" && pwd)/impl-bin"):\"\$PATH\" AGENT_HARNESS_IMPL=1"$'\n'
   guard() { jq -n --arg a "${2-impl}" --argjson t "$1" '{agent_type: $a, tool_input: $t}' | "$scripts/review" guard 2>&1; echo $?; }
-  run() { guard "$(jq -n --arg c "$1" '{command: $c}')" "${@:2}"; }
-  local c no=$'Label or close no roadmap items.\n2'
-  for c in '.agent/scripts/roadmap gh . close 3' '"$s"/roadmap-gh complete 3' 'x && /h/.agent/scripts/land gh . 1 w main e' \
-    'gh issue close 3' 'gh issue -R o/r close 3' 'gh issue edit 3 --add-label approved' 'gh issue create -t t --label x' \
-    'gh issue create -t t -b b -l approved' "echo '{\"state\":\"closed\"}' | gh api -X PATCH repos/o/r/issues/3 --input -" \
+  run() {
+    local out
+    out=$(guard "$(jq -n --arg c "$1" '{command: $c}')")
+    [ "${out##*$'\n'}" = 0 ] || { echo "$out"; return; }
+    (cd "$tmp/road" && PATH=${2:+$2:}$PATH bash -c "$(head -n 1 <<<"$out" | jq -r .hookSpecificOutput.updatedInput.command)" 2>&1)
+    echo $?
+  }
+  mkdir -p "$e" "$sp"
+  printf '#!/bin/sh\necho gh "$@"\ncase "$*" in *-) cat ;; esac\n' >"$e/gh"
+  chmod +x "$e/gh"
+  cp "$scripts/roadmap" "$scripts/roadmap-gh" "$sp"
+  seed
+  echo 'gh api -X PATCH repos/o/r/issues/2 -f state=closed' >"$tmp/road/close.sh"
+  echo 'mutation{removeLabelsFromLabelable(input:{labelableId:"x",labelIds:["y"]}){clientMutationId}}' >"$tmp/road/q.graphql"
+  before=$(states)
+  for c in "$scripts/roadmap gh . close 2" "r=$scripts/roadmap; \$r gh . complete 8" "'$sp/roadmap' gh . close 2" 'sh close.sh' \
+    "true && $scripts/land gh . 1 w main e" 'gh issue close 3' 'gh issue -R o/r close 3' 'gh issue delete 3 --yes' \
+    'gh issue edit 3 --add-label approved' 'gh issue edit 3 --remove-label approved' 'gh issue edit 3 --remove-label=approved' \
+    'gh issue create -t t --label x' 'gh issue create -t t -b b -lapproved' 'gh api -X PATCH repos/o/r/issues/3 -f state=closed' \
+    "echo '{\"state\": \"closed\"}' | gh api -X PATCH repos/o/r/issues/3 --input -" "gh api repos/o/r/issues/3 -f 'state=closed'" \
+    'gh api repos/o/r/issues/3 --input - <<<'"'"'{"labels": ["x"]}'"'" 'gh api repos/o/r/issues/3/labels -f labels[]=x' \
+    'gh api -X DELETE repos/o/r/issues/3/labels/approved' 'gh api graphql -F query=@q.graphql' \
     'gh api graphql -f query='"'"'mutation{updateIssue(input:{id:"x",state:CLOSED}){issue{id}}}'"'" \
-    'gh api -X PATCH repos/o/r/issues/3 -f state=closed' "gh api repos/o/r/issues/3 -f 'state=closed'" \
-    'gh api repos/o/r/issues/3 --input - <<<'"'"'{"state": "closed"}'"'" 'gh api repos/o/r/issues/3/labels -f labels[]=x' \
-    'gh api graphql -f query=closeIssue'; do
-    same "$(run "$c")" "$no"
+    "curl -X PATCH https://api.github.com/repos/o/r/issues/3 -d '{\"state\": \"closed\"}'" \
+    "python3 -c 'import requests; requests.post(\"https://api.github.com/repos/o/r/issues/3/labels\", json={\"labels\": [\"x\"]})'"; do
+    same "$(run "$c")" "$no" || { echo "$c"; return 1; }
   done
-  for c in '.agent/scripts/roadmap gh . add "close it" b 3' '.agent/scripts/roadmap gh . show 3' 'cat .agent/scripts/land' \
-    'git commit -m "Make roadmap-gh complete items"' 'grep -n complete .agent/scripts/roadmap-gh' 'gh issue view 3'; do
-    same "$(run "$c")" 0
+  same "$(states)" "$before"
+  for c in 'gh issue list -l approved' 'gh issue list --label approved' "gh api repos/o/r/issues --jq '.[].labels'" \
+    "gh issue comment 3 -b 'close it; --add-label approved'" 'gh issue edit 3 --title "-l x"' 'gh issue view 3' \
+    'gh api -X GET repos/o/r/issues -f state=closed' 'gh api graphql -f query="{repository{issues(states:CLOSED){nodes{labels{nodes{name}}}}}}"'; do
+    same "$(run "$c" "$e")" "$(bash -c "echo $c")"$'\n0' || { echo "$c"; return 1; }
   done
-  same "$(run 'gh issue close 3' '')" 0
-  same "$(run 'gh issue close 3' other:impl)" 0
-  same "$(run 'gh issue close 3' agent-harness:impl)" "$no"
+  same "$(printf '{"title": "t"}\n' | run 'gh api repos/o/r/issues --input -' "$e")" $'gh api repos/o/r/issues --input -\n{"title": "t"}\n0'
+  same "$(run "$scripts/roadmap gh . add 'Avoid gh issue close' 'roadmap gh . close 3; gh issue edit 3 --add-label x; state=closed' 1")" $'10\n0'
+  for c in "cat $scripts/land" "grep -c complete $scripts/roadmap-gh" 'echo "gh issue close 3; curl -X PATCH api.github.com"'; do
+    same "$(run "$c >/dev/null")" 0
+  done
+  same "$(guard '{"command": "gh issue close 3"}' '')" 0
+  same "$(guard '{"command": "gh issue close 3"}' other:impl)" 0
+  same "$(guard '{"command": "x"}' agent-harness:impl | head -n 1 | jq -r .hookSpecificOutput.updatedInput.command)" "${prefix}x"
   same "$(guard '{"state": "closed"}')" "$no"
-  same "$(guard '{"labels": ["x"]}')" "$no"
-  same "$(guard '{"state": "open", "labels": []}')" 0
+  same "$(guard '{"labels": []}')" "$no"
+  same "$(guard '{"method": "update", "state": "open", "body": "close"}')" 0
+  m=$(jq -r '.hooks.PreToolUse[] | select(.hooks[].command | endswith("review guard")) | .matcher' "$here/../../.claude/settings.json")
+  for c in Bash mcp__github__issue_write; do [[ $c =~ ^($m)$ ]]; done
+  for c in Read mcp__github__issue_read; do [[ ! $c =~ ^($m)$ ]]; done
 }
 
 test_plugin_loads() {
