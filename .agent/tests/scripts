@@ -286,8 +286,11 @@ test_review() {
     sed '1s/[0-9a-f]\{40\}"/F"/')" "$(jq -nc --arg p "$h"$'\nWorktree: '"$w"$'\nRoot Branch: main\nFingerprint: F' '{hookSpecificOutput: {hookEventName: "PreToolUse",
       updatedInput: {subagent_type: "agent-harness:earn-its-place-critic", prompt: $p, description: "d"}}}')"$'\n0'
   for t in impl agent-harness:impl; do
-    same "$(spawn "$t" $'x\ny')" "$(jq -nc --arg t "$t" --arg p "$h"$'\nx\ny' '{hookSpecificOutput: {hookEventName: "PreToolUse",
+    same "$(spawn "$t" "$r"$'\ny')" "$(jq -nc --arg t "$t" --arg p "$h"$'\n'"$r"$'\ny' '{hookSpecificOutput: {hookEventName: "PreToolUse",
       updatedInput: {subagent_type: $t, prompt: $p, description: "d"}}}')"$'\n0'
+  done
+  for p in "$r y" "rev"$'\ny' "$tmp/none"$'\ny'; do
+    same "$(cd "$tmp" && spawn impl "$p")" "An impl's prompt must start with the target repo's path on its own line."$'\n2'
   done
   for t in other:impl ../x-critic x-critic other:full-review-critic ''; do same "$(spawn "$t" junk)" 0; done
   local bad="A critic's prompt must hold only your worktree's path and the root branch."$'\n2'
@@ -444,13 +447,14 @@ test_review() {
 
 test_guard() {
   local c m e=$tmp/echo-gh sp="$tmp/with space" before no=$'Label or close no roadmap items.\n2'
-  local prefix="export PATH=$(printf %q "$(cd "$scripts" && pwd)/impl-bin"):\"\$PATH\" AGENT_HARNESS_IMPL=1"$'\n'
-  guard() { jq -n --arg a "${2-impl}" --argjson t "$1" '{agent_type: $a, tool_input: $t}' | "$scripts/review" guard 2>&1; echo $?; }
+  local prefix="export PATH=$(printf %q "$(cd "$scripts" && pwd)/impl-bin"):\"\$PATH\" AGENT_HARNESS_IMPL=''"$'\n'
+  local s=$tmp/guard-config/s g
+  guard() { jq -n --arg a "${2-impl}" --argjson t "$1" "{agent_type: \$a, tool_input: \$t}${X-}" | "$scripts/review" guard 2>&1; echo $?; }
   run() {
     local out
     out=$(guard "$(jq -n --arg c "$1" '{command: $c}')")
     [ "${out##*$'\n'}" = 0 ] || { echo "$out"; return; }
-    (cd "$tmp/road" && PATH=${2:+$2:}$PATH bash -c "$(head -n 1 <<<"$out" | jq -r .hookSpecificOutput.updatedInput.command)" 2>&1)
+    (cd "${D-$tmp/road}" && PATH=${2:+$2:}$PATH bash -c "$(head -n 1 <<<"$out" | jq -r .hookSpecificOutput.updatedInput.command)" 2>&1)
     echo $?
   }
   mkdir -p "$e" "$sp"
@@ -461,7 +465,7 @@ test_guard() {
   echo 'gh api -X PATCH repos/o/r/issues/2 -f state=closed' >"$tmp/road/close.sh"
   echo 'mutation{removeLabelsFromLabelable(input:{labelableId:"x",labelIds:["y"]}){clientMutationId}}' >"$tmp/road/q.graphql"
   before=$(states)
-  for c in "$scripts/roadmap gh . close 2" "r=$scripts/roadmap; \$r gh . complete 8" "'$sp/roadmap' gh . close 2" 'sh close.sh' \
+  for c in "$scripts/roadmap gh . close 2" "r=$scripts/roadmap; \$r gh . complete 8" "'$sp/roadmap' gh . close 2" \
     "true && $scripts/land gh . 1 w main e" 'gh issue close 3' 'gh issue -R o/r close 3' 'gh issue delete 3 --yes' \
     'gh issue edit 3 --add-label approved' 'gh issue edit 3 --remove-label approved' 'gh issue edit 3 --remove-label=approved' \
     'gh issue create -t t --label x' 'gh issue create -t t -b b -lapproved' 'gh api -X PATCH repos/o/r/issues/3 -f state=closed' \
@@ -486,7 +490,26 @@ test_guard() {
   done
   same "$(guard '{"command": "gh issue close 3"}' '')" 0
   same "$(guard '{"command": "gh issue close 3"}' other:impl)" 0
-  same "$(guard '{"command": "x"}' agent-harness:impl | head -n 1 | jq -r .hookSpecificOutput.updatedInput.command)" "${prefix}x"
+  same "$(guard '{"command": "gh x"}' agent-harness:impl | head -n 1 | jq -r .hookSpecificOutput.updatedInput.command)" "${prefix}gh x"
+  for c in 'sh close.sh' 'git status' 'make test' 'git log --grep=landing'; do
+    same "$(guard "$(jq -n --arg c "$c" '{command: $c}')")" 0 || { echo "$c"; return 1; }
+  done
+  for g in n t w x; do git init -q "$tmp/guard-$g"; done
+  git -C "$tmp/guard-t" remote add origin git@github.com:O/R.git
+  git -C "$tmp/guard-w" remote add origin https://github.com/o/r
+  git -C "$tmp/guard-x" remote add origin https://github.com/x/y.git
+  mkdir -p "$s/subagents"
+  jq -nc --arg p $'${CLAUDE_PLUGIN_ROOT}: h\n'"$tmp/guard-t"$'\nr' '{type: "user", message: {content: $p}}' >"$s/subagents/agent-g.jsonl"
+  local X=" + {agent_id: \"g\", transcript_path: \"$s.jsonl\"}"
+  for c in 'w:gh issue close 3' 'w:gh issue edit 3 --add-label x' 'w:gh api -X PATCH repos/{owner}/{repo}/issues/3 -f state=closed' \
+    'x:gh issue close 3 -R O/R' 'x:gh issue close -Rgithub.com/o/r 3' 'x:GH_REPO=o/r gh issue close 3' \
+    'x:gh api -X PATCH repos/o/r/issues/3 -f state=closed' 'n:gh api -X DELETE /repos/o/r/issues/3/labels/x'; do
+    same "$(D=$tmp/guard-${c%%:*} run "${c#*:}" "$e")" "$no" || { echo "$c"; return 1; }
+  done
+  for c in 'n:gh issue close 3' 'x:gh issue close 3' 'x:gh api -X PATCH repos/{owner}/{repo}/issues/3 -f state=closed' \
+    'w:gh issue close 3 --repo=x/y' 'w:GH_REPO=x/y gh issue close 3' 'w:gh api repos/x/y/issues/3/labels -f labels[]=z'; do
+    same "$(D=$tmp/guard-${c%%:*} run "${c#*:}" "$e")" "$(bash -c "echo ${c#*:}" | sed 's/^GH_REPO=x\/y //')"$'\n0' || { echo "$c"; return 1; }
+  done
   same "$(guard '{"state": "closed"}')" "$no"
   same "$(guard '{"labels": []}')" "$no"
   same "$(guard '{"method": "update", "state": "open", "body": "close"}')" 0

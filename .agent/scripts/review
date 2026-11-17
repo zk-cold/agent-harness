@@ -86,6 +86,9 @@ report() (
   done
   fail 'Approvals: no review found'
 )
+transcript() {
+  jq -r '.agent_transcript_path // ((.transcript_path | rtrimstr(".jsonl")) + "/subagents/agent-\(.agent_id).jsonl")' <<<"$i"
+}
 case $1 in
   spawn)
     i=$(cat)
@@ -112,7 +115,10 @@ case $1 in
       p=$r$'\nWorktree: '"$w"$'\nRoot Branch: '"$b"$'\nFingerprint: '"$change"
     else
       ours "$a" impl || exit 0
-      p=$r$'\n'$(jq -r '.tool_input.prompt // ""' <<<"$i")
+      p=$(jq -r '.tool_input.prompt // ""' <<<"$i")
+      t=${p%%$'\n'*}
+      [[ $t = /* ]] && git -C "$t" rev-parse 2>/dev/null || { echo "An impl's prompt must start with the target repo's path on its own line." >&2; exit 2; }
+      p=$r$'\n'$p
     fi
     jq -c --arg p "$p" '{hookSpecificOutput: {hookEventName: "PreToolUse", updatedInput: (.tool_input | .prompt = $p)}}' <<<"$i"
     exit ;;
@@ -122,7 +128,7 @@ case $1 in
     k=.last_assistant_message
     [ "$1" = record ] || k=.tool_input.message
     m=$(jq -r "$k // \"\"" <<<"$i")
-    t=$(jq -r '.agent_transcript_path // ((.transcript_path | rtrimstr(".jsonl")) + "/subagents/agent-\(.agent_id).jsonl")' <<<"$i")
+    t=$(transcript)
     final() { [ "$1" = record ] && jq -e .stop_hook_active <<<"$i" >/dev/null; }
     if ours "$a" impl; then
       n=
@@ -170,8 +176,10 @@ case $1 in
     ! jq -e --arg a "$api" --arg w "$write" --arg c "$closing" '.tool_input | .state == "closed" or .labels != null or
       (.command // "" | test($a) and test($w; "i") and test($c; "i"))' <<<"$i" >/dev/null ||
       { echo 'Label or close no roadmap items.' >&2; exit 2; }
-    p=$(printf 'export PATH=%q:"$PATH" AGENT_HARNESS_IMPL=1' "$s/impl-bin")
-    jq -c --arg p "$p" 'select(.tool_input.command) | {hookSpecificOutput: {hookEventName: "PreToolUse",
+    jq -e '.tool_input.command // "" | test("\\b(gh|roadmap|land)\\b")' <<<"$i" >/dev/null || exit 0
+    t=$(prompt "$(transcript)" 2>/dev/null | sed -n 2p) || :
+    p=$(printf 'export PATH=%q:"$PATH" AGENT_HARNESS_IMPL=%q' "$s/impl-bin" "$t")
+    jq -c --arg p "$p" '{hookSpecificOutput: {hookEventName: "PreToolUse",
       updatedInput: (.tool_input | .command = $p + "\n" + .command)}}' <<<"$i"
     exit ;;
 esac

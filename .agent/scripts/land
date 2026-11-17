@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 [ $# -ge 6 ] || { echo "usage: $0 <backend> <target repo path> <item> <worktree> <root branch> <review ID>..." >&2; exit 2; }
-[ -z "${AGENT_HARNESS_IMPL-}" ] || { echo 'Label or close no roadmap items.' >&2; exit 2; }
+[ -z "${AGENT_HARNESS_IMPL+1}" ] || { echo 'Label or close no roadmap items.' >&2; exit 2; }
 s=$(cd "$(dirname "$0")" && pwd)
 road=("$s/roadmap" "$1" "$2")
 m=$(git -C "$2" rev-parse --path-format=absolute --git-common-dir)/land-$3
