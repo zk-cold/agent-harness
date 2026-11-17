@@ -319,6 +319,8 @@ test_review() {
   same "$(X='.transcript_path = "/none.jsonl"' handback alignment-critic l 'Approved.' | tail -n 1)" 1
   same "$(P="$h"$'\nWorktree: '"$tmp/none"$'\nRoot Branch: main\nFingerprint: 0' handback alignment-critic l 'Approved.' | tail -n 1)" 1
   [ ! -e "$r/.git/critic-reviews/l" ]
+  local meta=$CLAUDE_CONFIG_DIR/projects/p/s2/subagents/agent
+  jq -n '{agentType: "alignment-critic", finished: true}' >"$meta-k.meta.json"
   (sleep 1; record alignment-critic k $'Verdict: REJECT\nRejection Grounds: r' >/dev/null) &
   same "$(timeout 20 "$scripts/review" wait "$w" k)" $'Verdict: REJECT\nRejection Grounds: r'
   wait
@@ -326,7 +328,11 @@ test_review() {
   record earn-its-place-critic e2 'Verdict: APPROVE' >/dev/null
   same "$(spawn alignment-critic "$w main" | tail -n 1)" 0
   record alignment-critic k2 $'Verdict: REJECT\nRejection Grounds: r' >/dev/null
-  same "$(hook wait "$w" ../k)" $'../k: invalid review ID\n1'
+  for id in ../k . .. .k; do same "$(hook wait "$w" "$id")" "$id: invalid review ID"$'\n1'; done
+  for id in z i; do same "$(hook wait "$w" "$id")" "$id: no critic of ours has this ID"$'\n1'; done
+  jq -n '{agentType: "agent-harness:alignment-critic", finished: true}' >"$meta-n.meta.json"
+  touch -d '-2 min' "$meta-n.meta.json"
+  same "$(hook wait "$w" n)" $'n: the critic finished without its review being recorded\n1'
   same "$(hook wait "$w" | tail -n 1)" 2
   same "$(handback alignment-critic k 'Verdict: APPROVE')" 0
   same "$(tail -n 1 "$r/.git/critic-reviews/k")" 'Rejection Grounds: r'

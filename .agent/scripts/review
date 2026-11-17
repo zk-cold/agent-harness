@@ -148,9 +148,18 @@ case $1 in
     ls -t "$d" | tail -n +101 | (cd "$d" && xargs -rd '\n' rm -f --)
     exit "$rc" ;;
   wait)
-    [[ $3 =~ ^[^/]+$ ]] || fail "$3: invalid review ID"
+    [[ $3 =~ ^[^/.][^/]*$ ]] || fail "$3: invalid review ID"
     d=$(git -C "$2" rev-parse --path-format=absolute --git-common-dir)/critic-reviews
-    until [ -e "$d/$3" ]; do sleep 5; done
+    until [ -e "$d/$3" ]; do
+      m=
+      for t in "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/projects/*/*/subagents/agent-"$3".meta.json; do
+        critic "$(jq -r .agentType "$t" 2>/dev/null)" && m=$t
+      done
+      [ -n "$m" ] || fail "$3: no critic of ours has this ID"
+      ! jq -e .finished "$m" >/dev/null || [ $(($(date +%s) - $(stat -c %Y "$m"))) -lt 60 ] ||
+        fail "$3: the critic finished without its review being recorded"
+      sleep 5
+    done
     tail -n +3 "$d/$3"
     exit ;;
   guard)
