@@ -551,6 +551,10 @@ test_land() {
   printf '#!/bin/sh\n[ "$2" != -X ] || exit 1\nexec "%s" "$@"\n' "$here/stub/gh" >"$tmp/land-bin/gh"
   chmod +x "$tmp/land-bin/gh"
   same "$(PATH=$tmp/land-bin:$PATH land)" $'2\n'"$w: merged into main; rerun land to complete 1"$'\n1'
+  echo w >"$w/w"
+  git -C "$w" add . && git -C "$w" commit -qm g
+  same "$(REVIEW=1 land)" 1
+  git -C "$w" reset -q --hard HEAD~
   git -C "$h" worktree remove "$w"
   same "$(land)" 0
   same "$(git -C "$h" log -1 --format=%s)" 'Merge work (#1)'
@@ -577,7 +581,10 @@ test_land() {
   git -C "$c-wt" commit -qam f
   same "$(land main "$c" "$c-wt")" $'3\n1'
   jq '.[0].labels = [{name: "approved"}]' "$c/.git/issues.json" >"$tmp/i" && mv "$tmp/i" "$c/.git/issues.json"
-  same "$(LAND_MERGE='git merge -q --squash "$1" >/dev/null 2>&1; false' land main "$c" "$c-wt")" $'3\n1'
+  local head
+  head=$(git -C "$c" rev-parse HEAD)
+  same "$(LAND_MERGE='git merge -q --squash "$1" >/dev/null 2>&1 && git commit -qm s && false' land main "$c" "$c-wt")" $'3\n1'
+  same "$(git -C "$c" rev-parse HEAD)" "$head"
   same "$(git -C "$c" status --porcelain)" ''
   same "$(land main "$c" "$c-wt")" $'3\n0'
 }
