@@ -13,7 +13,7 @@ critics=(earn-its-place-critic alignment-critic full-review-critic)
 verdicts() {
   local f
   for f in $(ls -tr .git/critic-reviews); do
-    printf '%s\t%s\n' "$(head -n 1 ".git/critic-reviews/$f")" "$(tail -n +3 ".git/critic-reviews/$f" | .agent/scripts/verdict)"
+    printf '%s\t%s\n' "$(head -n 1 ".git/critic-reviews/$f")" "$(awk 'NR == 2 && $0 == "-" {exit} NR > 2' ".git/critic-reviews/$f" | .agent/scripts/verdict)"
   done
 }
 approved() { verdicts | awk -v c="$1" '$1 == c {v = $2} END {exit v != "APPROVE"}'; }
