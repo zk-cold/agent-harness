@@ -9,7 +9,20 @@ trap 'rm -f "$in"' EXIT
 for a in "$@"; do [[ $a = - || $a = --input=- || $a = *=@- ]] && in=$(mktemp) && cat >"$in" && break; done
 shopt -s nocasematch
 mut='(close|delete)issue|labels?(ids|tolabelable|fromlabelable)|state[^[:alnum:]]{0,4}closed'
-deny() { echo 'Label or close no roadmap items.' >&2; exit 2; }
+slug() {
+  sed -E 's#(\.git)?/*$##; s#.*[/:]([^/:]+/[^/:]+)$#\1#' | tr '[:upper:]' '[:lower:]'
+}
+remotes() {
+  git -C "$1" remote -v 2>/dev/null | awk '{print $2}' | slug
+}
+deny() {
+  local own= its=${1:-${GH_REPO-}}
+  [ -z "${AGENT_HARNESS_IMPL-}" ] || own=$(remotes "$AGENT_HARNESS_IMPL")
+  if [ -n "$its" ]; then its=$(slug <<<"$its"); else its=$(remotes .); fi
+  [ -z "$own" ] || grep -qxF -- "$own" <<<"$its" || return 0
+  echo 'Label or close no roadmap items.' >&2
+  exit 2
+}
 content() {
   [ "$1" != - ] || set -- "$in"
   cat -- "$1" 2>/dev/null || :
@@ -24,11 +37,14 @@ input() {
 }
 case ${1-} in
   issue)
-    sub= skip= label=
+    sub= skip= label= repo=
     for a in "${@:2}"; do
-      [ -z "$skip" ] || { skip=; continue; }
+      [ -z "$skip" ] || { [ "$skip" != R ] || repo=$a; skip=; continue; }
       [[ ! $a =~ ^(-l|--((add|remove)-)?label(=|$)) ]] || label=1
       case $a in
+        -R | --repo) skip=R ;;
+        -R?*) repo=${a#-R} ;;
+        --repo=*) repo=${a#*=} ;;
         --*=* | -w | --web | -e | --editor | --remove-milestone | -h | --help) ;;
         -? | --*) skip=1 ;;
         -*) ;;
@@ -36,11 +52,11 @@ case ${1-} in
       esac
     done
     case $sub in
-      close | delete) deny ;;
-      create | edit) [ -z "$label" ] || deny ;;
+      close | delete) deny "$repo" ;;
+      create | edit) [ -z "$label" ] || deny "$repo" ;;
     esac ;;
   api)
-    method= write= endpoint= bad=
+    method= write= endpoint= bad= repo=
     for ((i = 2; i <= $#; i++)); do
       a=${!i}
       case $a in
@@ -57,7 +73,8 @@ case ${1-} in
         *) [ -n "$endpoint" ] || endpoint=$a ;;
       esac
     done
-    [[ $method = get || -z $method$write ]] || [[ -z $bad && ! $endpoint =~ /labels([/?]|$) ]] || deny ;;
+    [[ ! $endpoint =~ (^|/)repos/([^/{}]+/[^/{}?]+) ]] || repo=${BASH_REMATCH[2]}
+    [[ $method = get || -z $method$write ]] || [[ -z $bad && ! $endpoint =~ /labels([/?]|$) ]] || deny "$repo" ;;
 esac
 [ -z "$in" ] || { exec <"$in" && rm -f "$in"; }
 PATH=$path exec gh "$@"
