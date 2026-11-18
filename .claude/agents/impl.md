@@ -36,13 +36,13 @@ Label or close no roadmap items.
 2. After addressing a rejection, run the tests if any `earn-its-place-critic` has ever approved your work, then return to step 1.
 
 ## Background Critics
-Await a critic running in the background only by running `${CLAUDE_PLUGIN_ROOT}/.agent/scripts/review wait <your worktree> <its review ID>` in the foreground until it prints the review, never by ending your turn.
+Await a critic running in the background only by running `${CLAUDE_PLUGIN_ROOT}/.agent/scripts/review wait <your worktree> <its review ID>` in the foreground until it prints the review or fails, never by ending your turn.
 
 ## Standing Approvals
 Treat approvals as standing only while `${CLAUDE_PLUGIN_ROOT}/.agent/scripts/review approved <your worktree> <root branch> <their review IDs>` accepts them.
 
 ## Reporting
-Report only once your verdict is `READY`, or to escalate each rejection and failed review beyond the fifth in total and anything else you cannot resolve yourself.
+Report only once your verdict is `READY`, or to escalate each rejection and failed review beyond the fifth in total, each failure of `review wait`, and anything else you cannot resolve yourself.
 
 ## Report
 Each report starts with these labeled parts, in order, omitting an empty one:
