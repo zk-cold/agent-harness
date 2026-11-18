@@ -339,6 +339,7 @@ test_review() {
   jq -n '{agentType: "alignment-critic"}' >"$meta-u.meta.json"
   jq -n '{agentType: "general-purpose", parentAgentId: "u"}' >"$meta-c.meta.json"
   touch "$meta-c.jsonl"
+  echo x >"$meta-b.meta.json"
   touch -d '-31 min' "$meta-u.meta.json"
   same "$(timeout -s INT 7 "$scripts/review" wait "$w" u; echo $?)" 124
   touch -d '-31 min' "$meta-c.meta.json" "$meta-c.jsonl"

@@ -157,9 +157,11 @@ case $1 in
     [[ $3 =~ ^[^/.][^/]*$ ]] || fail "$3: invalid review ID"
     d=$(git -C "$2" rev-parse --path-format=absolute --git-common-dir)/critic-reviews
     active() {
+      local c
       stat -c %Y "$1.jsonl" "$1.meta.json" 2>/dev/null
-      jq -r --arg p "${1##*/agent-}" 'select(.parentAgentId == $p) | input_filename | rtrimstr(".meta.json")' \
-        "${1%/*}"/agent-*.meta.json 2>/dev/null | while IFS= read -r c; do active "$c"; done
+      for c in "${1%/*}"/agent-*.meta.json; do
+        [ "$(jq -r .parentAgentId "$c" 2>/dev/null)" != "${1##*/agent-}" ] || active "${c%.meta.json}"
+      done
     }
     until [ -e "$d/$3" ]; do
       m=
