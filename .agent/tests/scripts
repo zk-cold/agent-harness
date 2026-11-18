@@ -335,7 +335,14 @@ test_review() {
   for id in z i; do same "$(hook wait "$w" "$id")" "$id: no critic of ours has this ID"$'\n1'; done
   jq -n '{agentType: "agent-harness:alignment-critic", finished: true}' >"$meta-n.meta.json"
   touch -d '-2 min' "$meta-n.meta.json"
-  same "$(hook wait "$w" n)" $'n: the critic finished without its review being recorded\n1'
+  same "$(hook wait "$w" n)" $'n: the critic stopped without its review being recorded\n1'
+  jq -n '{agentType: "alignment-critic"}' >"$meta-u.meta.json"
+  jq -n '{agentType: "general-purpose", parentAgentId: "u"}' >"$meta-c.meta.json"
+  touch "$meta-c.jsonl"
+  touch -d '-31 min' "$meta-u.meta.json"
+  same "$(timeout -s INT 7 "$scripts/review" wait "$w" u; echo $?)" 124
+  touch -d '-31 min' "$meta-c.meta.json" "$meta-c.jsonl"
+  same "$(hook wait "$w" u)" $'u: the critic stopped without its review being recorded\n1'
   same "$(hook wait "$w" | tail -n 1)" 2
   same "$(handback alignment-critic k 'Verdict: APPROVE')" 0
   same "$(tail -n 1 "$r/.git/critic-reviews/k")" 'Rejection Grounds: r'

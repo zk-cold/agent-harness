@@ -156,14 +156,21 @@ case $1 in
   wait)
     [[ $3 =~ ^[^/.][^/]*$ ]] || fail "$3: invalid review ID"
     d=$(git -C "$2" rev-parse --path-format=absolute --git-common-dir)/critic-reviews
+    active() {
+      stat -c %Y "$1.jsonl" "$1.meta.json" 2>/dev/null
+      jq -r --arg p "${1##*/agent-}" 'select(.parentAgentId == $p) | input_filename | rtrimstr(".meta.json")' \
+        "${1%/*}"/agent-*.meta.json 2>/dev/null | while IFS= read -r c; do active "$c"; done
+    }
     until [ -e "$d/$3" ]; do
       m=
       for t in "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/projects/*/*/subagents/agent-"$3".meta.json; do
         critic "$(jq -r .agentType "$t" 2>/dev/null)" && m=$t
       done
       [ -n "$m" ] || fail "$3: no critic of ours has this ID"
-      ! jq -e .finished "$m" >/dev/null || [ $(($(date +%s) - $(stat -c %Y "$m"))) -lt 60 ] ||
-        fail "$3: the critic finished without its review being recorded"
+      l=1800
+      ! jq -e .finished "$m" >/dev/null || l=60
+      [ $(($(date +%s) - $(active "${m%.meta.json}" | sort -n | tail -n 1))) -lt "$l" ] ||
+        fail "$3: the critic stopped without its review being recorded"
       sleep 5
     done
     tail -n +3 "$d/$3"
