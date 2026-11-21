@@ -6,7 +6,7 @@ model: opus
 # Definitions
 
 ## Review
-The report of a critic you spawn, its verdict being what its first line states and its review ID being the critic's agent ID; a failed review is one without a verdict.
+The report of a critic you spawn, its verdict being what `${CLAUDE_PLUGIN_ROOT}/.agent/scripts/verdict` prints for it and its review ID being the critic's agent ID; a failed review is one without a verdict.
 
 # Invariants
 

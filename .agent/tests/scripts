@@ -299,6 +299,10 @@ test_review() {
   same "$(spawn full-review-critic "$w none" | tail -n 2)" "$bad"
   unapproved() { echo "$1: the latest review of the change as it stands is not an approval by $2"$'\n2'; }
   same "$(spawn alignment-critic "$w main")" "$(unapproved alignment-critic earn-its-place-critic)"
+  local malformed=$'Verdict: APPROVE\nRejection Grounds: None' omit=$'line 2: APPROVE must omit Rejection Grounds'
+  same "$(record earn-its-place-critic m "$malformed")" "$omit"$'\n2'
+  same "$(X='.stop_hook_active = true' record earn-its-place-critic m "$malformed")" "$omit"$'\n1'
+  same "$(spawn alignment-critic "$w main")" "$(unapproved alignment-critic earn-its-place-critic)"
   same "$(record earn-its-place-critic e 'Verdict: APPROVE')" 0
   same "$(spawn alignment-critic "$w main" | tail -n 1)" 0
   same "$(spawn full-review-critic "$w main")" "$(unapproved full-review-critic alignment-critic)"
